@@ -1,5 +1,7 @@
 # Tiến độ Pha 1
 
+**Cập nhật C2 — 13/10/2026:** nền `173a9a4` đã merge PR #8, chứa B2/UI01-C1 cùng P01/C1/UI01-A. C2 đã triển khai S04 và route registration trên nhánh `feat/c2-reporting-operations`; chờ review nhóm/merge, chưa push. [Handoff C2](handoffs/C2.md) ghi evidence sau self-review: 32 frontend tests, 83 backend tests, 9 browser tests. S02/S03 vẫn chờ B3, citizen trong luồng C2 được kiểm tra qua HTTP thật. Các đoạn ngày 10/10 bên dưới giữ bối cảnh lịch sử, không còn là blocker B2 của C2.
+
 Cập nhật 10/10/2026 sau đối chiếu main `ca3751d`, triển khai nhánh B2 và UI01-C1. Đây là bảng trạng thái, không phải kế hoạch riêng.
 **DONE không đồng nghĩa đã review/merge** hay toàn bộ 15 APIs/6 screens đã implemented.
 Nhánh B2 từ main `ca3751d` có E01–E11 và S01/S05, Flyway V1–V5 (chờ review/merge); xem [handoff B2](handoffs/B2.md).
@@ -23,7 +25,7 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | UI01-C1 | 3 | UI01-A, C1 | DONE | [Handoff](handoffs/UI01-C1.md): S05 workbench responsive 360/768/1280, focus dialog; 19 frontend +1 browser +83 backend tests pass; nhánh `feat/ui01-c1-disaster-ui`, chờ review/merge |
 | D1 | 4 | B2, C1 | TODO | Rescue backend/DB race protection |
 | B3 | 2 | B1, UI01-A; B2/D1 để hoàn tất | TODO | S02/S03 theo shared design system |
-| C2 | 3 | B2, C1, UI01-A | TODO | S04 theo shared design system |
+| C2 | 3 | B2, C1, UI01-A | DONE trên nhánh; chờ review nhóm/merge | [Handoff C2](handoffs/C2.md): S04 route AUTHORITY, filters/pagination/detail/approve/reject; nền 173a9a4 chứa B2/UI01-C1; 32 frontend tests, 9 browser tests và 83 backend tests pass; Citizen UI chờ B3 |
 | D2 | 4 | D1, UI01-A | TODO | S06 theo shared design system |
 | A1 | 1 | UI01-A; audit lại khi B2/D1 merge | TODO | Security/shared behavior; UI foundation thuộc UI01-A |
 | A2 | 1 | UI01-A; hoàn tất UI runtime và X2/CI | TODO | Docker/frontend/CI |
