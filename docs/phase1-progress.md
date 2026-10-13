@@ -1,9 +1,13 @@
 # Tiến độ Pha 1
 
-Cập nhật 10/10/2026 sau đối chiếu main `ca3751d`, triển khai nhánh B2 và UI01-C1. Đây là bảng trạng thái, không phải kế hoạch riêng.
+Cập nhật 13/10/2026 sau đối chiếu main `173a9a4`, triển khai nhánh B2, UI01-C1 và D2. Đây là bảng trạng thái, không phải kế hoạch riêng.
 **DONE không đồng nghĩa đã review/merge** hay toàn bộ 15 APIs/6 screens đã implemented.
-Nhánh B2 từ main `ca3751d` có E01–E11 và S01/S05, Flyway V1–V5 (chờ review/merge); xem [handoff B2](handoffs/B2.md).
-Nhánh UI01-C1 từ B2 `2814b4f` đã cải tạo S05 và chờ review/merge; xem [handoff UI01-C1](handoffs/UI01-C1.md).
+Nhánh B2 từ main `ca3751d` có E01–E11 và S01/S05, Flyway V1–V5; code B2 đã là
+ancestor của main qua UI01-C1, còn [handoff B2](handoffs/B2.md) giữ evidence lịch sử.
+Nhánh UI01-C1 từ B2 `2814b4f` đã cải tạo S05 và đã merge vào main tại `173a9a4`; xem
+[handoff UI01-C1](handoffs/UI01-C1.md).
+Nhánh D2 `feat/d2-rescue-ui` được tạo từ main `173a9a4`; S06 đã dựng theo contract E12–E15,
+nhưng D1 chưa có runtime implementation trên main; xem [handoff D2](handoffs/D2.md).
 Xem [P00 handoff](handoffs/P00.md) và [kế hoạch/dependencies](PROMPTS_PHA_1_4_NGUOI.md).
 
 **Bổ sung 09/10/2026 — F00 nền tảng chạy được:** hoàn tất readiness/liveness,
@@ -24,7 +28,7 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | D1 | 4 | B2, C1 | TODO | Rescue backend/DB race protection |
 | B3 | 2 | B1, UI01-A; B2/D1 để hoàn tất | TODO | S02/S03 theo shared design system |
 | C2 | 3 | B2, C1, UI01-A | TODO | S04 theo shared design system |
-| D2 | 4 | D1, UI01-A | TODO | S06 theo shared design system |
+| D2 | 4 | D1, UI01-A | IN_PROGRESS | [Handoff](handoffs/D2.md): S06 workbench + E12–E15 client, 25 frontend tests; runtime/browser chờ D1 merge |
 | A1 | 1 | UI01-A; audit lại khi B2/D1 merge | TODO | Security/shared behavior; UI foundation thuộc UI01-A |
 | A2 | 1 | UI01-A; hoàn tất UI runtime và X2/CI | TODO | Docker/frontend/CI |
 | UI01-B | 1 + owners | B3, C2, D2, UI01-C1 | TODO | Audit đồng nhất/accessibility đủ 6 màn hình; gate trước X1 |
@@ -34,10 +38,11 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | C3 | 3 | X1; bổ sung X2/D3 | TODO | Tài liệu/rubric/demo |
 | A3 | 1 + nhóm | X2, C3, D3, UI01-B và mọi task trước | TODO | Audit cuối; không tuyên bố Pha 1 DONE khi thiếu evidence |
 
-P00/P01/B1/C1/UI01-A đã tích hợp. B2 và UI01-C1 hoàn tất trên nhánh riêng, chờ review/merge.
+P00/P01/B1/C1/UI01-A/B2/UI01-C1 đã tích hợp trên main.
 Có thể giao A1/A2 lượt đầu (người 1) theo catalog, trên nhánh/clone riêng. B3 phần gửi/xem đã đủ
 dependency nhưng người 2 cần tự sắp lịch với B2; B3 chỉ DONE sau B2/D1. C2 đợi B2;
-D1 đợi B2; D2 đợi D1. Chưa đủ điều kiện chạy UI01-B/X1/X2/A3.
+D1 đợi B2; D2 đã dựng phần UI trên nhánh riêng nhưng còn chờ D1 để kiểm thử runtime.
+Chưa đủ điều kiện chạy UI01-B/X1/X2/A3.
 Chỉ thực hiện prompt được giao; bảng này không tự giao hoặc khởi chạy task tiếp theo.
 
 ## Rà soát tài liệu 10/10/2026
