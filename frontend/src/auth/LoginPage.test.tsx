@@ -28,8 +28,23 @@ describe('Login', () => {
       .mockResolvedValueOnce(new Response(JSON.stringify(user)))
     vi.stubGlobal('fetch', fetcher)
     mount(); await fillAndSubmit()
+    if (role === 'CITIZEN') {
+    expect(await screen.findByRole('heading', { name: 'Báo cáo sự cố' })).toBeVisible()
+  } else {
     expect(await screen.findByRole('heading', { name: 'Đã đăng nhập' })).toBeVisible()
-    expect(fetcher.mock.calls.map(call => call[0])).toEqual(['/api/auth/login', '/api/auth/me'])
+  }
+   expect(fetcher.mock.calls.slice(0, 2).map(call => call[0])).toEqual([
+    '/api/auth/login',
+    '/api/auth/me'
+  ])
+
+  if (role === 'CITIZEN') {
+    await waitFor(() => {
+      expect(fetcher.mock.calls.map(call => call[0])).toContain(
+        '/api/reports?page=0&size=10&sort=createdAt%2Cdesc'
+      )
+    })
+  }
     expect(session.snapshot().user).toEqual(user)
     expect(Boolean(screen.queryByRole('link', { name: 'Thảm họa' }))).toBe(role === 'AUTHORITY')
     expect(localStorage.length).toBe(0)
