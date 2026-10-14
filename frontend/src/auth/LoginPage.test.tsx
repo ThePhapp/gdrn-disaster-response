@@ -29,7 +29,7 @@ describe('Login', () => {
     vi.stubGlobal('fetch', fetcher)
     mount(); await fillAndSubmit()
     if (role === 'CITIZEN') {
-    expect(await screen.findByRole('heading', { name: 'Báo cáo sự cố' })).toBeVisible()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Báo cáo sự cố' })).toBeVisible()
   } else {
     expect(await screen.findByRole('heading', { name: 'Đã đăng nhập' })).toBeVisible()
   }

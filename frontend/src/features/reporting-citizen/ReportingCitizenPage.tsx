@@ -1,6 +1,6 @@
 
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../shared/api'
 import { EmptyState, ErrorMessage, Field, Loading, PageHeader } from '../../shared/components'
 import {
@@ -315,53 +315,87 @@ function ReportList({
 
 export function ReportingCitizenPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const isCreatePage = location.pathname === '/reports/new'
   const [selected, setSelected] = useState<Report>()
+
+    const handleCreated = (report: Report) => {
+    setSelected(report)
+    navigate('/my-reports')
+  }
 
   return (
     <main className="reporting-citizen-page">
       <PageHeader
         eyebrow="GDRN · NGƯỜI DÂN"
-        title="Báo cáo sự cố"
-        description="Gửi thông tin sự cố và theo dõi trạng thái xử lý."
+        title={isCreatePage ? 'Tạo báo cáo mới' : 'Báo cáo sự cố'}
+        description={
+          isCreatePage
+            ? 'Cung cấp mô tả và tọa độ để đội xử lý xác định vị trí.'
+            : 'Theo dõi trạng thái và quản lý các báo cáo sự cố của bạn.'
+        }
       />
 
-      <div className="reporting-citizen-layout">
-        <section className="reporting-citizen-card" aria-labelledby="create-report-title">
+      {isCreatePage ? (
+        <section
+          className="reporting-citizen-card"
+          aria-labelledby="create-report-title"
+        >
           <h2 id="create-report-title">Tạo báo cáo mới</h2>
-          <p className="muted">Cung cấp mô tả và tọa độ để đội xử lý xác định vị trí.</p>
-          <CreateReportForm onCreated={report => {
-            setSelected(report)
-            navigate('/my-reports')
-          }} />
+          <CreateReportForm onCreated={handleCreated} />
         </section>
-
-        <div className="reporting-citizen-card">
-          {selected && (
-            <p role="status">
-              Báo cáo vừa tạo: <strong>{selected.id}</strong>
-            </p>
-          )}
-          <ReportList
-                onSelect={report => setSelected(report)}
-                onWithdrawn={reportId => {
-                    setSelected(current => current?.id === reportId ? undefined : current)
-                }}
+      ) : (
+        <div className="reporting-citizen-layout">
+          <section className="reporting-citizen-card">
+            <ReportList
+              onSelect={report => setSelected(report)}
+              onWithdrawn={reportId => {
+                setSelected(current =>
+                  current?.id === reportId ? undefined : current,
+                )
+              }}
             />
-          {selected && (
-            <aside className="reporting-citizen-detail" aria-live="polite">
-              <h3>Chi tiết báo cáo</h3>
-              <p><strong>Mã báo cáo:</strong> {selected.id}</p>
-              <p><strong>Loại:</strong> {selected.type}</p>
-              <p><strong>Trạng thái:</strong> <ReportStatus status={selected.status} /></p>
-              <p>{selected.description}</p>
-              <p><strong>Tọa độ:</strong> {selected.latitude}, {selected.longitude}</p>
-            </aside>
-          )}
-          <button type="button" className="secondary" onClick={() => navigate('/reports/new')}>
-            Mở biểu mẫu tạo báo cáo
-          </button>
+          </section>
+
+          <section className="reporting-citizen-card">
+            {selected ? (
+              <aside
+                className="reporting-citizen-detail"
+                aria-live="polite"
+              >
+                <h2>Chi tiết báo cáo</h2>
+                <p>
+                  <strong>Mã báo cáo:</strong> {selected.id}
+                </p>
+                <p>
+                  <strong>Loại:</strong> {selected.type}
+                </p>
+                <p>
+                  <strong>Trạng thái:</strong>{' '}
+                  <ReportStatus status={selected.status} />
+                </p>
+                <p>{selected.description}</p>
+                <p>
+                  <strong>Tọa độ:</strong> {selected.latitude},{' '}
+                  {selected.longitude}
+                </p>
+              </aside>
+            ) : (
+              <EmptyState>
+                Chọn một báo cáo để xem chi tiết.
+              </EmptyState>
+            )}
+
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => navigate('/reports/new')}
+            >
+              Tạo báo cáo mới
+            </button>
+          </section>
         </div>
-      </div>
+      )}
     </main>
   )
 }

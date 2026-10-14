@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -44,6 +45,14 @@ const page = (items: Report[] = [report]): ReportPage => ({
   totalPages: items.length ? 1 : 0,
 })
 
+const renderAt = (path: '/reports/new' | '/my-reports') => {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <ReportingCitizenPage />
+    </MemoryRouter>,
+  )
+}
+
 describe('ReportingCitizenPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -53,7 +62,7 @@ describe('ReportingCitizenPage', () => {
   })
 
   it('loads the citizen report list and shows status', async () => {
-    render(<ReportingCitizenPage />)
+    renderAt('/my-reports')
 
     expect(await screen.findByText(report.description)).toBeVisible()
     expect(screen.getByText('Đang chờ xác minh')).toBeVisible()
@@ -67,7 +76,7 @@ describe('ReportingCitizenPage', () => {
   it('shows an empty state when the citizen has no reports', async () => {
     mocks.list.mockResolvedValueOnce(page([]))
 
-    render(<ReportingCitizenPage />)
+    renderAt('/my-reports')
 
     expect(await screen.findByText('Bạn chưa có báo cáo nào.')).toBeVisible()
   })
@@ -75,7 +84,7 @@ describe('ReportingCitizenPage', () => {
   it('shows a recoverable error when loading reports fails', async () => {
     mocks.list.mockRejectedValueOnce(new Error('network'))
 
-    render(<ReportingCitizenPage />)
+    renderAt('/my-reports')
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Không thể kết nối máy chủ. Vui lòng thử lại.',
@@ -84,7 +93,7 @@ describe('ReportingCitizenPage', () => {
 
   it('validates description and coordinates before sending', async () => {
     const user = userEvent.setup()
-    render(<ReportingCitizenPage />)
+    renderAt('/reports/new')
 
     await user.click(screen.getByRole('button', { name: 'Gửi báo cáo' }))
 
@@ -96,7 +105,7 @@ describe('ReportingCitizenPage', () => {
 
   it('submits a valid report and navigates to my reports', async () => {
     const user = userEvent.setup()
-    render(<ReportingCitizenPage />)
+    renderAt('/reports/new')
 
     await user.type(
       screen.getByLabelText('Mô tả tình huống'),
@@ -115,14 +124,13 @@ describe('ReportingCitizenPage', () => {
       })
     })
     expect(mocks.navigate).toHaveBeenCalledWith('/my-reports')
-    expect(await screen.findByRole('status')).toHaveTextContent(report.id)
   })
 
   it('shows an error when creating a report fails', async () => {
     const user = userEvent.setup()
     mocks.create.mockRejectedValueOnce(new Error('network'))
 
-    render(<ReportingCitizenPage />)
+    renderAt('/reports/new')
 
     await user.type(screen.getByLabelText('Mô tả tình huống'), 'Có ngập nước.')
     await user.type(screen.getByLabelText('Vĩ độ (latitude)'), '21.0285')
@@ -137,7 +145,7 @@ describe('ReportingCitizenPage', () => {
 
   it('does not withdraw a report when confirmation is cancelled', async () => {
     const user = userEvent.setup()
-    render(<ReportingCitizenPage />)
+    renderAt('/my-reports')
 
     await screen.findByText(report.description)
     await user.click(screen.getByRole('button', { name: 'Rút báo cáo' }))
@@ -151,7 +159,7 @@ describe('ReportingCitizenPage', () => {
 
   it('withdraws a pending report and reloads the list', async () => {
     const user = userEvent.setup()
-    render(<ReportingCitizenPage />)
+    renderAt('/my-reports')
 
     await screen.findByText(report.description)
     await user.click(screen.getByRole('button', { name: 'Rút báo cáo' }))
@@ -180,7 +188,7 @@ describe('ReportingCitizenPage', () => {
     }),
     )
 
-    render(<ReportingCitizenPage />)
+    renderAt('/my-reports')
 
     await screen.findByText(report.description)
     await user.click(screen.getByRole('button', { name: 'Rút báo cáo' }))
