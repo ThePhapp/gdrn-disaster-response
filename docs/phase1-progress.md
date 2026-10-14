@@ -1,13 +1,13 @@
 # Tiến độ Pha 1
 
-Cập nhật 13/10/2026 sau đối chiếu main `173a9a4`, triển khai nhánh B2, UI01-C1 và D2. Đây là bảng trạng thái, không phải kế hoạch riêng.
+Cập nhật 14/10/2026 sau đối chiếu main `e380d68`, triển khai D1 và hoàn tất D2 trên nhánh `feat/d2-rescue-ui`. Đây là bảng trạng thái, không phải kế hoạch riêng.
 **DONE không đồng nghĩa đã review/merge** hay toàn bộ 15 APIs/6 screens đã implemented.
 Nhánh B2 từ main `ca3751d` có E01–E11 và S01/S05, Flyway V1–V5; code B2 đã là
 ancestor của main qua UI01-C1, còn [handoff B2](handoffs/B2.md) giữ evidence lịch sử.
 Nhánh UI01-C1 từ B2 `2814b4f` đã cải tạo S05 và đã merge vào main tại `173a9a4`; xem
 [handoff UI01-C1](handoffs/UI01-C1.md).
-Nhánh D2 `feat/d2-rescue-ui` được tạo từ main `173a9a4`; S06 đã dựng theo contract E12–E15,
-nhưng D1 chưa có runtime implementation trên main; xem [handoff D2](handoffs/D2.md).
+Nhánh D1 đã merge vào main tại `e380d68`; nhánh D2 merge main qua `5ebfc9b`,
+S06 đã nối runtime E12–E15 và browser flow pass; xem [handoff D2](handoffs/D2.md).
 Xem [P00 handoff](handoffs/P00.md) và [kế hoạch/dependencies](PROMPTS_PHA_1_4_NGUOI.md).
 
 **Bổ sung 09/10/2026 — F00 nền tảng chạy được:** hoàn tất readiness/liveness,
@@ -23,12 +23,12 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | B1 | 2 | P01; C1 migration trước B1 | DONE | [Handoff](handoffs/B1.md): E07–E09, V4, security production, ownership/PostGIS/upgrade/snapshot tests; local smoke pass; radius/verify/delete thuộc B2 |
 | C1 | 3 | P01 | DONE | [Handoff](handoffs/C1.md): E03–E06/S05, V3, DisasterQuery; integration retest 62 backend +15 frontend +4 browser tests pass; list snapshot đã sửa theo P00 |
 | UI01-A | 1 | P00, P01, B1, C1 | DONE | [Handoff](handoffs/UI01-A.md): shared theme/primitives + S01; đã merge PR #6 tại `78f164b` (implementation `7445913`); evidence 62 backend/17 frontend/8 browser tests; S05 patch giao UI01-C1 |
-| B2 | 2 | B1, C1 | DONE | [Handoff](handoffs/B2.md): E10/E11, E08 radius, ReportingQuery, V5; 83 backend tests pass; nhánh feat/b2-report-verification, chờ review/merge |
-| UI01-C1 | 3 | UI01-A, C1 | DONE | [Handoff](handoffs/UI01-C1.md): S05 workbench responsive 360/768/1280, focus dialog; 19 frontend +1 browser +83 backend tests pass; nhánh `feat/ui01-c1-disaster-ui`, chờ review/merge |
-| D1 | 4 | B2, C1 | TODO | Rescue backend/DB race protection |
+| B2 | 2 | B1, C1 | DONE | [Handoff](handoffs/B2.md): E10/E11, E08 radius, ReportingQuery, V5; code đã là ancestor của main |
+| UI01-C1 | 3 | UI01-A, C1 | DONE | [Handoff](handoffs/UI01-C1.md): S05 workbench responsive 360/768/1280, focus dialog; đã merge vào main tại `173a9a4` |
+| D1 | 4 | B2, C1 | DONE | [Handoff](handoffs/D1.md): E12–E15, V6, JDBC persistence, authorization và concurrency race tests; đã merge main tại `e380d68` |
 | B3 | 2 | B1, UI01-A; B2/D1 để hoàn tất | TODO | S02/S03 theo shared design system |
 | C2 | 3 | B2, C1, UI01-A | TODO | S04 theo shared design system |
-| D2 | 4 | D1, UI01-A | IN_PROGRESS | [Handoff](handoffs/D2.md): S06 workbench + E12–E15 client, 25 frontend tests; runtime/browser chờ D1 merge |
+| D2 | 4 | D1, UI01-A | DONE | [Handoff](handoffs/D2.md): S06 workbench + E12–E15 client, 38 frontend tests, 1 E2E browser test, full backend verify 109 tests; nhánh `feat/d2-rescue-ui` chờ review/merge |
 | A1 | 1 | UI01-A; audit lại khi B2/D1 merge | TODO | Security/shared behavior; UI foundation thuộc UI01-A |
 | A2 | 1 | UI01-A; hoàn tất UI runtime và X2/CI | TODO | Docker/frontend/CI |
 | UI01-B | 1 + owners | B3, C2, D2, UI01-C1 | TODO | Audit đồng nhất/accessibility đủ 6 màn hình; gate trước X1 |
@@ -38,10 +38,11 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | C3 | 3 | X1; bổ sung X2/D3 | TODO | Tài liệu/rubric/demo |
 | A3 | 1 + nhóm | X2, C3, D3, UI01-B và mọi task trước | TODO | Audit cuối; không tuyên bố Pha 1 DONE khi thiếu evidence |
 
-P00/P01/B1/C1/UI01-A/B2/UI01-C1 đã tích hợp trên main.
+P00/P01/B1/C1/UI01-A/B2/UI01-C1/D1 đã tích hợp trên main. D2 đã hoàn tất acceptance
+trên nhánh riêng, chờ review/merge.
 Có thể giao A1/A2 lượt đầu (người 1) theo catalog, trên nhánh/clone riêng. B3 phần gửi/xem đã đủ
 dependency nhưng người 2 cần tự sắp lịch với B2; B3 chỉ DONE sau B2/D1. C2 đợi B2;
-D1 đợi B2; D2 đã dựng phần UI trên nhánh riêng nhưng còn chờ D1 để kiểm thử runtime.
+không mở UI01-B/X1/X2/A3 trước khi các task dependency còn lại có evidence.
 Chưa đủ điều kiện chạy UI01-B/X1/X2/A3.
 Chỉ thực hiện prompt được giao; bảng này không tự giao hoặc khởi chạy task tiếp theo.
 
