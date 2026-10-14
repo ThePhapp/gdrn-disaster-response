@@ -1,0 +1,271 @@
+
+.reporting-citizen-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.reporting-citizen-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.reporting-citizen-card {
+  min-width: 0;
+  padding: 24px;
+  background: var(--gdrn-surface, #fff);
+  border: 1px solid var(--gdrn-border, #d6e0e8);
+  border-radius: 16px;
+}
+
+.reporting-citizen-card h2,
+.reporting-citizen-detail h3 {
+  margin-top: 0;
+  color: var(--gdrn-ink, #10243a);
+}
+
+.report-form,
+.report-form__field {
+  display: grid;
+  gap: 8px;
+}
+
+.report-form {
+  gap: 20px;
+}
+
+.report-form__field label {
+  font-weight: 600;
+}
+
+.report-form input,
+.report-form select,
+.report-form textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  color: var(--gdrn-ink, #10243a);
+  background: var(--gdrn-surface, #fff);
+  border: 1px solid var(--gdrn-border, #d6e0e8);
+  border-radius: 8px;
+  font: inherit;
+}
+
+.report-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.report-form input:focus-visible,
+.report-form select:focus-visible,
+.report-form textarea:focus-visible,
+.reporting-citizen-page button:focus-visible {
+  outline: 3px solid var(--gdrn-ocean, #247ba0);
+  outline-offset: 2px;
+}
+
+.report-form__coordinates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.report-field-error {
+  margin: 0;
+  color: var(--gdrn-critical, #c83f45);
+  font-size: 0.9rem;
+}
+
+.report-field-hint,
+.muted {
+  color: var(--gdrn-muted, #506578);
+}
+
+.report-form button,
+.reporting-citizen-page button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.report-form button {
+  color: white;
+  background: var(--gdrn-ocean, #247ba0);
+}
+
+.reporting-citizen-page button.secondary {
+  color: var(--gdrn-ink, #10243a);
+  background: var(--gdrn-canvas, #f4f7fa);
+  border: 1px solid var(--gdrn-border, #d6e0e8);
+}
+
+.reporting-citizen-page button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.report-list {
+  display: grid;
+  gap: 16px;
+}
+
+.report-list__heading,
+.report-list__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.report-list__heading h2 {
+  margin-bottom: 0;
+}
+
+.report-list__items {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.report-list__item {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  background: var(--gdrn-surface, #fff);
+  border: 1px solid var(--gdrn-border, #d6e0e8) !important;
+}
+
+.report-list__item-main {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.report-list__item-main span {
+  overflow-wrap: anywhere;
+  font-weight: 400;
+}
+
+.report-list__item-main small {
+  color: var(--gdrn-muted, #506578);
+  font-weight: 400;
+}
+
+.report-status {
+  display: inline-block;
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.report-status--pending {
+  color: #80500b;
+  background: #fff2cc;
+}
+
+.report-status--verified {
+  color: #176344;
+  background: #dff5e8;
+}
+
+.report-status--rejected {
+  color: #9b2c31;
+  background: #fde8e8;
+}
+
+.reporting-citizen-detail {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--gdrn-border, #d6e0e8);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 768px) {
+  .reporting-citizen-page {
+    padding: 16px;
+  }
+
+  .reporting-citizen-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .reporting-citizen-card {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .report-form__coordinates {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .report-list__item {
+    flex-direction: column;
+  }
+
+  .report-list__pagination {
+    flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reporting-citizen-page *,
+  .reporting-citizen-page *::before,
+  .reporting-citizen-page *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+.report-list__item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.report-list__item-row > .report-list__item {
+  flex: 1;
+  min-width: 0;
+}
+
+.report-withdraw-confirm {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: 0.75rem;
+  background: var(--color-surface, #fff);
+}
+
+.report-withdraw-confirm h3 {
+  margin-top: 0;
+}
+
+.report-withdraw-confirm__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.report-withdraw-confirm button:focus-visible,
+.report-list__item-row button:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 3px;
+}
