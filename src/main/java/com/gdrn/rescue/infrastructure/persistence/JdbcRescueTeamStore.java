@@ -115,7 +115,7 @@ public class JdbcRescueTeamStore implements RescueTeamRepository {
                                WHERE m.team_id = t.id AND m.status IN ('ASSIGNED', 'IN_PROGRESS')
                            ) THEN 'BUSY' ELSE 'AVAILABLE' END AS availability
                     FROM rescue_teams t
-                    """ + where + " ORDER BY btrim(t.name) " + order + ", t.id ASC LIMIT :limit OFFSET :offset";
+                    """ + where + " ORDER BY btrim(t.name) COLLATE \"C\" " + order + ", t.id ASC LIMIT :limit OFFSET :offset";
 
             List<RescueTeamSummary> items = jdbc.query(selectSql, params, (rs, rowNum) -> new RescueTeamSummary(
                     rs.getObject("id", UUID.class),

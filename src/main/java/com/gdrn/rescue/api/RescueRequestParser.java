@@ -54,12 +54,12 @@ final class RescueRequestParser {
     }
 
     static Optional<UUID> optionalUuid(String value, String field) {
-        if (value == null || value.isBlank()) return Optional.empty();
+        if (value == null) return Optional.empty();
         return Optional.of(uuid(value, field));
     }
 
     static int parseInteger(String value, int defaultValue, String field) {
-        if (value == null || value.isBlank()) return defaultValue;
+        if (value == null) return defaultValue;
         if (!value.matches("^[0-9]+$")) {
             throw new InvalidRescueInput(field);
         }
@@ -85,7 +85,7 @@ final class RescueRequestParser {
     }
 
     static Optional<MissionStatus> optionalMissionStatus(String value) {
-        if (value == null || value.isBlank()) return Optional.empty();
+        if (value == null) return Optional.empty();
         try {
             return Optional.of(MissionStatus.valueOf(value));
         } catch (IllegalArgumentException ex) {
