@@ -21,7 +21,7 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | UI01-A | 1 | P00, P01, B1, C1 | DONE | [Handoff](handoffs/UI01-A.md): shared theme/primitives + S01; đã merge PR #6 tại `78f164b` (implementation `7445913`); evidence 62 backend/17 frontend/8 browser tests; S05 patch giao UI01-C1 |
 | B2 | 2 | B1, C1 | DONE | [Handoff](handoffs/B2.md): E10/E11, E08 radius, ReportingQuery, V5; 83 backend tests pass; nhánh feat/b2-report-verification, chờ review/merge |
 | UI01-C1 | 3 | UI01-A, C1 | DONE | [Handoff](handoffs/UI01-C1.md): S05 workbench responsive 360/768/1280, focus dialog; 19 frontend +1 browser +83 backend tests pass; nhánh `feat/ui01-c1-disaster-ui`, chờ review/merge |
-| D1 | 4 | B2, C1 | TODO | Rescue backend/DB race protection |
+| D1 | 4 | B2, C1 | DONE | [Handoff](handoffs/D1.md): E12–E15, V6, DemoRescueTeamBootstrap; concurrency test 2 tx barrier (same team 409 TEAM_BUSY, same report 409 REPORT_ALREADY_ASSIGNED, status atomic 409 INVALID_TRANSITION); citizen isolation; clean verify 48 tests pass |
 | B3 | 2 | B1, UI01-A; B2/D1 để hoàn tất | TODO | S02/S03 theo shared design system |
 | C2 | 3 | B2, C1, UI01-A | TODO | S04 theo shared design system |
 | D2 | 4 | D1, UI01-A | TODO | S06 theo shared design system |

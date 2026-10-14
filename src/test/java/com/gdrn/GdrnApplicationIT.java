@@ -231,7 +231,7 @@ class GdrnApplicationIT {
         assertThat(response.getBody().path("info").path("title").asText())
                 .isEqualTo("Global Disaster Response Network API");
         assertThat(response.getBody().path("info").path("version").asText()).isEqualTo("Phase 1");
-        assertThat(response.getBody().path("paths").size()).isEqualTo(7);
+        assertThat(response.getBody().path("paths").size()).isEqualTo(10);
         assertThat(response.getBody().at("/paths/~1api~1auth~1login/post/operationId").asText()).isEqualTo("E01");
         assertThat(response.getBody().at("/paths/~1api~1auth~1me/get/operationId").asText()).isEqualTo("E02");
         assertThat(response.getBody().at("/paths/~1api~1disasters/get/operationId").asText()).isEqualTo("E03");
@@ -241,11 +241,17 @@ class GdrnApplicationIT {
         assertThat(response.getBody().at("/paths/~1api~1reports/post/operationId").asText()).isEqualTo("E07");
         assertThat(response.getBody().at("/paths/~1api~1reports/get/operationId").asText()).isEqualTo("E08");
         assertThat(response.getBody().at("/paths/~1api~1reports~1{id}/get/operationId").asText()).isEqualTo("E09");
+        assertThat(response.getBody().at("/paths/~1api~1reports~1{id}~1verification/patch/operationId").asText()).isEqualTo("E10");
+        assertThat(response.getBody().at("/paths/~1api~1reports~1{id}/delete/operationId").asText()).isEqualTo("E11");
+        assertThat(response.getBody().at("/paths/~1api~1rescue-teams/get/operationId").asText()).isEqualTo("E12");
+        assertThat(response.getBody().at("/paths/~1api~1rescue-missions/post/operationId").asText()).isEqualTo("E13");
+        assertThat(response.getBody().at("/paths/~1api~1rescue-missions/get/operationId").asText()).isEqualTo("E14");
+        assertThat(response.getBody().at("/paths/~1api~1rescue-missions~1{id}~1status/patch/operationId").asText()).isEqualTo("E15");
         Set<String> operations = new HashSet<>();
         response.getBody().path("paths").forEach(path -> path.forEach(operation -> {
             if (operation.has("operationId")) operations.add(operation.path("operationId").asText());
         }));
-        assertThat(operations).containsExactlyInAnyOrder("E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09", "E10", "E11");
+        assertThat(operations).containsExactlyInAnyOrder("E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09", "E10", "E11", "E12", "E13", "E14", "E15");
         assertThat(response.getBody().at("/paths/~1api~1reports/post/security/0/bearerAuth").isArray()).isTrue();
         assertThat(response.getBody().at("/paths/~1api~1reports/get/parameters").toString()).contains("radiusMeters").doesNotContain("ownerId");
         assertThat(response.getBody().at("/components/securitySchemes/bearerAuth/scheme").asText()).isEqualTo("bearer");
@@ -269,7 +275,9 @@ class GdrnApplicationIT {
                 .isEqualTo(HttpStatus.FORBIDDEN);
         String token = login("one@example.test").path("accessToken").asText();
         assertError(call(HttpMethod.GET, "/actuator/health/db", null, token), 403, "FORBIDDEN");
-        for (String path : List.of("/api/rescue-missions", "/api/auth/register", "/api/auth/refresh", "/api/auth/logout")) {
+        assertError(call(HttpMethod.GET, "/api/rescue-teams", null, token), 403, "FORBIDDEN");
+        assertError(call(HttpMethod.POST, "/api/rescue-missions", "{}", token), 403, "FORBIDDEN");
+        for (String path : List.of("/api/auth/register", "/api/auth/refresh", "/api/auth/logout")) {
             assertError(call(HttpMethod.GET, path, null, token), 403, "FORBIDDEN");
             assertError(call(HttpMethod.POST, path, "{}", token), 403, "FORBIDDEN");
         }
