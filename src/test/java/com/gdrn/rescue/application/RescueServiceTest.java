@@ -157,6 +157,20 @@ class RescueServiceTest {
     }
 
     @Test
+    void reportConflictTakesPriorityOverTeamConstraintFailure() {
+        UUID reportId = UUID.randomUUID();
+        UUID teamId = UUID.randomUUID();
+        when(reportLookup.findById(reportId))
+                .thenReturn(Optional.of(new ReportSummary(reportId, citizen.id(), true, true)));
+        when(teams.findById(teamId)).thenReturn(Optional.of(new RescueTeam(teamId, "Team 1")));
+        when(missions.existsByReportId(reportId)).thenReturn(false, true);
+        when(missions.insert(any())).thenThrow(new TeamBusy("Concurrent assignment"));
+
+        assertThatThrownBy(() -> service.createMission(authority, reportId, teamId))
+                .isInstanceOf(ReportAlreadyAssigned.class);
+    }
+
+    @Test
     void listMissionsEnforcesCitizenReportIdOwnership() {
         UUID reportId = UUID.randomUUID();
 

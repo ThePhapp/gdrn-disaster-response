@@ -40,11 +40,11 @@ public final class RescueService {
         if (page < 0 || page > 1000000) throw new InvalidRescueInput("page");
         if (size < 1 || size > 100) throw new InvalidRescueInput("size");
 
-        if (sort != null && !sort.isBlank() && !"name,asc".equals(sort) && !"name,desc".equals(sort)) {
+        if (sort != null && !"name,asc".equals(sort) && !"name,desc".equals(sort)) {
             throw new InvalidRescueInput("sort");
         }
 
-        if (availability != null && !availability.isBlank() && !"AVAILABLE".equals(availability) && !"BUSY".equals(availability)) {
+        if (availability != null && !"AVAILABLE".equals(availability) && !"BUSY".equals(availability)) {
             throw new InvalidRescueInput("availability");
         }
 
@@ -73,12 +73,25 @@ public final class RescueService {
             throw new ReportAlreadyAssigned("Report already has an assigned mission");
         }
         if (missions.hasActiveMissionForTeam(teamId)) {
+            // Another assignment can commit after the first report check.
+            if (missions.existsByReportId(reportId)) {
+                throw new ReportAlreadyAssigned("Report already has an assigned mission");
+            }
             throw new TeamBusy("Team already has an active mission");
         }
 
         Instant now = clock.instant().truncatedTo(ChronoUnit.MICROS);
         Mission mission = Mission.assign(UUID.randomUUID(), report.id(), team.id(), now);
-        return missions.insert(mission);
+        try {
+            return missions.insert(mission);
+        } catch (TeamBusy conflict) {
+            // The failed insert has rolled back; report conflict takes priority
+            // regardless of which unique constraint the database detected first.
+            if (missions.existsByReportId(reportId)) {
+                throw new ReportAlreadyAssigned("Report already has an assigned mission");
+            }
+            throw conflict;
+        }
     }
 
     public MissionPageResult listMissions(RescueActor actor, Optional<UUID> reportId, Optional<UUID> teamId,
@@ -86,7 +99,7 @@ public final class RescueService {
         if (page < 0 || page > 1000000) throw new InvalidRescueInput("page");
         if (size < 1 || size > 100) throw new InvalidRescueInput("size");
 
-        if (sort != null && !sort.isBlank() && !"createdAt,desc".equals(sort) && !"createdAt,asc".equals(sort)) {
+        if (sort != null && !"createdAt,desc".equals(sort) && !"createdAt,asc".equals(sort)) {
             throw new InvalidRescueInput("sort");
         }
 
