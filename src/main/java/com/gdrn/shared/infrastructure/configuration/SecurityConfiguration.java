@@ -45,6 +45,10 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.DELETE, "/api/reports/*").hasRole("CITIZEN")
                         .requestMatchers(HttpMethod.GET, "/api/reports", "/api/reports/*")
                         .hasAnyRole("CITIZEN", "AUTHORITY")
+                        .requestMatchers(HttpMethod.GET, "/api/rescue-teams").hasRole("AUTHORITY")
+                        .requestMatchers(HttpMethod.POST, "/api/rescue-missions").hasRole("AUTHORITY")
+                        .requestMatchers(HttpMethod.GET, "/api/rescue-missions").hasAnyRole("CITIZEN", "AUTHORITY")
+                        .requestMatchers(HttpMethod.PATCH, "/api/rescue-missions/*/status").hasRole("AUTHORITY")
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(oauth -> oauth
                         .bearerTokenResolver(request -> "POST".equals(request.getMethod()) && "/api/auth/login".equals(request.getServletPath())
