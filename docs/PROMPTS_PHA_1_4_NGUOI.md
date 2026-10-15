@@ -17,6 +17,13 @@ chạy toàn bộ liên tiếp. Prompt UI01 nằm trong phụ lục
 `docs/design/GDRN_UI01_PROMPTS.md` nhưng chỉ được chạy theo dependency và trạng thái
 catalog tại file này; phụ lục không phải kế hoạch thay thế.
 
+**Bổ sung 14/10/2026 — UI vị trí:** C2 đã merge PR #9 (`120dec8`), D1 đã merge
+PR #11 (`e380d68`) và sửa review tại `888996a`. Kế hoạch/prompt mở rộng bản đồ nằm
+trong mục [UI vị trí sau C2/D1](#ui-vi-tri-sau-c2-d1) của chính catalog này.
+Đây là phạm vi đã được yêu cầu lập kế hoạch, **chưa triển khai**, không tạo task ID
+mới hoặc chạy lại các slice đã hoàn tất. Ngoại lệ bản đồ dưới đây thay các lệnh
+cấm map tổng quát trong prompt cũ, chỉ cho chọn/xem điểm và minh họa bán kính.
+
 Trạng thái và commit đã tích hợp được cập nhật tập trung tại
 [phase1-progress.md](phase1-progress.md). Không dùng lịch D1–D15 hoặc một handoff cũ
 để suy ra task đang mở; kiểm tra bảng tiến độ và code của nhánh làm việc trước.
@@ -81,7 +88,7 @@ trước khi nhóm bắt đầu code; không xóa lịch sử quyết định ho
 | Disaster | Tạo/xem/sửa, ACTIVE → RESOLVED | Lifecycle nhiều bước, tự phát hiện thảm họa |
 | Reporting | Gửi/xem/duyệt/từ chối/rút; lọc bán kính | Upload, phát hiện trùng, kiểm duyệt tự động |
 | Rescue | Đội được seed, giao nhiệm vụ, cập nhật trạng thái | CRUD đội, tính ưu tiên, phân công tự động, RescueRequest riêng |
-| Geo | Điểm tọa độ, truy vấn PostGIS theo mét | Map tương tác, polygon, route, risk engine |
+| Geo | Điểm tọa độ, truy vấn PostGIS theo mét; UI chọn/xem điểm và vòng bán kính theo bổ sung 14/10 | Bản đồ tổng hợp, polygon, route, risk engine, tìm địa chỉ/geocoding |
 | Resource/Alert | Chưa triển khai | Kho, phân bổ, thông báo/realtime/SMS |
 
 Không thêm broker, cache server, microservices, event bus hoặc abstraction chưa có nhu cầu.
@@ -652,7 +659,8 @@ Tiến độ rescue lấy từ E14?reportId=... khi có D1, không thêm endpoin
 Reporting gọi ngược Rescue. Hiển thị report chưa có mission là trạng thái bình thường.
 Giữ auth/token/client ở module chung, không lưu token hoặc báo cáo riêng vào storage
 không cần thiết. Clear private UI state khi logout/401; xử lý 404/409 và refresh.
-Không tạo map/upload/dashboard riêng. Đảm bảo dùng được trên màn hình hẹp và bàn phím.
+Chỉ dùng map chọn/xem vị trí theo bổ sung UI vị trí trong catalog; không tạo map riêng,
+upload/dashboard. Đảm bảo dùng được trên màn hình hẹp và bàn phím.
 Tái sử dụng semantic tokens/shared components từ UI01-A, thể hiện Citizen flow ít áp
 lực nhận thức; không nhân bản theme, global CSS, API client hoặc tự thêm UI library.
 Kiểm tra 360/768/1280px, focus-visible, reduced motion và tương phản theo design spec.
@@ -714,7 +722,8 @@ không tạo hai active missions; citizen đọc được tiến độ qua UI B3
 Giữ layout/router/client convention và responsive. Chạy frontend checks/backend verify,
 ghi handoff D2 cùng routes, actions và kết quả demo. Không tự sửa Reporting internals.
 Tổ chức theo Authority Operational Workbench và dùng shared tokens/components; không
-nhân bản theme/client hay thêm dashboard/map/drag-drop. Kiểm tra 360/768/1280px,
+nhân bản theme/client hay thêm dashboard/map tổng hợp/drag-drop phân công. Map vị trí
+chỉ đọc theo bổ sung UI vị trí trong catalog. Kiểm tra 360/768/1280px,
 keyboard/focus, reduced motion và tương phản theo design spec.
 ```
 
@@ -794,7 +803,7 @@ ghi task rõ cho owner khi liên quan business, không sửa mọi thứ tập t
 
 Kiểm tra routes/nav, error messages, fields/timezones, pagination/dropdown nhiều trang,
 không console error/API giả/secret hoặc internal entity trên HTTP. Sửa chặn demo trước,
-không thêm charts/map/animation. API chưa có UI phải được hoàn thiện trong screen owner.
+không thêm charts/map ngoài phạm vi UI vị trí/animation. API chưa có UI phải được hoàn thiện trong screen owner.
 Tạo docs/qa/phase1-integration-checklist.md và cập nhật progress/handoff X1 với evidence
 thật. Nếu không điều khiển được browser thì không tự đánh dấu UI pass; để checklist
 cho nhóm chạy và chỉ báo phần đã kiểm tra bằng công cụ.
@@ -916,6 +925,171 @@ Chỉ đánh dấu Pha 1 DONE nếu toàn bộ acceptance gate bắt buộc có 
 Nếu bị chặn thì ghi phần đã đạt và blocker; không gọi completion khi hết thời gian.
 Ghi handoff A3 và báo cáo bàn giao ngắn cho nhóm, không thực hiện Pha 2.
 ```
+
+<a id="ui-vi-tri-sau-c2-d1"></a>
+## UI vị trí sau C2/D1 — kế hoạch và prompt bổ sung 14/10/2026
+
+### Nền hiện tại và giới hạn
+
+Nền đã review `888996a`: S01, S04 (C2), S05 (C1/UI01-C1), E01–E15 và V1–V6 có code.
+B3/S02–S03 và D2/S06 chưa có; không lấy việc D1 hoàn tất làm bằng chứng UI Rescue đã có.
+[Review tích hợp C2](qa/c2-post-merge-review.md) ghi checks và giới hạn thực tế.
+S04 hiện nhập tâm/bán kính bằng số; S05 nhập tọa độ bằng số; chi tiết chỉ hiện cặp số.
+Giữ cả ba cách nhập/chọn/xem ở cùng feature, không tạo route bản đồ thứ bảy.
+
+Phạm vi được lập kế hoạch: Leaflet + raster tiles, một điểm được chọn, preview vị trí,
+vòng tròn bán kính. Không routing, geocoding/autocomplete/reverse geocoding, GPS tự động,
+cluster, heatmap, polygon, theo dõi đội, bản đồ tất cả reports hoặc cache/offline tiles.
+Không thêm backend endpoint/schema/migration; không đổi 15 operations/6 screens,
+roles, DTO, lifecycle, PostGIS radius hay module boundaries. Đây là UI Pha 1, không
+phải quyết định chuyển kiến trúc Pha 2. Không hứa ngày giao khi chưa có capacity nhóm.
+
+### Thứ tự, owner và điều kiện hoàn tất
+
+Các hàng là phần tiếp tục của task hiện có, không phải task catalog thứ hai.
+
+| Thứ tự | Task / owner | Đầu vào | Kết quả / gate |
+| --- | --- | --- | --- |
+| 1 | UI01-A bổ sung / Người 1, phối hợp Người 3 | Shared UI đã merge; S05 là consumer thật | Component tọa độ dùng chung, dependency/tiles config, tích hợp tối thiểu S05 để chứng minh; review bởi Người 3 |
+| 2 | UI01-C1 + C2 bổ sung / Người 3 | Phần UI01-A bổ sung đã merge | S05 chọn điểm + preview; S04 chọn tâm/vòng radius và preview detail; giữ toàn bộ acceptance cũ; handoff cập nhật |
+| 3 | B3 / Người 2 | B1/B2/D1/UI01-A đã merge; component map đã merge trước phần map | S02 dùng picker, S03 preview chỉ đọc; hoàn tất gửi/xem/rút/mission như B3 gốc |
+| 4 | D2 / Người 4 | D1/B2/UI01-A; component map đã merge trước phần map | S06 preview report từ API Reporting; phân công/chuyển trạng thái vẫn theo D2 gốc |
+| 5 | UI01-B → X1 → X2 / owners gốc | B3/D2 và phần bổ sung UI01-A/UI01-C1/C2 đã merge | Audit đủ 6 màn hình + fallback map; flow thật xuyên suốt và regression CI |
+
+B3/D2 có thể làm phần nghiệp vụ trước khi component map sẵn sàng, không cần đợi để
+bắt đầu task. A1/A2 tiếp tục theo dependency cũ; không chạy lại bootstrap hoặc dừng
+hoàn thiện màn hình để mở rộng bản đồ. Phần baseline DONE giữ evidence lịch sử;
+phần bổ sung TODO chỉ chuyển DONE khi có tests/handoff/merge evidence riêng.
+UI01-B/X1 phải kiểm tra thêm phần bổ sung; không kéo lại dependency cho baseline.
+
+### Thiết kế kỹ thuật và hành vi bắt buộc
+
+- Người 1 sở hữu dependency/lockfile và `frontend/src/shared/location/` (chỉ tạo khi
+  implement với consumer thật); không đưa business/API client của module vào đó.
+  Dùng Leaflet trực tiếp với React lifecycle hoặc wrapper tương thích đã kiểm chứng;
+  pin phiên bản trong lockfile sau kiểm tra Node/React hiện tại. Không dùng CDN script.
+- Model component: giá trị `{latitude, longitude}` hoặc chưa chọn; callback đổi điểm,
+  disabled/readOnly, tùy chọn `radiusMeters`. Tên public cuối cùng ghi trong handoff.
+  Parent giữ state; không có hai nguồn tọa độ độc lập. Hủy event/map instance khi
+  unmount, không tạo trùng trong StrictMode; resize đúng khi panel/dialog xuất hiện.
+- Giữ hai input số có label làm fallback và hỗ trợ keyboard. Click map cập nhật
+  điểm, input hợp lệ cập nhật ghim. Không biến chuỗi rỗng thành 0; (0,0) là tọa độ hợp lệ.
+  Giữ WGS84 và miền lat/lon P00; không đảo trục hoặc làm tròn dữ liệu lúc submit.
+  Tâm bản đồ mặc định chỉ để xem, **không tự trở thành vị trí đã chọn**.
+- S05: chọn điểm trong form create/edit ACTIVE; preview trong detail; RESOLVED giữ
+  read-only và expectedVersion/409 hiện tại. Không tự lưu khi kéo/bấm ghim.
+- S04: map tâm lọc có state draft; nút Áp dụng mới gọi E08, reset page=0; Xóa bộ lọc
+  xóa đủ status/tâm/radius và ghim/vòng. Khi paginate giữ filter đã áp dụng, không
+  gửi tọa độ draft. Radius integer 1–100000 mét; nếu UI dùng km phải chuyển chính xác
+  sang `radiusMeters`. Vòng tròn chỉ minh họa; backend PostGIS quyết định kết quả.
+- Preview report được chọn là read-only, tách biệt tâm filter. Đổi selection/filter
+  phải bỏ marker dữ liệu cũ; không dựng bản đồ toàn bộ dataset từ một trang E08.
+  Không tự chọn disaster bằng khoảng cách. E03 selector vẫn ACTIVE + phân trang.
+- S06 lấy tọa độ từ report E09 hoặc dữ liệu E08 đã tải; không thêm tọa độ vào Mission
+  DTO hay giả định đội có vị trí GPS. Chỉ hiển thị link S04 → S06 khi route D2 thật
+  đã có; mang `reportId`, kiểm tra lại E09/quyền/status, không tự phân công.
+- Tile failure/timeout/mất mạng: hiển thị trạng thái + retry, giữ input, quyết định,
+  pagination và các API còn hoạt động. Lazy-load map, không mount map ở từng list item.
+  Không gửi token, reporterId, nội dung báo cáo hay thông tin tài khoản sang tile host.
+  Map SDK/tiles không đi qua shared authenticated `/api` client.
+- Config public dự kiến `VITE_MAP_TILE_URL`, `VITE_MAP_ATTRIBUTION`; chỉ phục vụ tile
+  provider, không thay API_PROXY_TARGET. Không nhúng secret vào biến VITE. Browser
+  tải tiles trực tiếp; HTTPS, attribution luôn nhìn thấy, dùng cache HTTP tiêu chuẩn.
+  OSM public tiles chỉ dùng demo lưu lượng nhỏ theo policy, không SLA/bulk download.
+  A2 ghi cấu hình build frontend và cách đổi provider; không thêm proxy/backend API.
+- Trạng thái vị trí riêng theo form/session; clear khi logout/401. Bàn phím, focus,
+  touch, 360/768/1280px, reduced motion và tương phản giữ design system. Không để
+  map bắt cuộn/tab làm người dùng không tiếp tục được form; không nhúng text report
+  trực tiếp làm HTML popup. Dữ liệu không có địa chỉ thì không bịa nhãn địa chỉ.
+
+### Ma trận giữ chức năng và acceptance
+
+| Luồng | Acceptance sau thay UI |
+| --- | --- |
+| Auth/S01 | Login cả hai role, landing/nav, reload/logout, expiry/401; không lộ state phiên trước |
+| S05/E03–E06 | List/detail, create/edit, ACTIVE→RESOLVED, version conflict, selector/pagination vẫn hoạt động |
+| S04/E08–E10 | Status + đủ bộ radius, reset/page; chọn disaster ngoài trang 1; verify/reject Unicode; confirmation/double-submit |
+| S04 lỗi/race | 403 khóa quyết định; 404 bỏ dữ liệu bị rút; 409 refetch, không success giả hoặc retry write; response cũ không ghi đè selection |
+| B3/E07–E11/E14 | Gửi tọa độ đã xác nhận; ownership/rút PENDING; report chưa mission hiển thị bình thường; map không chặn tiến độ |
+| D2/E12–E15 | Chọn report/team đủ pagination; conflicts, ASSIGNED→IN_PROGRESS→COMPLETED; sau RESOLVED mission cũ vẫn hoàn tất |
+| Map | Click/input đồng bộ, blank/0/biên/invalid, radius đúng mét, draft vs applied, read-only, tile fail, unmount/logout/StrictMode |
+
+Unit/component tests có thể mock map/tiles, phải assert payload API không đổi. Browser
+acceptance dùng backend/DB thật; chỉ được stub tile transport trong test lỗi map,
+không mock API nghiệp vụ. Chạy riêng smoke online xác nhận tiles và attribution,
+không tính tile provider uptime vào benchmark backend. Có test fallback khi chặn
+tile host nhưng submit/filter/decision vẫn dùng được. Nếu thiếu browser/network
+thì ghi NOT RUN, không bỏ kiểm tra hoặc coi placeholder map là PASS.
+Mỗi owner chạy frontend typecheck/test/build, browser liên quan và `mvnw.cmd clean verify`.
+X2 ghép regression map vào CI sau khi implementation có; giữ suite hiện tại.
+
+### Prompt copy chạy theo thứ tự
+
+**Người 1 — tiếp tục UI01-A, phần component vị trí**
+
+```text
+Tiếp tục UI01-A của GDRN với phần UI vị trí tại mục ui-vi-tri-sau-c2-d1 trong
+docs/PROMPTS_PHA_1_4_NGUOI.md. Đọc AGENTS.md, progress, design system, review C2
+docs/qa/c2-post-merge-review.md và code hiện tại; không chạy lại UI01-A baseline.
+Sở hữu shared/location, dependency/lockfile/config cần thiết; phối hợp Người 3
+tích hợp tối thiểu vào form S05 làm consumer thật. Thực hiện đúng model controlled,
+manual fallback, read-only/radius, lifecycle cleanup và tiles policy trong catalog.
+Không đổi backend/DTO, auth/theme hoặc thêm route. Kiểm tra phiên bản tương thích,
+lazy loading, lỗi tiles và khả năng thao tác bằng bàn phím. Test input/click/blank/0,
+StrictMode/unmount và form payload; chạy checks bắt buộc. Cập nhật handoff UI01-A
+với API component, config public, consumer, tests và giới hạn; progress phân biệt
+baseline DONE với phần bổ sung. Dừng sau phần được giao, không tự làm B3/D2.
+```
+
+**Người 3 — tiếp tục UI01-C1 và C2 đã merge**
+
+```text
+Tiếp tục UI01-C1/C2 với phần UI vị trí trong catalog duy nhất. C2 đã merge PR #9
+120dec8; nền review có D1 và fix 888996a. Đọc AGENTS.md, design system, review C2,
+handoff component vị trí của UI01-A; kiểm tra component đã merge trước khi dùng.
+Sở hữu disaster/reporting-operations; không regenerate hai workbench đã hoạt động.
+Hoàn thiện S05 picker/preview, S04 tâm draft/vòng radius và detail preview read-only.
+Giữ ma trận acceptance cũ và mới trong catalog: filter/page/reset, selector ACTIVE
+ngoài trang 1, confirm/verify/reject, 403/404/409, stale requests, version, auth/focus.
+Không nối S06 placeholder; khi D2 có route thật thì phối hợp Người 4 ghép reportId.
+Map failure không khóa nghiệp vụ. Không đổi E03–E10, DTO hoặc backend PostGIS.
+Chạy unit/typecheck/build, browser thật toàn bộ suite cũ + regression map và backend
+clean verify. Ghi screenshots, PASS/FAIL/NOT RUN, handoff UI01-C1/C2 và progress phần
+bổ sung; không ghi đè evidence lịch sử hoặc tự đánh dấu B3/D2/UI01-B hoàn tất.
+```
+
+**Người 2 — B3 với UI vị trí**
+
+```text
+Thực hiện B3 gốc trong catalog và áp dụng mục UI vị trí sau C2/D1. B1/B2/D1 đã có
+trên nền hiện tại; đọc code và handoff để xác nhận, không fake API. Sau khi component
+UI01-A vị trí đã merge, dùng trong S02 và preview S03; trước đó có thể làm nghiệp vụ.
+Không tạo map library/client thứ hai. Giữ gửi/xem/rút PENDING, E14 bắt buộc reportId,
+ownership, empty mission, reset khi logout và fallback nhập tay. Không thêm GPS,
+geocoding, upload, API hoặc route ngoài B3. Kiểm thử citizen UI thật cùng C2 và D1,
+map lỗi vẫn gửi/lọc/xem được; chạy checks, cập nhật handoff B3 và progress trung thực.
+```
+
+**Người 4 — D2 với preview vị trí**
+
+```text
+Thực hiện D2 gốc và phần UI vị trí trong catalog. Đọc AGENTS.md, handoff D1/C2,
+component UI01-A và contracts; không thay backend Rescue đã merge. Hoàn thiện S06
+trước, dùng preview chỉ đọc cho report được chọn khi component vị trí sẵn sàng.
+Phối hợp Người 3 ghép link S04→S06?reportId=... sau khi route thật có; tải E09 và
+kiểm tra lại trạng thái/quyền, không phân công tự động. Tọa độ thuộc report, không
+thêm tọa độ đội/Mission, không routing/live tracking. Giữ pagination, conflict,
+lifecycle và thông báo reload/refetch. Kiểm tra chuỗi C2 verify→D2 assign→complete→
+B3 progress khi B3 có UI; phần chưa có ghi rõ API-only/NOT RUN. Chạy checks và cập
+nhật handoff D2/progress; không khởi chạy benchmark hoặc UI01-B thay owner.
+```
+
+UI01-B/X1/X2 tiếp tục dùng prompt gốc và ma trận acceptance bổ sung ở trên, không
+chạy trước dependency. Nguồn kỹ thuật cho implementation (kiểm tra lại khi chọn version):
+[Leaflet](https://leafletjs.com/examples/quick-start/),
+[OSM tile policy](https://operations.osmfoundation.org/policies/tiles/),
+[Nominatim policy](https://operations.osmfoundation.org/policies/nominatim/)
+(public Nominatim không dùng cho autocomplete; geocoding chưa thuộc scope).
 
 ## Mẫu tiếp tục task đang dở (không tính là prompt tính năng mới)
 

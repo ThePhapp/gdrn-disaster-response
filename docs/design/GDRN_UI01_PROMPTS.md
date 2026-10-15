@@ -72,7 +72,8 @@ loading/empty/error, responsive ở 360/768/1280px, keyboard và focus.
 
 Tái sử dụng shared components và tokens từ UI01-A; không nhân bản CSS/client.
 Giữ nguyên E03–E06, route thực tế, role permissions, trạng thái ACTIVE → RESOLVED,
-request/response, dữ liệu API thật và error semantics. Không thêm map, dashboard,
+request/response, dữ liệu API thật và error semantics. Map chỉ theo phần bổ sung UI
+vị trí 14/10 trong catalog; không thêm map ngoài phạm vi đó, dashboard,
 API, dữ liệu giả hoặc module mới. Không sửa shared router/theme nếu chưa phối hợp
 người 1. Không thay backend, security, migration, OpenAPI.
 
@@ -90,7 +91,8 @@ Khi thực hiện task B3/C2/D2 theo prompt trong catalog chính, đọc thêm
 Xây màn hình mới theo đúng design tokens, shared components và phân biệt
 Citizen/Authority của GDRN Crisis Command. Giữ nguyên API, role, route,
 file ownership, acceptance và dependency của prompt gốc.
-Không thêm map/dashboard/số liệu giả chỉ để tăng độ đẹp. Không tự sửa theme,
+Chỉ thêm map chọn/xem điểm và vòng radius theo mục UI vị trí 14/10 trong catalog;
+không thêm map tổng hợp/dashboard/số liệu giả chỉ để tăng độ đẹp. Không tự sửa theme,
 router hoặc feature người khác. Nếu phát hiện thiếu shared component, gửi
 đề xuất cụ thể cho người 1 và ghi blocker/handoff. Test giao diện và API thật.
 ```
@@ -99,6 +101,8 @@ router hoặc feature người khác. Nếu phát hiện thiếu shared componen
 
 ```text
 Thực hiện UI01-B chỉ sau khi S01–S06, UI01-C1 và các task UI có liên quan đã merge.
+Bao gồm phần UI vị trí bổ sung của UI01-A/UI01-C1/C2; kiểm tra fallback nhập tay,
+tiles lỗi, focus, attribution và toàn bộ ma trận regression trong catalog.
 Đọc AGENTS.md, P00, Quy tắc chung, docs/design/GDRN_UI_DESIGN_SYSTEM.md,
 handoffs UI01-A/UI01-C1 và handoffs của B3/C2/D2. Kiểm tra code thật.
 

@@ -4,11 +4,21 @@
 
 Global Disaster Response Network is a university simulation of disaster response
 coordination. It is not an operational emergency response system. The repository
-currently provides the foundation plus P01 Identity/login, C1 Disaster and B1/B2 Reporting: one Java 21 Spring Boot
+currently provides the foundation plus P01 Identity/login, C1 Disaster, B1/B2 Reporting and D1 Rescue: one Java 21 Spring Boot
 application, database infrastructure, technical endpoints, tests, Docker and CI.
 Plain Java Identity `User`, `EmailAddress`, `Role` and their unit tests also exist.
 P01 adds login/me, user/credential persistence and the login SPA. C1 adds the Disaster
-lifecycle, E03–E06, V3 persistence, published query contract and S05. Rescue remains unimplemented; see [handoff C1](../handoffs/C1.md).
+lifecycle, E03–E06, V3 persistence, published query contract and S05. D1 adds E12–E15,
+V6 teams/missions, unique report assignment, partial unique active-team assignment
+and conditional mission transitions. C2 adds S04, merged via `120dec8`.
+
+Runtime checked on `888996a` (14/10/2026): E01–E15 and S01/S04/S05 exist;
+B3/S02–S03 and D2/S06 remain planned. The limited location-map UI is planned in the
+[single catalog](../PROMPTS_PHA_1_4_NGUOI.md#ui-vi-tri-sau-c2-d1), not implemented.
+It preserves the modular monolith, API/schema and PostGIS filtering: browser-only
+point selection/preview and radius visualization, with manual input fallback.
+See [C2 integration review](../qa/c2-post-merge-review.md) for current evidence;
+dated B2/UI01 notes below preserve their original branch context.
 
 B1/C1 integration (2026-10-09): E07–E09 now run with centralized JWT security and
 Flyway V4 after Disaster V3. Reporting stores WGS84 geography through an explicit
@@ -55,8 +65,8 @@ flowchart LR
     Backend --> DB[(PostgreSQL + PostGIS)]
 ```
 
-The main application, shared technical configuration, Identity/Disaster/Reporting slices,
-login SPA, S05 and remaining module package-info files currently exist. The responsibilities below include the
+The main application, shared technical configuration, Identity/Disaster/Reporting/Rescue slices,
+login SPA, S04/S05 and remaining module package-info files currently exist. The responsibilities below include the
 long-term backlog; only the four MVP modules are scheduled for business implementation.
 
 | Package under `com.gdrn` | Planned responsibility |
@@ -167,8 +177,9 @@ Resource Server/Nimbus verifies HS256/issuer/audience/time/required claims; key 
 environment-only. No generated user, Basic/form/cookie auth, registration or refresh.
 CSRF ignores /api/** for Bearer-only auth; other paths retain protection. Session
 creation is stateless and request caching is off. JSON errors and no-store headers
-are consistent. Swagger exposes E01–E11 via checked-in Identity, Disaster and Reporting contract
-slices; future modules must extend them as their real controllers merge.
+are consistent. D1 permits AUTHORITY team reads/mission writes and CITIZEN/AUTHORITY
+mission reads, with report visibility checked in the Rescue application.
+Swagger exposes E01–E15 via checked-in Identity, Disaster, Reporting and Rescue slices.
 
 API extracts UUID and role from verified Jwt into plain application arguments;
 IdentityService uses account/password/token ports, JPA/BCrypt/Nimbus are outer
@@ -186,7 +197,7 @@ they do not duplicate auth/client/theme. New shared abstractions require a real 
 ## Testing and CI
 
 `mvnw test` runs domain/application/configuration tests and ArchUnit through Surefire without Docker. `mvnw verify` also runs
-Failsafe's `GdrnApplicationIT` and `ReportingIT` using isolated PostGIS Testcontainers and real HTTP
+Failsafe's `GdrnApplicationIT`, `ReportingIT` and `RescueIT` using isolated PostGIS Testcontainers and real HTTP
 server. It verifies application startup, Flyway history, PostGIS spatial behavior,
 public technical endpoints and denied requests, readiness refusal and a real
 database outage/recovery while liveness stays UP. Missing Docker fails integration
@@ -208,8 +219,9 @@ are dated evidence in handoffs, not guarantees for a later commit.
 
 ## Phase 1 and Phase 2
 
-Reporting UI, Rescue, the expanded A1 security audit and benchmark workloads remain
-planned; P01/C1/B1/B2 and shared UI01-A are implemented.
+Citizen Reporting UI, Rescue UI, the expanded A1 security audit and benchmark workloads
+remain planned; P01/C1/B1/B2/C2/D1 and shared UI01-A are implemented. Location-map UI
+is a planned addition to existing task ownership, not a new backend module.
 Internal events may be introduced in-process; delivery, transaction timing and
 failure semantics are not decided or implemented. Examples such as
 `IncidentReportSubmitted`, `DisasterDetected`, `DisasterEscalated`, `RescueRequested`,
