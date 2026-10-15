@@ -39,7 +39,7 @@ test('real role navigation and forbidden route preserve citizen session; logout 
   await page.getByLabel('Email', { exact: true }).fill(email)
   await page.getByLabel('Mật khẩu', { exact: true }).fill(password)
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Đã đăng nhập' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Báo cáo sự cố' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Thảm họa', exact: true })).toHaveCount(0)
   // SPA navigation keeps the in-memory session, so this exercises RoleGuard rather than reload.
   await page.evaluate(() => { history.pushState(null, '', '/operations/disasters'); dispatchEvent(new PopStateEvent('popstate')) })

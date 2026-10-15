@@ -6,6 +6,7 @@
 .report-filter-status textarea { resize: vertical; }
 .report-filter-status select:focus-visible, .report-filter-status textarea:focus-visible { outline: 3px solid var(--gdrn-focus); outline-offset: 2px; }
 .report-filter-hint { grid-column: 1 / -1; margin: calc(-1 * var(--gdrn-space-3)) 0 0; color: var(--gdrn-muted); font-size: var(--gdrn-text-sm); }
+.report-filter-map { grid-column: 1 / -1; }
 .report-filters > button { width: 100%; }
 .report-list-error { display: flex; align-items: center; gap: var(--gdrn-space-3); }
 .report-list-error .notice { flex: 1; }
@@ -37,6 +38,7 @@
 .report-facts div { min-width: 0; padding: var(--gdrn-space-3); background: var(--gdrn-canvas); }
 .report-facts dt { color: var(--gdrn-muted); font-size: var(--gdrn-text-xs); }
 .report-facts dd { margin: var(--gdrn-space-1) 0 0; font-weight: 600; overflow-wrap: anywhere; }
+.report-detail__map { margin-bottom: var(--gdrn-space-6); }
 .report-id { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: var(--gdrn-text-sm); }
 .report-decision { display: grid; gap: var(--gdrn-space-4); margin-top: var(--gdrn-space-6); }
 .report-decision h3 { margin: 0; font-size: var(--gdrn-text-base); }

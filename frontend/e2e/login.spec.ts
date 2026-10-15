@@ -14,10 +14,10 @@ for (const prefix of ['DEMO_CITIZEN_ONE', 'DEMO_CITIZEN_TWO', 'DEMO_AUTHORITY'])
     await expect(page.getByRole('alert')).toContainText('Email hoặc mật khẩu không đúng.')
     await page.getByLabel('Mật khẩu', { exact: true }).fill(password)
     await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click()
-    const landingHeading = prefix === 'DEMO_AUTHORITY' ? 'Duyệt báo cáo sự cố' : 'Đã đăng nhập'
+    const landingHeading = prefix === 'DEMO_AUTHORITY' ? 'Duyệt báo cáo sự cố' : 'Báo cáo sự cố'
     await expect(page.getByRole('heading', { name: landingHeading })).toBeVisible()
     if (prefix === 'DEMO_AUTHORITY') await expect(page).toHaveURL(/\/operations\/reports$/)
-    else await expect(page.getByText(email, { exact: true })).toBeVisible()
+    else await expect(page).toHaveURL(/\/my-reports$/)
     expect(await page.evaluate(() => localStorage.length + sessionStorage.length)).toBe(0)
     await page.reload()
     await expect(page.getByRole('heading', { name: 'Đăng nhập GDRN' })).toBeVisible()

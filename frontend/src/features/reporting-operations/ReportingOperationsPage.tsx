@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError } from '../../shared/api'
 import { EmptyState, ErrorMessage, Loading, PageHeader } from '../../shared/components'
+import { LocationMap } from '../../shared/location'
 import type { Disaster } from '../disaster/disaster-api'
 import { typeLabels } from '../disaster/DisasterBadges'
 import { DecisionDialog } from './DecisionDialog'
@@ -151,6 +152,8 @@ export function ReportingOperationsPage() {
               {selected.rejectionReason && <div><dt>Lý do từ chối</dt><dd>{selected.rejectionReason}</dd></div>}
               {selected.rejectedAt && <div><dt>Từ chối lúc</dt><dd>{dates.format(new Date(selected.rejectedAt))}</dd></div>}
             </dl>
+            <LocationMap value={{ latitude: selected.latitude, longitude: selected.longitude }} readOnly
+              label={`Vị trí báo cáo ${selected.id}`} className="report-detail__map" />
             {selected.status === 'PENDING' && !forbidden ? <section className="report-decision" aria-label="Quyết định">
               {!decision ? <><h3>Quyết định</h3><div className="report-actions">
                 <button type="button" disabled={locked} onClick={() => { setDecision('verify'); setFieldError('') }}>Xác minh báo cáo</button>

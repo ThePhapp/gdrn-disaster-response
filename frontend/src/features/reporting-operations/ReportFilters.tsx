@@ -1,5 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { Field } from '../../shared/components'
+import { LocationMap, type LocationValue } from '../../shared/location'
 import type { ReportFilters as Filters, ReportStatus } from './reporting-api'
 import { reportStatuses, statusLabels } from './presentation'
 
@@ -8,6 +9,25 @@ export function ReportFilters({ disabled, onApply }: { disabled: boolean; onAppl
   const [coordinates, setCoordinates] = useState({ lat: '', lon: '', radiusMeters: '' })
   const [errors, setErrors] = useState<Partial<typeof coordinates>>({})
   const form = useRef<HTMLFormElement>(null)
+  const latitude = coordinates.lat.trim() === '' ? undefined : Number(coordinates.lat)
+  const longitude = coordinates.lon.trim() === '' ? undefined : Number(coordinates.lon)
+  const location = latitude !== undefined && longitude !== undefined
+    && Number.isFinite(latitude) && latitude >= -90 && latitude <= 90
+    && Number.isFinite(longitude) && longitude >= -180 && longitude <= 180
+    ? { latitude, longitude }
+    : undefined
+  const radius = Number(coordinates.radiusMeters)
+  const radiusMeters = Number.isInteger(radius) && radius >= 1 && radius <= 100000 ? radius : undefined
+
+  function setCoordinate(field: keyof typeof coordinates, value: string) {
+    setCoordinates(current => ({ ...current, [field]: value }))
+    setErrors(current => ({ ...current, [field]: undefined }))
+  }
+
+  function setLocation(value: LocationValue) {
+    setCoordinates(current => ({ ...current, lat: String(value.latitude), lon: String(value.longitude) }))
+    setErrors(current => ({ ...current, lat: undefined, lon: undefined }))
+  }
   function apply(event: FormEvent) {
     event.preventDefault()
     const next: Partial<typeof coordinates> = {}
@@ -37,7 +57,9 @@ export function ReportFilters({ disabled, onApply }: { disabled: boolean; onAppl
     </select></div>
     {(['lat', 'lon', 'radiusMeters'] as const).map(key => <Field key={key} id={`report-filter-${key}`} disabled={disabled}
       label={key === 'lat' ? 'Vĩ độ' : key === 'lon' ? 'Kinh độ' : 'Bán kính (m)'} inputMode={key === 'radiusMeters' ? 'numeric' : 'decimal'}
-      value={coordinates[key]} error={errors[key]} onChange={event => setCoordinates(current => ({ ...current, [key]: event.target.value }))} />)}
+      value={coordinates[key]} error={errors[key]} onChange={event => setCoordinate(key, event.target.value)} />)}
+    <LocationMap value={location} onChange={setLocation} radiusMeters={radiusMeters} disabled={disabled}
+      label="Chọn tâm và xem bán kính lọc" className="report-filter-map" />
     <p className="report-filter-hint">WGS84: vĩ độ −90…90, kinh độ −180…180. Nhập đủ cả ba giá trị để lọc trong bán kính 1–100000 mét.</p>
     <button type="submit" disabled={disabled}>Áp dụng bộ lọc</button>
     <button type="button" className="secondary" disabled={disabled} onClick={() => {

@@ -7,6 +7,19 @@ import { session } from '../../auth/session'
 import { ReportingOperationsPage } from './ReportingOperationsPage'
 import type { Report } from './reporting-api'
 
+vi.mock('../../shared/location', () => ({
+  LocationMap: ({ value, onChange, readOnly, disabled, radiusMeters, label }: {
+    value?: { latitude: number; longitude: number }
+    onChange?: (value: { latitude: number; longitude: number }) => void
+    readOnly?: boolean
+    disabled?: boolean
+    radiusMeters?: number
+    label?: string
+  }) => <button type="button" aria-label={label ?? 'Bản đồ giả lập'} disabled={disabled || readOnly}
+    data-location={value ? `${value.latitude},${value.longitude}` : 'blank'} data-radius={radiusMeters ?? 'blank'}
+    onClick={() => onChange?.({ latitude: 0, longitude: 0 })}>Bản đồ giả lập</button>,
+}))
+
 const original: Report = { id: '00000000-0000-4000-8000-000000000005', reporterId: '00000000-0000-4000-8000-000000000001', type: 'FLOOD', description: 'Nước ngập lối vào', latitude: 21, longitude: 105, status: 'PENDING', createdAt: '2026-10-10T03:00:00Z', updatedAt: '2026-10-10T03:00:00Z' }
 const disaster = { id: '00000000-0000-4000-8000-000000000004', name: 'Lũ miền Bắc', type: 'FLOOD', status: 'ACTIVE' }
 const page = (items: unknown[], index = 0, pages = 1) => ({ items, page: index, size: 20, totalElements: pages === 2 ? 21 : items.length, totalPages: items.length ? pages : 0 })
@@ -48,6 +61,8 @@ async function reject() {
 it('validates complete geography before any request, applies wire filters and clears them', async () => {
   render(<ReportingOperationsPage />)
   await screen.findByRole('button', { name: /Nước ngập lối vào/ })
+  const map = screen.getByRole('button', { name: 'Chọn tâm và xem bán kính lọc' })
+  expect(map).toHaveAttribute('data-location', 'blank')
   await userEvent.type(screen.getByLabelText('Vĩ độ'), '91')
   await userEvent.click(screen.getByRole('button', { name: 'Áp dụng bộ lọc' }))
   expect(fetcher).toHaveBeenCalledTimes(1)
@@ -58,6 +73,8 @@ it('validates complete geography before any request, applies wire filters and cl
   await userEvent.click(screen.getByRole('button', { name: 'Áp dụng bộ lọc' }))
   expect(fetcher).toHaveBeenCalledTimes(1)
   await userEvent.clear(screen.getByLabelText('Bán kính (m)')); await userEvent.type(screen.getByLabelText('Bán kính (m)'), '1000')
+  expect(map).toHaveAttribute('data-location', '0,0')
+  expect(map).toHaveAttribute('data-radius', '1000')
   await userEvent.selectOptions(screen.getByLabelText('Trạng thái'), 'PENDING')
   await userEvent.click(screen.getByRole('button', { name: 'Áp dụng bộ lọc' }))
   await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2))
@@ -66,10 +83,31 @@ it('validates complete geography before any request, applies wire filters and cl
   await userEvent.click(screen.getByRole('button', { name: 'Xóa bộ lọc' }))
   await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(3))
   expect(fetcher.mock.calls[2][0]).not.toContain('radiusMeters')
+  expect(map).toHaveAttribute('data-location', 'blank')
+  expect(map).toHaveAttribute('data-radius', 'blank')
+})
+
+it('keeps the map as draft state, accepts a zero center click and only filters after apply', async () => {
+  render(<ReportingOperationsPage />)
+  await screen.findByRole('button', { name: /Nước ngập lối vào/ })
+  const map = screen.getByRole('button', { name: 'Chọn tâm và xem bán kính lọc' })
+  await userEvent.click(map)
+  expect(screen.getByLabelText('Vĩ độ')).toHaveValue('0')
+  expect(screen.getByLabelText('Kinh độ')).toHaveValue('0')
+  expect(fetcher).toHaveBeenCalledTimes(1)
+  await userEvent.type(screen.getByLabelText('Bán kính (m)'), '2500')
+  expect(map).toHaveAttribute('data-radius', '2500')
+  expect(fetcher).toHaveBeenCalledTimes(1)
+  await userEvent.click(screen.getByRole('button', { name: 'Áp dụng bộ lọc' }))
+  await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2))
+  expect(fetcher.mock.calls[1][0]).toContain('lat=0&lon=0&radiusMeters=2500')
 })
 
 it('requires a disaster, selects beyond the first page, confirms and refreshes list/detail after approval', async () => {
   await openReport()
+  const preview = screen.getByRole('button', { name: `Vị trí báo cáo ${original.id}` })
+  expect(preview).toBeDisabled()
+  expect(preview).toHaveAttribute('data-location', '21,105')
   await userEvent.click(screen.getByRole('button', { name: 'Xác minh báo cáo' }))
   await screen.findByLabelText('Thảm họa đang hoạt động')
   await userEvent.click(screen.getByRole('button', { name: 'Kiểm tra quyết định' }))
