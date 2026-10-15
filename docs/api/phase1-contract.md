@@ -1,9 +1,10 @@
 # Hợp đồng HTTP/UI Pha 1 — P00
 
-Runtime nhánh B2: P01 E01/E02/S01, C1 E03–E06/S05, B1/B2 E07–E11 đã có.
-E08 hỗ trợ đủ lat/lon/radiusMeters cùng các filter trước. YAML giữ baseline đích
-15 operations; Swagger runtime công bố E01–E11. Xem [handoff B2](../handoffs/B2.md)
-cho trạng thái review/merge và kiểm chứng. E12–E15 và S02/S03/S04/S06 chưa có.
+Runtime đối chiếu `888996a` ngày 14/10/2026: E01–E15 và S01/S04/S05 đã có;
+C2 merge `120dec8`, D1 merge `e380d68` + fix `888996a`. E08 hỗ trợ đủ
+lat/lon/radiusMeters cùng các filter trước. YAML giữ baseline đích 15 operations;
+Swagger runtime công bố E01–E15. S02/S03/S06 chưa có; UI bản đồ mới là kế hoạch.
+Xem [review C2](../qa/c2-post-merge-review.md) và [progress](../phase1-progress.md).
 
 Ngày chốt thiết kế: 08/10/2026. Đây là baseline đích; trạng thái runtime được ghi ở
 đầu tài liệu và theo handoff từng task. Chuẩn máy đọc là
@@ -41,7 +42,9 @@ RESPONDER/ADMIN vẫn có trong enum Java, không được seed/cấp quyền/hi
 - Latitude [-90,90], longitude [-180,180], số hữu hạn WGS84. Không đảo thứ tự;
   PostGIS point constructor nhận longitude trước latitude.
 - Không có upload, register, refresh, logout API, CRUD team, dashboard API, separate
-  RescueRequest, alert/resource, event bus, map hay thuật toán ưu tiên.
+  RescueRequest, alert/resource, event bus, map backend API hay thuật toán ưu tiên.
+  Bổ sung UI vị trí 14/10 theo catalog chỉ chọn/xem tọa độ và minh họa bán kính;
+  giữ nguyên wire contract/OpenAPI, không thêm operation hoặc trường dữ liệu.
 
 ## Phân trang, filter và sort
 
