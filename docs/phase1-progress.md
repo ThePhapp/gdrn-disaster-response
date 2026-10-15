@@ -1,6 +1,6 @@
 # Tiến độ Pha 1
 
-Cập nhật 14/10/2026 sau đối chiếu main `e380d68`, triển khai D1 và hoàn tất D2 trên nhánh `feat/d2-rescue-ui`. Đây là bảng trạng thái, không phải kế hoạch riêng.
+Cập nhật 15/10/2026 sau review và sửa D2 trên nhánh `feat/d2-rescue-ui`. Đây là bảng trạng thái, không phải kế hoạch riêng.
 **DONE không đồng nghĩa đã review/merge** hay toàn bộ 15 APIs/6 screens đã implemented.
 Nhánh B2 từ main `ca3751d` có E01–E11 và S01/S05, Flyway V1–V5; code B2 đã là
 ancestor của main qua UI01-C1, còn [handoff B2](handoffs/B2.md) giữ evidence lịch sử.
@@ -28,7 +28,7 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | D1 | 4 | B2, C1 | DONE | [Handoff](handoffs/D1.md): E12–E15, V6, JDBC persistence, authorization và concurrency race tests; đã merge main tại `e380d68` |
 | B3 | 2 | B1, UI01-A; B2/D1 để hoàn tất | TODO | S02/S03 theo shared design system |
 | C2 | 3 | B2, C1, UI01-A | TODO | S04 theo shared design system |
-| D2 | 4 | D1, UI01-A | DONE | [Handoff](handoffs/D2.md): S06 workbench + E12–E15 client, 38 frontend tests, 1 E2E browser test, full backend verify 109 tests; nhánh `feat/d2-rescue-ui` chờ review/merge |
+| D2 | 4 | D1, UI01-A | DONE | [Handoff](handoffs/D2.md): S06 workbench + E12–E15 client; review đã sửa stale async state, 409 recovery và double-submit; 41 frontend tests, 1 E2E browser test, full backend verify 113 tests; nhánh `feat/d2-rescue-ui` chờ merge |
 | A1 | 1 | UI01-A; audit lại khi B2/D1 merge | TODO | Security/shared behavior; UI foundation thuộc UI01-A |
 | A2 | 1 | UI01-A; hoàn tất UI runtime và X2/CI | TODO | Docker/frontend/CI |
 | UI01-B | 1 + owners | B3, C2, D2, UI01-C1 | TODO | Audit đồng nhất/accessibility đủ 6 màn hình; gate trước X1 |

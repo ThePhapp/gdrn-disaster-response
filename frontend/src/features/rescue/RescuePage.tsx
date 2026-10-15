@@ -55,28 +55,51 @@ export function RescuePage() {
   const [teamsError, setTeamsError] = useState('')
   const [teamFilters, setTeamFilters] = useState({ page: 0, size: pageSize, sort: 'name,asc' as const, availability: 'AVAILABLE' as const })
   const panel = useRef<HTMLElement>(null)
+  const missionListRequest = useRef(0)
+  const reportListRequest = useRef(0)
+  const teamListRequest = useRef(0)
+  const reportDetailRequest = useRef(0)
+  const mutationInFlight = useRef(false)
 
   const loadMissions = useCallback(async () => {
+    const request = ++missionListRequest.current
     setListLoading(true); setListError('')
-    try { setMissions(await listMissions(filters)) }
-    catch (error) { setListError(message(error)) }
-    finally { setListLoading(false) }
+    try {
+      const result = await listMissions(filters)
+      if (request === missionListRequest.current) setMissions(result)
+    } catch (error) {
+      if (request === missionListRequest.current) setListError(message(error))
+    } finally {
+      if (request === missionListRequest.current) setListLoading(false)
+    }
   }, [filters])
 
   useEffect(() => { void loadMissions() }, [loadMissions])
 
   const loadReports = useCallback(async () => {
+    const request = ++reportListRequest.current
     setReportsLoading(true); setReportsError('')
-    try { setReports(await listVerifiedReports(reportFilters)) }
-    catch (error) { setReportsError(message(error)) }
-    finally { setReportsLoading(false) }
+    try {
+      const result = await listVerifiedReports(reportFilters)
+      if (request === reportListRequest.current) setReports(result)
+    } catch (error) {
+      if (request === reportListRequest.current) setReportsError(message(error))
+    } finally {
+      if (request === reportListRequest.current) setReportsLoading(false)
+    }
   }, [reportFilters])
 
   const loadTeams = useCallback(async () => {
+    const request = ++teamListRequest.current
     setTeamsLoading(true); setTeamsError('')
-    try { setTeams(await listRescueTeams(teamFilters)) }
-    catch (error) { setTeamsError(message(error)) }
-    finally { setTeamsLoading(false) }
+    try {
+      const result = await listRescueTeams(teamFilters)
+      if (request === teamListRequest.current) setTeams(result)
+    } catch (error) {
+      if (request === teamListRequest.current) setTeamsError(message(error))
+    } finally {
+      if (request === teamListRequest.current) setTeamsLoading(false)
+    }
   }, [teamFilters])
 
   useEffect(() => {
@@ -87,11 +110,17 @@ export function RescuePage() {
   }, [mode, loadReports, loadTeams])
 
   const loadReport = useCallback(async (id: string, fallback?: Report) => {
+    const request = ++reportDetailRequest.current
     setReportError(''); setReportLoading(true)
     if (fallback) setSelectedReport(fallback)
-    try { setSelectedReport(await getReport(id)) }
-    catch (error) { setReportError(message(error)) }
-    finally { setReportLoading(false) }
+    try {
+      const result = await getReport(id)
+      if (request === reportDetailRequest.current) setSelectedReport(result)
+    } catch (error) {
+      if (request === reportDetailRequest.current) setReportError(message(error))
+    } finally {
+      if (request === reportDetailRequest.current) setReportLoading(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -103,6 +132,7 @@ export function RescuePage() {
 
   function changeFilter(next: Partial<MissionFilters>) {
     setFilters(current => ({ ...current, ...next, page: next.page ?? 0 }))
+    reportDetailRequest.current++
     setSelectedMission(undefined); setSelectedReport(undefined); setReportError(''); setMutationError('')
   }
 
@@ -125,8 +155,9 @@ export function RescuePage() {
   }
 
   function startCreate() {
+    reportDetailRequest.current++
     setMode('create'); setSelectedMission(undefined); setSelectedReport(undefined); setSelectedTeam(undefined)
-    setMutationError(''); setReportError(''); setReportFilters(current => ({ ...current, page: 0 })); setTeamFilters(current => ({ ...current, page: 0 }))
+    setReportLoading(false); setMutationError(''); setReportError(''); setReportFilters(current => ({ ...current, page: 0 })); setTeamFilters(current => ({ ...current, page: 0 }))
   }
 
   async function refreshAfterConflict() {
@@ -134,7 +165,8 @@ export function RescuePage() {
   }
 
   async function create() {
-    if (busy || !selectedReport || !selectedTeam) return
+    if (mutationInFlight.current || !selectedReport || !selectedTeam) return
+    mutationInFlight.current = true
     setBusy(true); setMutationError('')
     try {
       const mission = await createMission(selectedReport.id, selectedTeam.id)
@@ -144,12 +176,20 @@ export function RescuePage() {
       requestAnimationFrame(() => panel.current?.focus())
     } catch (error) {
       setMutationError(message(error))
-      if (error instanceof ApiError && error.status === 409) await refreshAfterConflict()
-    } finally { setBusy(false) }
+      if (error instanceof ApiError && error.status === 409) {
+        if (error.problem?.code === 'TEAM_BUSY') setSelectedTeam(undefined)
+        if (['REPORT_ALREADY_ASSIGNED', 'REPORT_NOT_VERIFIED', 'DISASTER_NOT_ACTIVE'].includes(error.problem?.code ?? '')) {
+          reportDetailRequest.current++
+          setSelectedReport(undefined); setReportLoading(false)
+        }
+        await refreshAfterConflict()
+      }
+    } finally { mutationInFlight.current = false; setBusy(false) }
   }
 
   async function transition(status: TransitionStatus) {
-    if (busy || !selectedMission) return
+    if (mutationInFlight.current || !selectedMission) return
+    mutationInFlight.current = true
     setBusy(true); setMutationError('')
     try {
       const mission = await updateMissionStatus(selectedMission.id, status)
@@ -158,8 +198,12 @@ export function RescuePage() {
       requestAnimationFrame(() => panel.current?.focus())
     } catch (error) {
       setMutationError(message(error))
-      if (error instanceof ApiError && error.status === 409) await loadMissions()
-    } finally { setBusy(false) }
+      if (error instanceof ApiError && error.status === 409) {
+        reportDetailRequest.current++
+        setSelectedMission(undefined); setSelectedReport(undefined); setConfirming(undefined); setReportLoading(false)
+        await loadMissions()
+      }
+    } finally { mutationInFlight.current = false; setBusy(false) }
   }
 
   return <section className="rescue-page">

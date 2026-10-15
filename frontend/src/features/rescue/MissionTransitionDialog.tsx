@@ -54,8 +54,8 @@ export function MissionTransitionDialog({ nextStatus, busy, returnFocus, onConfi
       <h2 id="mission-transition-title">{title}</h2>
       <p id="mission-transition-description">{description}</p>
       <div className="rescue-dialog__actions">
-        <button ref={cancel} type="button" className="secondary" onClick={close} aria-disabled={busy}>Quay lại</button>
-        <button type="button" onClick={() => { if (!busy) onConfirm() }} aria-busy={busy} aria-disabled={busy}>
+        <button ref={cancel} type="button" className="secondary" onClick={close} disabled={busy}>Quay lại</button>
+        <button type="button" onClick={onConfirm} aria-busy={busy} disabled={busy}>
           {busy ? 'Đang cập nhật…' : `Xác nhận ${missionStatusLabels[nextStatus].toLowerCase()}`}
         </button>
       </div>

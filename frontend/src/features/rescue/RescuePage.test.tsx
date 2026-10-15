@@ -39,8 +39,8 @@ describe('RescuePage', () => {
     mocks.updateMissionStatus.mockResolvedValue({ ...assigned, status: 'IN_PROGRESS', startedAt: '2026-10-09T10:10:00Z', updatedAt: '2026-10-09T10:10:00Z' })
   })
 
-  function renderPage() {
-    return render(<MemoryRouter initialEntries={['/operations/rescue']}><RescuePage /></MemoryRouter>)
+  function renderPage(entry = '/operations/rescue') {
+    return render(<MemoryRouter initialEntries={[entry]}><RescuePage /></MemoryRouter>)
   }
 
   it('loads missions, filters and advances a mission through confirmation', async () => {
@@ -92,5 +92,49 @@ describe('RescuePage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Đội đã được phân công')
     expect(screen.getByText('Tạo phân công cứu hộ')).toBeVisible()
     expect(mocks.listRescueTeams).toHaveBeenCalledTimes(2)
+    expect(screen.getAllByRole('button', { name: 'Tạo phân công' })[1]).toBeDisabled()
+  })
+
+  it('does not assign a report from a deep link when it is no longer verified', async () => {
+    const pending = { ...report, status: 'PENDING' as const, disasterId: undefined, verifiedAt: undefined }
+    mocks.getReport.mockResolvedValueOnce(pending)
+    renderPage(`/operations/rescue?reportId=${pending.id}`)
+
+    expect(await screen.findByText('Báo cáo không còn ở trạng thái đã xác minh. Hãy chọn báo cáo khác.')).toBeVisible()
+    expect(screen.getAllByRole('button', { name: 'Tạo phân công' })[1]).toBeDisabled()
+  })
+
+  it('clears a stale mission after a transition conflict', async () => {
+    const user = userEvent.setup()
+    mocks.updateMissionStatus.mockRejectedValueOnce(new ApiError(409, {
+      timestamp: '2026-10-09T10:00:00Z', status: 409, code: 'INVALID_TRANSITION',
+      message: 'Invalid mission transition.', path: `/api/rescue-missions/${assigned.id}/status`, fieldErrors: [],
+    }))
+    renderPage()
+    await user.click(await screen.findByRole('button', { name: /Nhiệm vụ 00000000/ }))
+    await user.click(await screen.findByRole('button', { name: 'Bắt đầu thực hiện' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Trạng thái nhiệm vụ đã thay đổi')
+    expect(screen.queryByRole('button', { name: 'Bắt đầu thực hiện' })).not.toBeInTheDocument()
+    expect(screen.getByText('Chọn một nhiệm vụ')).toBeVisible()
+  })
+
+  it('does not let an older report response overwrite the latest mission selection', async () => {
+    const user = userEvent.setup()
+    const secondMission = { ...assigned, id: '00000000-0000-0000-0000-000000000008', reportId: '00000000-0000-0000-0000-000000000009' }
+    const secondReport = { ...report, id: secondMission.reportId, description: 'Báo cáo được chọn sau.' }
+    let resolveFirst!: (value: Report) => void
+    const firstResponse = new Promise<Report>(resolve => { resolveFirst = resolve })
+    mocks.listMissions.mockResolvedValue(page([assigned, secondMission]))
+    mocks.getReport.mockReturnValueOnce(firstResponse).mockResolvedValueOnce(secondReport)
+    renderPage()
+
+    await user.click(await screen.findByRole('button', { name: new RegExp(`Nhiệm vụ 00000000…${assigned.id.slice(-4)}`) }))
+    await user.click(screen.getByRole('button', { name: new RegExp(`Nhiệm vụ 00000000…${secondMission.id.slice(-4)}`) }))
+    expect(await screen.findByText(secondReport.description)).toBeVisible()
+
+    resolveFirst(report)
+    await waitFor(() => expect(screen.queryByText(report.description)).not.toBeInTheDocument())
+    expect(screen.getByText(secondReport.description)).toBeVisible()
   })
 })

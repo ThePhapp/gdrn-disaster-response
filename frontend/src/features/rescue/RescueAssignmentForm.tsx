@@ -30,7 +30,8 @@ export function RescueAssignmentForm({ reports, reportsLoading, reportsError, se
   onSubmit: () => void
   onCancel: () => void
 }) {
-  const canSubmit = Boolean(selectedReport && selectedTeamId) && !busy
+  const reportEligible = selectedReport?.status === 'VERIFIED' && !reportDetailLoading && !reportDetailError
+  const canSubmit = Boolean(reportEligible && selectedTeamId) && !busy
   return <div className="rescue-assignment-form">
     <section className="rescue-picker" aria-labelledby="rescue-report-picker-title">
       <div className="rescue-picker__header"><div><p className="eyebrow">BƯỚC 1</p><h3 id="rescue-report-picker-title">Chọn báo cáo đã xác minh</h3></div>
@@ -53,6 +54,7 @@ export function RescueAssignmentForm({ reports, reportsLoading, reportsError, se
         <div><span className="rescue-fact-label">Nội dung báo cáo</span>
           {reportDetailLoading ? <Loading>Đang tải chi tiết báo cáo…</Loading> : <p>{selectedReport.description}</p>}</div>
         {reportDetailError && <ErrorMessage>{reportDetailError}</ErrorMessage>}
+        {selectedReport.status !== 'VERIFIED' && <ErrorMessage>Báo cáo không còn ở trạng thái đã xác minh. Hãy chọn báo cáo khác.</ErrorMessage>}
         <dl><div><dt>Tọa độ</dt><dd>{selectedReport.latitude}, {selectedReport.longitude}</dd></div>
           <div><dt>Mã báo cáo</dt><dd className="rescue-breakable">{selectedReport.id}</dd></div></dl>
       </div>}
