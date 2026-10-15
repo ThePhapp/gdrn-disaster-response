@@ -20,7 +20,12 @@
 - **CITIZEN (người dân):** nền sáng, dễ đọc, ưu tiên điện thoại, biểu mẫu ít áp lực nhận thức, một hành động chính rõ ràng.
 - **AUTHORITY (cơ quan chức năng):** giao diện điều hành có mật độ thông tin cao hơn; điều hướng xanh navy; bố cục danh sách–chi tiết–thao tác để xử lý nhiều báo cáo/nhiệm vụ.
 
-**Ngoài phạm vi Pha 1:** bản đồ tương tác, biểu đồ, dashboard số liệu, realtime feed, thông báo, upload, đăng nhập mạng xã hội, API/route mới, phân công tự động, tính năng AI. Không dùng dữ liệu giả trong runtime để làm đẹp giao diện. Hình minh họa chỉ mang tính nhận diện, không ngụ ý tính năng đã tồn tại.
+**Bổ sung phạm vi 14/10/2026, chưa triển khai:** cho phép bản đồ chọn/xem một vị trí
+và minh họa bán kính theo [catalog duy nhất](../PROMPTS_PHA_1_4_NGUOI.md#ui-vi-tri-sau-c2-d1).
+Giữ nhập tay, fallback khi tiles lỗi, attribution, keyboard và shared tokens.
+Map chỉ hỗ trợ form/filter/detail, không thay danh sách, quyết định hay API thật.
+
+**Ngoài phạm vi Pha 1:** bản đồ tổng hợp, routing/tracking/geocoding, biểu đồ, dashboard số liệu, realtime feed, thông báo, upload, đăng nhập mạng xã hội, API/route mới, phân công tự động, tính năng AI. Không dùng dữ liệu giả trong runtime để làm đẹp giao diện. Hình minh họa chỉ mang tính nhận diện, không ngụ ý tính năng đã tồn tại.
 
 ## 2. Nguyên tắc thiết kế
 
@@ -104,11 +109,11 @@ Không bắt buộc tạo toàn bộ danh sách component trong một task. Khô
 | Màn hình | Thiết kế chủ đạo | Điều không được làm |
 |---|---|---|
 | **S01 — `/login`** | Desktop chia vùng nhận diện/biểu mẫu; họa tiết địa hình riêng; trên mobile một cột, đăng nhập rõ ràng | Không tạo tài khoản, social login, thống kê giả |
-| **S02 — `/reports/new`** | Form cho Citizen; nhóm trường đánh số; trợ giúp nhập tọa độ, xác thực input, CTA gửi báo cáo | Không thêm map, upload hoặc trường ngoài API |
-| **S03 — `/my-reports`** | Danh sách/card có thời gian, trạng thái xác minh, panel chi tiết; tiến độ mission từ E14 khi có | Không tạo timeline sự kiện hoặc mission giả |
-| **S04 — `/operations/reports`** | Workbench duyệt: bộ lọc và danh sách bên trái, chi tiết/quyết định bên phải; chọn disaster qua E03 | Không thêm bước duyệt, tính năng map |
-| **S05 — route Disaster đã có trong C1** | Danh sách sự kiện + panel chi tiết; form tạo/sửa/resolve; phân cấp trạng thái rõ ràng | Không đổi route, E03–E06 hoặc semantics resolve |
-| **S06 — `/operations/rescue`** | Workbench điều phối: chọn report đã xác minh, chọn team, danh sách mission và thao tác chuyển trạng thái | Không kéo-thả phân công, tự động điều phối, map hay CRUD team |
+| **S02 — `/reports/new`** | Form Citizen; picker vị trí dùng chung + nhập tay, validation, CTA gửi báo cáo | Chưa chọn ghim thì không tự điền tọa độ mặc định; không upload hoặc trường ngoài API |
+| **S03 — `/my-reports`** | Danh sách/card có thời gian, trạng thái xác minh, panel chi tiết với preview vị trí chỉ đọc; tiến độ mission từ E14 | Không tạo timeline sự kiện hoặc mission giả |
+| **S04 — `/operations/reports`** | Workbench duyệt; chọn tâm/vòng bán kính trong filter, preview report chỉ đọc; chọn disaster qua E03 | Tách tâm filter với vị trí report; không tự chọn disaster hoặc thêm bước duyệt |
+| **S05 — route Disaster đã có trong C1** | Danh sách + panel preview vị trí; form tạo/sửa có picker và nhập tay; resolve giữ confirmation | Không đổi route, E03–E06, expectedVersion hoặc semantics resolve |
+| **S06 — `/operations/rescue`** | Workbench điều phối: chọn report đã xác minh, preview vị trí report, chọn team, danh sách mission và chuyển trạng thái | Không kéo-thả phân công, tự động điều phối, bản đồ đội/tracking hay CRUD team |
 
 Route ở bảng chỉ là tham chiếu theo kế hoạch. Với S05 và các feature đã triển khai, **đọc router/exports hiện tại**, không tự đổi tên đường dẫn.
 
