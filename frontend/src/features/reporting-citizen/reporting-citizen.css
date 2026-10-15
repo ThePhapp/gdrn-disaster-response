@@ -34,6 +34,11 @@
   gap: var(--gdrn-space-4);
 }
 
+.report-form__map,
+.reporting-citizen-detail__map {
+  margin-top: var(--gdrn-space-2);
+}
+
 .report-form__field label {
   font-weight: 600;
 }

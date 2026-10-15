@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../shared/api'
 import { EmptyState, ErrorMessage, Field, Loading, PageHeader } from '../../shared/components'
+import { LocationMap, type LocationValue } from '../../shared/location'
 import {
   createReport,
   getReport,
@@ -68,6 +69,27 @@ function CreateReportForm({ onCreated }: { onCreated: (report: Report) => void }
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
   const [requestError, setRequestError] = useState('')
+  const parsedLatitude = latitude.trim() === '' ? undefined : Number(latitude)
+  const parsedLongitude = longitude.trim() === '' ? undefined : Number(longitude)
+  const selectedLocation = parsedLatitude !== undefined && parsedLongitude !== undefined
+    && Number.isFinite(parsedLatitude) && parsedLatitude >= -90 && parsedLatitude <= 90
+    && Number.isFinite(parsedLongitude) && parsedLongitude >= -180 && parsedLongitude <= 180
+    ? { latitude: parsedLatitude, longitude: parsedLongitude }
+    : undefined
+
+  function setCoordinate(field: 'latitude' | 'longitude', value: string) {
+    if (field === 'latitude') setLatitude(value)
+    else setLongitude(value)
+    setErrors(current => ({ ...current, [field]: '' }))
+    setRequestError('')
+  }
+
+  function setLocation(value: LocationValue) {
+    setLatitude(String(value.latitude))
+    setLongitude(String(value.longitude))
+    setErrors(current => ({ ...current, latitude: '', longitude: '' }))
+    setRequestError('')
+  }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -124,9 +146,14 @@ function CreateReportForm({ onCreated }: { onCreated: (report: Report) => void }
       </div>
 
       <div className="report-form__coordinates">
-        <Field id="report-latitude" label="Vĩ độ (latitude)" inputMode="decimal" value={latitude} onChange={event => setLatitude(event.target.value)} placeholder="Ví dụ: 21.0285" error={errors.latitude} />
-        <Field id="report-longitude" label="Kinh độ (longitude)" inputMode="decimal" value={longitude} onChange={event => setLongitude(event.target.value)} placeholder="Ví dụ: 105.8542" error={errors.longitude} />
+        <Field id="report-latitude" label="Vĩ độ (latitude)" inputMode="decimal" value={latitude}
+          onChange={event => setCoordinate('latitude', event.target.value)} placeholder="Ví dụ: 21.0285" error={errors.latitude} />
+        <Field id="report-longitude" label="Kinh độ (longitude)" inputMode="decimal" value={longitude}
+          onChange={event => setCoordinate('longitude', event.target.value)} placeholder="Ví dụ: 105.8542" error={errors.longitude} />
       </div>
+
+      <LocationMap value={selectedLocation} onChange={setLocation} disabled={busy}
+        label="Chọn vị trí báo cáo" className="report-form__map" />
 
       {requestError && <ErrorMessage>{requestError}</ErrorMessage>}
       <button type="submit" disabled={busy}>{busy ? 'Đang gửi báo cáo…' : 'Gửi báo cáo'}</button>
@@ -415,6 +442,8 @@ function ReportDetail({ reportId }: { reportId?: string }) {
         <div><dt>Cập nhật</dt><dd>{formatDate(report.updatedAt)}</dd></div>
         {report.rejectionReason && <div><dt>Lý do từ chối</dt><dd>{report.rejectionReason}</dd></div>}
       </dl>
+      <LocationMap value={{ latitude: report.latitude, longitude: report.longitude }} readOnly
+        label={`Vị trí báo cáo ${report.id}`} className="reporting-citizen-detail__map" />
       <MissionProgress report={report} />
     </div>
   )
