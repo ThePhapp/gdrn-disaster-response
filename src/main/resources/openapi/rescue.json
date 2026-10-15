@@ -1,0 +1,1377 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "GDRN Rescue implemented contract",
+    "version": "D1",
+    "description": "E12-E15, rescue teams, mission assignment, listing and status transition."
+  },
+  "paths": {
+    "/api/rescue-teams": {
+      "get": {
+        "operationId": "E12",
+        "summary": "E12 GET /api/rescue-teams",
+        "tags": [
+          "D1"
+        ],
+        "description": "Derived availability at read time only; assignment rechecks database invariant.",
+        "x-owner": "Person 4",
+        "x-task": "D1",
+        "x-roles": [
+          "AUTHORITY"
+        ],
+        "x-consumers": [
+          "S06"
+        ],
+        "x-status": "implemented",
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RescueTeamPage"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "id": "00000000-0000-4000-8000-000000000006",
+                      "name": "Demo team 1",
+                      "availability": "AVAILABLE"
+                    }
+                  ],
+                  "page": 0,
+                  "size": 20,
+                  "totalElements": 1,
+                  "totalPages": 1
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 400,
+                  "code": "VALIDATION_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-teams",
+                  "fieldErrors": [
+                    {
+                      "field": "body",
+                      "message": "Invalid request shape."
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 401,
+                  "code": "UNAUTHENTICATED",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-teams",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "WWW-Authenticate": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "Bearer"
+                  ]
+                },
+                "description": "Bearer challenge."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 403,
+                  "code": "FORBIDDEN",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-teams",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 500,
+                  "code": "INTERNAL_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-teams",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000,
+              "default": 0
+            },
+            "description": "page"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "description": "size"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "name,asc",
+                "name,desc"
+              ],
+              "default": "name,asc"
+            },
+            "description": "One sort only. Always append id ASC as tie-breaker."
+          },
+          {
+            "name": "availability",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "AVAILABLE",
+                "BUSY"
+              ]
+            },
+            "description": "availability"
+          }
+        ]
+      }
+    },
+    "/api/rescue-missions": {
+      "post": {
+        "operationId": "E13",
+        "summary": "E13 POST /api/rescue-missions",
+        "tags": [
+          "D1"
+        ],
+        "description": "Require nondeleted VERIFIED report, associated ACTIVE disaster at business check, existing team, no prior mission for report, no active mission for team. Atomic DB invariants; no cancel or reassign.",
+        "x-owner": "Person 4",
+        "x-task": "D1",
+        "x-roles": [
+          "AUTHORITY"
+        ],
+        "x-consumers": [
+          "S06"
+        ],
+        "x-status": "implemented",
+        "responses": {
+          "201": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mission"
+                },
+                "example": {
+                  "id": "00000000-0000-4000-8000-000000000007",
+                  "reportId": "00000000-0000-4000-8000-000000000005",
+                  "teamId": "00000000-0000-4000-8000-000000000006",
+                  "status": "ASSIGNED",
+                  "assignedAt": "2026-10-08T03:00:00Z",
+                  "updatedAt": "2026-10-08T03:00:00Z"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 400,
+                  "code": "VALIDATION_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions",
+                  "fieldErrors": [
+                    {
+                      "field": "body",
+                      "message": "Invalid request shape."
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 401,
+                  "code": "UNAUTHENTICATED",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "WWW-Authenticate": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "Bearer"
+                  ]
+                },
+                "description": "Bearer challenge."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 403,
+                  "code": "FORBIDDEN",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 404,
+                  "code": "NOT_FOUND",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "409": {
+            "description": "REPORT_NOT_VERIFIED / DISASTER_NOT_ACTIVE / REPORT_ALREADY_ASSIGNED / TEAM_BUSY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 409,
+                  "code": "REPORT_NOT_VERIFIED",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "415": {
+            "description": "UNSUPPORTED_MEDIA_TYPE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 415,
+                  "code": "UNSUPPORTED_MEDIA_TYPE",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 500,
+                  "code": "INTERNAL_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMissionRequest"
+              },
+              "example": {
+                "reportId": "00000000-0000-4000-8000-000000000005",
+                "teamId": "00000000-0000-4000-8000-000000000006"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "E14",
+        "summary": "E14 GET /api/rescue-missions",
+        "tags": [
+          "D1"
+        ],
+        "description": "Validate report visibility through Reporting before applying mission filters. Citizen can only query their own reportId, never all missions. Visible report with no missions or unmatched filters =>200 empty page. Authority may omit reportId. Unknown teamId filter =>empty page. Batch lookup for page report data; no N+1.",
+        "x-owner": "Person 4",
+        "x-task": "D1",
+        "x-roles": [
+          "CITIZEN",
+          "AUTHORITY"
+        ],
+        "x-consumers": [
+          "S03",
+          "S06"
+        ],
+        "x-status": "implemented",
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionPage"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "id": "00000000-0000-4000-8000-000000000007",
+                      "reportId": "00000000-0000-4000-8000-000000000005",
+                      "teamId": "00000000-0000-4000-8000-000000000006",
+                      "status": "ASSIGNED",
+                      "assignedAt": "2026-10-08T03:00:00Z",
+                      "updatedAt": "2026-10-08T03:00:00Z"
+                    }
+                  ],
+                  "page": 0,
+                  "size": 20,
+                  "totalElements": 1,
+                  "totalPages": 1
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 400,
+                  "code": "VALIDATION_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions",
+                  "fieldErrors": [
+                    {
+                      "field": "body",
+                      "message": "Invalid request shape."
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 401,
+                  "code": "UNAUTHENTICATED",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "WWW-Authenticate": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "Bearer"
+                  ]
+                },
+                "description": "Bearer challenge."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 403,
+                  "code": "FORBIDDEN",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 404,
+                  "code": "NOT_FOUND",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 500,
+                  "code": "INTERNAL_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000,
+              "default": 0
+            },
+            "description": "page"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "description": "size"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "createdAt,desc",
+                "createdAt,asc"
+              ],
+              "default": "createdAt,desc"
+            },
+            "description": "One sort only. Always append id ASC as tie-breaker. Mission createdAt sort means assignedAt."
+          },
+          {
+            "name": "reportId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            },
+            "description": "Optional for AUTHORITY; required for CITIZEN (missing =>400). Supplied missing/deleted/other-owner report =>404 even if no mission exists."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/MissionStatus"
+            },
+            "description": "status"
+          },
+          {
+            "name": "teamId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            },
+            "description": "teamId"
+          }
+        ]
+      }
+    },
+    "/api/rescue-missions/{id}/status": {
+      "patch": {
+        "operationId": "E15",
+        "summary": "E15 PATCH /api/rescue-missions/{id}/status",
+        "tags": [
+          "D1"
+        ],
+        "description": "ASSIGNED -> IN_PROGRESS -> COMPLETED only; repeated or skipped transition =>409. Atomic compare-state update; existing missions may complete after disaster resolved.",
+        "x-owner": "Person 4",
+        "x-task": "D1",
+        "x-roles": [
+          "AUTHORITY"
+        ],
+        "x-consumers": [
+          "S06"
+        ],
+        "x-status": "implemented",
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mission"
+                },
+                "example": {
+                  "id": "00000000-0000-4000-8000-000000000007",
+                  "reportId": "00000000-0000-4000-8000-000000000005",
+                  "teamId": "00000000-0000-4000-8000-000000000006",
+                  "status": "IN_PROGRESS",
+                  "assignedAt": "2026-10-08T03:00:00Z",
+                  "updatedAt": "2026-10-08T03:02:00Z",
+                  "startedAt": "2026-10-08T03:02:00Z"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 400,
+                  "code": "VALIDATION_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions/00000000-0000-4000-8000-000000000005/status",
+                  "fieldErrors": [
+                    {
+                      "field": "body",
+                      "message": "Invalid request shape."
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 401,
+                  "code": "UNAUTHENTICATED",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions/00000000-0000-4000-8000-000000000005/status",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "WWW-Authenticate": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "Bearer"
+                  ]
+                },
+                "description": "Bearer challenge."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 403,
+                  "code": "FORBIDDEN",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions/00000000-0000-4000-8000-000000000005/status",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 404,
+                  "code": "NOT_FOUND",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions/00000000-0000-4000-8000-000000000005/status",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "409": {
+            "description": "INVALID_TRANSITION",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 409,
+                  "code": "INVALID_TRANSITION",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions/00000000-0000-4000-8000-000000000005/status",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "415": {
+            "description": "UNSUPPORTED_MEDIA_TYPE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 415,
+                  "code": "UNSUPPORTED_MEDIA_TYPE",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions/00000000-0000-4000-8000-000000000005/status",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 500,
+                  "code": "INTERNAL_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/rescue-missions/00000000-0000-4000-8000-000000000005/status",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            },
+            "description": "Resource UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMissionStatusRequest"
+              },
+              "example": {
+                "status": "IN_PROGRESS"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Id": {
+        "type": "string",
+        "format": "uuid",
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "description": "Canonical lowercase UUID with hyphens."
+      },
+      "Name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 120,
+        "description": "Unicode text trimmed at ends, not blank."
+      },
+      "Timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO-8601 UTC timestamp."
+      },
+      "MissionStatus": {
+        "type": "string",
+        "enum": [
+          "ASSIGNED",
+          "IN_PROGRESS",
+          "COMPLETED"
+        ],
+        "description": "ASSIGNED -> IN_PROGRESS -> COMPLETED"
+      },
+      "RescueTeam": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Name"
+          },
+          "availability": {
+            "type": "string",
+            "enum": [
+              "AVAILABLE",
+              "BUSY"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "availability"
+        ],
+        "description": "Availability is derived from active missions, not independently writable.",
+        "example": {
+          "id": "00000000-0000-4000-8000-000000000006",
+          "name": "Demo team 1",
+          "availability": "AVAILABLE"
+        }
+      },
+      "RescueTeamPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RescueTeam"
+            },
+            "maxItems": 100
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "totalElements",
+          "totalPages"
+        ]
+      },
+      "CreateMissionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reportId": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "teamId": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "reportId",
+          "teamId"
+        ],
+        "example": {
+          "reportId": "00000000-0000-4000-8000-000000000005",
+          "teamId": "00000000-0000-4000-8000-000000000006"
+        }
+      },
+      "UpdateMissionStatusRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ASSIGNED",
+              "IN_PROGRESS",
+              "COMPLETED"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "example": {
+          "status": "IN_PROGRESS"
+        }
+      },
+      "Mission": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "reportId": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "teamId": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MissionStatus"
+          },
+          "assignedAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "startedAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "completedAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "updatedAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "reportId",
+          "teamId",
+          "status",
+          "assignedAt",
+          "updatedAt"
+        ],
+        "description": "ASSIGNED: startedAt/completedAt absent. IN_PROGRESS: startedAt required, completedAt absent. COMPLETED: startedAt and completedAt required."
+      },
+      "MissionPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Mission"
+            },
+            "maxItems": 100
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "totalElements",
+          "totalPages"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "timestamp": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "fieldErrors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "field",
+                "message"
+              ]
+            }
+          }
+        },
+        "required": [
+          "timestamp",
+          "status",
+          "code",
+          "message",
+          "path",
+          "fieldErrors"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

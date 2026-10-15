@@ -17,8 +17,9 @@ public class OpenApiConfiguration {
         OpenAPI identity = read("openapi/identity.json");
         OpenAPI disaster = read("openapi/disaster.json");
         OpenAPI reporting = read("openapi/reporting.json");
+        OpenAPI rescue = read("openapi/rescue.json");
         return api -> {
-            for (OpenAPI contract : java.util.List.of(identity, disaster, reporting)) {
+            for (OpenAPI contract : java.util.List.of(identity, disaster, reporting, rescue)) {
                 contract.getPaths().forEach(api::path);
                 contract.getComponents().getSchemas().forEach(api.getComponents()::addSchemas);
                 if (contract.getComponents().getSecuritySchemes() != null) {

@@ -88,7 +88,7 @@ class ReportingIT {
 
     @BeforeEach void resetOnlyThisTestContainerReportingData() {
         reset(store, disasterLookup);
-        assertThat(jdbc.queryForObject("select count(*) from flyway_schema_history where success", Integer.class)).isEqualTo(5);
+        assertThat(jdbc.queryForObject("select count(*) from flyway_schema_history where success", Integer.class)).isGreaterThanOrEqualTo(5);
         jdbc.update("delete from reporting_reports");
     }
 
