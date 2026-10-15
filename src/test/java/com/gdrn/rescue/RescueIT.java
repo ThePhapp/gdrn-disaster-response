@@ -40,6 +40,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -500,6 +501,82 @@ class RescueIT {
 
         // Query param on POST -> 400
         assertError(call(HttpMethod.POST, "/api/rescue-missions?extra=1", missionJson(validReport, validTeam), auth), 400, "VALIDATION_ERROR");
+    }
+
+    @Test
+    void blankQueryValuesAreRejectedInsteadOfRemovingFilters() {
+        String auth = token(AUTHORITY_USER, "AUTHORITY");
+        for (String field : List.of("page", "size", "sort", "availability")) {
+            for (String value : List.of("", "+")) {
+                assertError(call(HttpMethod.GET, "/api/rescue-teams?" + field + "=" + value, null, auth),
+                        400, "VALIDATION_ERROR");
+            }
+        }
+        for (String field : List.of("page", "size", "sort", "reportId", "teamId", "status")) {
+            for (String value : List.of("", "+")) {
+                assertError(call(HttpMethod.GET, "/api/rescue-missions?" + field + "=" + value, null, auth),
+                        400, "VALIDATION_ERROR");
+            }
+        }
+    }
+
+    @Test
+    void teamNamesSortByCodePointAcrossPages() {
+        String auth = token(AUTHORITY_USER, "AUTHORITY");
+        List<String> names = List.of("Zebra", "apple", "Ánh");
+        List<UUID> ids = names.stream().map(ignored -> UUID.randomUUID()).toList();
+        try {
+            for (int i = 0; i < names.size(); i++) {
+                jdbc.update("INSERT INTO rescue_teams (id, name) VALUES (?, ?)", ids.get(i), names.get(i));
+            }
+            var expected = new ArrayList<>(List.of("Demo team 1", "Demo team 2", "Zebra", "apple", "Ánh"));
+            for (String direction : List.of("asc", "desc")) {
+                var actual = new ArrayList<String>();
+                for (int page = 0; page < expected.size(); page++) {
+                    var response = call(HttpMethod.GET, "/api/rescue-teams?size=1&page=" + page
+                            + "&sort=name," + direction, null, auth);
+                    assertThat(response.getStatusCode().value()).isEqualTo(200);
+                    actual.add(response.getBody().path("items").get(0).path("name").asText());
+                }
+                assertThat(actual).containsExactlyElementsOf(expected);
+                Collections.reverse(expected);
+            }
+        } finally {
+            ids.forEach(id -> jdbc.update("DELETE FROM rescue_teams WHERE id = ?", id));
+        }
+    }
+
+    @Test
+    void reportConflictWinsWhenAssignmentCommitsBetweenPrechecks() throws Exception {
+        UUID reportId = createAndVerifyReport(CITIZEN_ONE, createDisaster());
+        UUID teamId = getDemoTeamId(1);
+        String auth = token(AUTHORITY_USER, "AUTHORITY");
+        var reportChecked = new CountDownLatch(1);
+        var winnerCommitted = new CountDownLatch(1);
+        var calls = new AtomicInteger();
+        doAnswer(invocation -> {
+            boolean exists = (boolean) invocation.callRealMethod();
+            if (calls.incrementAndGet() == 1) {
+                reportChecked.countDown();
+                assertThat(winnerCommitted.await(10, TimeUnit.SECONDS)).isTrue();
+            }
+            return exists;
+        }).when(missionRepository).existsByReportId(reportId);
+        try (var pool = Executors.newSingleThreadExecutor()) {
+            var loser = pool.submit(() -> call(HttpMethod.POST, "/api/rescue-missions", missionJson(reportId, teamId), auth));
+            try {
+                assertThat(reportChecked.await(10, TimeUnit.SECONDS)).isTrue();
+                var winner = call(HttpMethod.POST, "/api/rescue-missions", missionJson(reportId, teamId), auth);
+                assertThat(winner.getStatusCode().value()).isEqualTo(201);
+            } finally {
+                winnerCommitted.countDown();
+            }
+            assertError(loser.get(15, TimeUnit.SECONDS), 409, "REPORT_ALREADY_ASSIGNED");
+        } finally {
+            reset(missionRepository);
+        }
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM rescue_missions WHERE report_id = ?", Integer.class, reportId))
+                .isEqualTo(1);
     }
 
     private UUID getDemoTeamId(int index) {
