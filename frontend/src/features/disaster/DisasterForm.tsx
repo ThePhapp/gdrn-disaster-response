@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Field } from '../../shared/components'
 import { LocationMap, type LocationValue } from '../../shared/location'
 import { severityLabels, typeLabels } from './DisasterBadges'
@@ -51,7 +51,15 @@ export function DisasterForm({ disaster, busy, onCancel, onCreate, onEdit }: {
 }) {
   const [value, setValue] = useState<FormValue>(() => valueOf(disaster))
   const [errors, setErrors] = useState<Errors>({})
+  const form = useRef<HTMLFormElement>(null)
+  const focusInvalid = useRef(false)
   const editing = Boolean(disaster)
+
+  useEffect(() => {
+    if (!focusInvalid.current) return
+    focusInvalid.current = false
+    form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+  }, [errors])
 
   const latitude = value.latitude.trim() === '' ? undefined : Number(value.latitude)
   const longitude = value.longitude.trim() === '' ? undefined : Number(value.longitude)
@@ -74,11 +82,10 @@ export function DisasterForm({ disaster, busy, onCancel, onCreate, onEdit }: {
   async function submit(event: FormEvent) {
     event.preventDefault()
     if (busy) return
-    const form = event.currentTarget
     const checked = validate(value)
     if (!checked.fields) {
+      focusInvalid.current = true
       setErrors(checked.errors)
-      requestAnimationFrame(() => form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus())
       return
     }
     if (!disaster) { await onCreate(checked.fields); return }
@@ -93,7 +100,7 @@ export function DisasterForm({ disaster, busy, onCancel, onCreate, onEdit }: {
     await onEdit(patch)
   }
 
-  return <form className="disaster-form" onSubmit={submit} noValidate aria-busy={busy}>
+  return <form ref={form} className="disaster-form" onSubmit={submit} noValidate aria-busy={busy}>
     <Field id="disaster-name" label="Tên thảm họa" value={value.name} maxLength={120} autoFocus
       hint="Tối đa 120 ký tự."
       onChange={event => set('name', event.target.value)} error={errors.name} disabled={busy} required />

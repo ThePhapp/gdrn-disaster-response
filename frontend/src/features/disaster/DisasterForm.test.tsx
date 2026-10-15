@@ -75,7 +75,8 @@ describe('DisasterForm', () => {
 
     await user.type(screen.getByLabelText('Vĩ độ'), '12.5')
     await user.type(screen.getByLabelText('Kinh độ'), '-45.25')
-    expect(screen.getByRole('button', { name: 'Chọn điểm giả lập' })).toHaveAttribute('data-location', '12.5,-45.25')
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Chọn điểm giả lập' }))
+      .toHaveAttribute('data-location', '12.5,-45.25'))
     await user.clear(screen.getByLabelText('Vĩ độ'))
     await user.clear(screen.getByLabelText('Kinh độ'))
     await user.click(screen.getByRole('button', { name: 'Chọn điểm giả lập' }))

@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Field } from '../../shared/components'
 import { LocationMap, type LocationValue } from '../../shared/location'
 import type { ReportFilters as Filters, ReportStatus } from './reporting-api'
@@ -9,6 +9,7 @@ export function ReportFilters({ disabled, onApply }: { disabled: boolean; onAppl
   const [coordinates, setCoordinates] = useState({ lat: '', lon: '', radiusMeters: '' })
   const [errors, setErrors] = useState<Partial<typeof coordinates>>({})
   const form = useRef<HTMLFormElement>(null)
+  const focusInvalid = useRef(false)
   const latitude = coordinates.lat.trim() === '' ? undefined : Number(coordinates.lat)
   const longitude = coordinates.lon.trim() === '' ? undefined : Number(coordinates.lon)
   const location = latitude !== undefined && longitude !== undefined
@@ -18,6 +19,12 @@ export function ReportFilters({ disabled, onApply }: { disabled: boolean; onAppl
     : undefined
   const radius = Number(coordinates.radiusMeters)
   const radiusMeters = Number.isInteger(radius) && radius >= 1 && radius <= 100000 ? radius : undefined
+
+  useEffect(() => {
+    if (!focusInvalid.current) return
+    focusInvalid.current = false
+    form.current?.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus()
+  }, [errors])
 
   function setCoordinate(field: keyof typeof coordinates, value: string) {
     setCoordinates(current => ({ ...current, [field]: value }))
@@ -42,9 +49,9 @@ export function ReportFilters({ disabled, onApply }: { disabled: boolean; onAppl
         }
       }
     }
+    if (Object.keys(next).length) focusInvalid.current = true
     setErrors(next)
     if (Object.keys(next).length) {
-      requestAnimationFrame(() => form.current?.querySelector<HTMLInputElement>('[aria-invalid=true]')?.focus())
       return
     }
     onApply({ page: 0, size: 20, status: status || undefined, ...(hasGeo ? {
