@@ -3,9 +3,9 @@
 Tài liệu dành cho thành viên mới cài dự án trên máy cá nhân. Chạy các lệnh bên dưới
 tại thư mục gốc repo, nơi có `pom.xml` và `docker-compose.yml`.
 
-**Trạng thái hiện tại:** E01–E11, S01/S05, shared UI01-A, Flyway V1–V5 trên nhánh B2; xem
-[progress](phase1-progress.md) cho commit/evidence. Backend Spring Boot và PostGIS
-chạy bằng Compose; frontend dev chạy trên host, production frontend còn thuộc A2.
+**Trạng thái hiện tại:** E01–E15, S01–S06, shared UI01-A và A1; xem
+[progress](phase1-progress.md) cho commit/evidence. Backend Spring Boot, PostGIS và
+frontend production chạy bằng Compose; frontend dev vẫn có thể chạy trên host.
 Đọc [P01: JWT/demo env, Node và frontend](P01_LOCAL.md) trước khi chạy backend.
 Frontend ở cổng 5173, backend không phục vụ trang HTML `/login`.
 
@@ -29,8 +29,8 @@ database từ lần chạy trước, điền credentials gốc của volume vào
 Thay password trong `.env` không đổi password của database đã khởi tạo.
 `up` cũng gọi `init` khi cần, build image, chờ cả hai container healthy và kiểm tra
 HTTP thật. Khi thành công, script in đường dẫn Swagger đúng theo port đang publish.
-`dev.ps1` quản lý backend/database. Để chạy thêm SPA login, dùng `local.ps1 -Action start`
-theo [hướng dẫn P01](P01_LOCAL.md); chưa có frontend production container.
+`dev.ps1` quản lý cả backend/database/frontend production. Để chạy Vite host cho phát
+triển nhanh, dùng `local.ps1 -Action start` theo [hướng dẫn P01](P01_LOCAL.md).
 
 | Lệnh | Kết quả |
 | --- | --- |
@@ -149,6 +149,7 @@ SERVER_PORT=18080
 | `DB_URL` | JDBC URL của backend chạy trực tiếp trên máy |
 | `DB_USERNAME`, `DB_PASSWORD` | Tài khoản kết nối khi backend chạy trực tiếp trên máy |
 | `SERVER_PORT` | Cổng backend khi chạy trực tiếp trên máy; mặc định 8080 |
+| `FRONTEND_PORT` | Cổng frontend production publish trên host; mặc định 5173 |
 
 Nếu đổi tên database hoặc tài khoản, cập nhật cả `DB_URL` và `DB_USERNAME` tương ứng.
 Compose tự kết nối backend với `database:5432` trong mạng Docker, không dùng cổng
@@ -165,21 +166,23 @@ docker compose up --build -d --wait
 docker compose ps
 ```
 
-Kết quả mong đợi: dịch vụ `database` và `backend` đều có trạng thái `healthy`.
+Kết quả mong đợi: dịch vụ `database`, `backend` và `frontend` đều có trạng thái
+`healthy`.
 Flyway chạy khi backend khởi động; không cần tạo bảng hoặc import SQL thủ công.
 
 Với cổng mặc định, mở:
 
 | Chức năng | Địa chỉ |
 | --- | --- |
+| Frontend production | http://localhost:5173/login |
 | Swagger UI | http://localhost:8080/swagger-ui/index.html |
 | Health check | http://localhost:8080/actuator/health |
 | OpenAPI JSON | http://localhost:8080/v3/api-docs |
 
 Nếu đã đặt `APP_PORT=18080`, thay `8080` bằng `18080` trong các URL trên.
-Health check phải trả về `{"status":"UP"}`. Swagger runtime có E01–E11; baseline
-P00 vẫn mô tả 15 operations đích. Muốn mở giao diện cần Vite theo hướng dẫn local;
-Compose hiện chưa có frontend container.
+Health check phải trả về `{"status":"UP"}`. Swagger runtime có E01–E15. Frontend
+production trả HTML cho `/login` và deep route, còn `/api/unknown` trả JSON 401 từ
+backend thay vì bị SPA fallback.
 Các API tương lai vẫn bị deny; thiếu token 401, role/route không được phép 403.
 
 Xem log nếu khởi động lỗi:
