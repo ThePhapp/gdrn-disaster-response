@@ -101,6 +101,14 @@ function Get-ApplicationUrl {
     return "http://127.0.0.1:$($Matches[1])"
 }
 
+function Get-PublishedUrl([string]$service, [int]$containerPort) {
+    $binding = Invoke-Docker -DockerArguments @('compose', 'port', $service, "$containerPort")
+    if ($binding -notmatch '^(?:127\.0\.0\.1|0\.0\.0\.0|\[::\]):(\d+)$') {
+        throw "Cannot resolve the $service port. Start Compose first."
+    }
+    return "http://127.0.0.1:$($Matches[1])"
+}
+
 function Test-Foundation {
     $url = Get-ApplicationUrl
     foreach ($path in @('/actuator/health', '/actuator/health/liveness', '/actuator/health/readiness')) {
@@ -131,6 +139,31 @@ function Test-Foundation {
     }
     Write-Host 'PASS /swagger-ui/index.html'
     Write-Host "Swagger: $url/swagger-ui/index.html"
+
+    $frontend = Get-PublishedUrl 'frontend' 80
+    foreach ($path in @('/login', '/operations/rescue')) {
+        $page = Invoke-WebRequest -UseBasicParsing -Uri "$frontend$path" -TimeoutSec 10
+        if ($page.StatusCode -ne 200 -or $page.Content -notmatch '<div id="root"></div>') {
+            throw "Frontend check failed: $path is not served as the SPA shell."
+        }
+        Write-Host "PASS frontend $path (SPA shell)"
+    }
+    try {
+        $null = Invoke-WebRequest -UseBasicParsing -Uri "$frontend/api/unknown" -TimeoutSec 10 `
+            -Headers @{ Accept = 'application/json' }
+        throw 'Frontend check failed: /api/unknown unexpectedly returned success.'
+    } catch [System.Net.WebException] {
+        $response = $_.Exception.Response
+        if (-not $response -or [int]$response.StatusCode -ne 401) {
+            throw 'Frontend check failed: /api/unknown did not return HTTP 401.'
+        }
+        $reader = New-Object System.IO.StreamReader($response.GetResponseStream())
+        try { $problem = $reader.ReadToEnd() } finally { $reader.Dispose() }
+        if ($problem -notmatch '"code"\s*:\s*"UNAUTHENTICATED"') {
+            throw 'Frontend check failed: /api/unknown did not return the JSON auth error.'
+        }
+        Write-Host 'PASS frontend /api/unknown (JSON 401, no SPA fallback)'
+    }
 }
 
 Push-Location -LiteralPath $repositoryRoot
