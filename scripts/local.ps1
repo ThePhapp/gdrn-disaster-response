@@ -55,6 +55,18 @@ try {
             DEMO_CITIZEN_TWO_PASSWORD = (Random-Value 18)
             DEMO_AUTHORITY_EMAIL = 'authority@example.test'
             DEMO_AUTHORITY_PASSWORD = (Random-Value 18)
+            VITE_MAPTILER_KEY = ''
+            VITE_MAP_STYLE_URL = ''
+            VITE_MAP_ATTRIBUTION = ''
+        }
+        # Preserve earlier frontend-only map configuration when upgrading an existing setup.
+        $frontendEnvPath = Join-Path $frontendPath '.env.local'
+        if (Test-Path -LiteralPath $frontendEnvPath) {
+            Get-Content -LiteralPath $frontendEnvPath | ForEach-Object {
+                if ($_ -match '^(VITE_MAPTILER_KEY|VITE_MAP_STYLE_URL|VITE_MAP_ATTRIBUTION)=(.*)$') {
+                    $defaults[$Matches[1]] = $Matches[2]
+                }
+            }
         }
         if ($values.POSTGRES_PASSWORD -and $values.POSTGRES_PASSWORD -notlike 'replace-*') {
             $defaults.POSTGRES_PASSWORD = $values.POSTGRES_PASSWORD
@@ -90,6 +102,10 @@ try {
             try { npm.cmd ci; Require-Success 'npm ci' } finally { Pop-Location }
             New-Item -ItemType Directory -Force -Path $runtimePath | Out-Null
             $env:API_PROXY_TARGET = "http://127.0.0.1:$backendPort"
+            foreach ($key in @('VITE_MAPTILER_KEY','VITE_MAP_STYLE_URL','VITE_MAP_ATTRIBUTION')) {
+                if ($values[$key]) { [Environment]::SetEnvironmentVariable($key, $values[$key], 'Process') }
+                else { Remove-Item "Env:$key" -ErrorAction SilentlyContinue }
+            }
             $vitePath = Join-Path $frontendPath 'node_modules/vite/bin/vite.js'
             $process = Start-Process -FilePath (Get-Command node).Source -ArgumentList @("`"$vitePath`"", '--host', '127.0.0.1') -WorkingDirectory $frontendPath -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $runtimePath 'frontend.log') -RedirectStandardError (Join-Path $runtimePath 'frontend-error.log')
             $managed = Get-CimInstance Win32_Process -Filter "ProcessId = $($process.Id)"
