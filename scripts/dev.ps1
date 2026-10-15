@@ -148,20 +148,39 @@ function Test-Foundation {
         }
         Write-Host "PASS frontend $path (SPA shell)"
     }
-    try {
-        $null = Invoke-WebRequest -UseBasicParsing -Uri "$frontend/api/unknown" -TimeoutSec 10 `
-            -Headers @{ Accept = 'application/json' }
-        throw 'Frontend check failed: /api/unknown unexpectedly returned success.'
-    } catch [System.Net.WebException] {
-        $response = $_.Exception.Response
-        if (-not $response -or [int]$response.StatusCode -ne 401) {
-            throw 'Frontend check failed: /api/unknown did not return HTTP 401.'
-        }
-        if ($response.ContentType -notmatch 'application/json') {
-            throw 'Frontend check failed: /api/unknown did not return JSON.'
-        }
-        Write-Host 'PASS frontend /api/unknown (JSON 401, no SPA fallback)'
+    $request = @{
+        UseBasicParsing = $true
+        Uri             = "$frontend/api/unknown"
+        TimeoutSec      = 10
+        Headers         = @{ Accept = 'application/json' }
     }
+    $response = $null
+    $skipHttpErrorCheck = (Get-Command Invoke-WebRequest).Parameters.ContainsKey('SkipHttpErrorCheck')
+    if ($skipHttpErrorCheck) {
+        # PowerShell 7 keeps non-success HTTP responses in the result object.
+        $response = Invoke-WebRequest @request -SkipHttpErrorCheck
+    } else {
+        # Windows PowerShell 5.1 exposes the response through WebException.
+        try {
+            $response = Invoke-WebRequest @request
+        } catch [System.Net.WebException] {
+            $response = $_.Exception.Response
+        }
+    }
+    if (-not $response -or [int]$response.StatusCode -ne 401) {
+        throw 'Frontend check failed: /api/unknown did not return HTTP 401.'
+    }
+    $contentType = $null
+    if ($response.PSObject.Properties.Name -contains 'ContentType') {
+        $contentType = $response.ContentType
+    }
+    if (-not $contentType -and $response.PSObject.Properties.Name -contains 'Headers') {
+        $contentType = $response.Headers['Content-Type']
+    }
+    if ($contentType -notmatch 'application/json') {
+        throw 'Frontend check failed: /api/unknown did not return JSON.'
+    }
+    Write-Host 'PASS frontend /api/unknown (JSON 401, no SPA fallback)'
 }
 
 Push-Location -LiteralPath $repositoryRoot
