@@ -15,8 +15,12 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+      - name: Show Java and Maven toolchains
+        run: |
+          java --version
+          mvn --version
       - name: Compile, test architecture, integrate with PostGIS, and package
-        run: bash ./mvnw --batch-mode --no-transfer-progress clean verify
+        run: mvn --batch-mode --no-transfer-progress clean verify
       - name: Publish unit and integration test reports
         if: always()
         uses: actions/upload-artifact@v4
