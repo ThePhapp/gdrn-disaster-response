@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -10,6 +10,19 @@ const mocks = vi.hoisted(() => ({
   missions: vi.fn(),
   withdraw: vi.fn(),
   navigate: vi.fn(),
+}))
+
+vi.mock('../../shared/location', () => ({
+  LocationMap: ({ value, onChange, readOnly, disabled, label }: {
+    value?: { latitude: number; longitude: number }
+    onChange?: (value: { latitude: number; longitude: number }) => void
+    readOnly?: boolean
+    disabled?: boolean
+    label?: string
+  }) => <button type="button" aria-label={label ?? 'Bản đồ giả lập'} disabled={disabled || readOnly}
+    data-location={value ? `${value.latitude},${value.longitude}` : 'blank'}
+    data-read-only={readOnly ? 'true' : 'false'}
+    onClick={() => onChange?.({ latitude: 0, longitude: 0 })}>Bản đồ giả lập</button>,
 }))
 
 vi.mock('./reporting-api', async importOriginal => ({
@@ -129,6 +142,7 @@ describe('ReportingCitizenPage', () => {
     )
     await user.type(screen.getByLabelText('Vĩ độ (latitude)'), '21.0285')
     await user.type(screen.getByLabelText('Kinh độ (longitude)'), '105.8542')
+    expect(screen.getByRole('button', { name: 'Chọn vị trí báo cáo' })).toHaveAttribute('data-location', '21.0285,105.8542')
     await user.click(screen.getByRole('button', { name: 'Gửi báo cáo' }))
 
     await waitFor(() => {
@@ -142,6 +156,43 @@ describe('ReportingCitizenPage', () => {
     expect(mocks.navigate).toHaveBeenCalledWith('/my-reports', {
       state: { selectedReportId: report.id },
     })
+  })
+
+  it('keeps blank coordinates unselected and submits an exact zero map selection', async () => {
+    const user = userEvent.setup()
+    renderAt('/reports/new')
+    const map = screen.getByRole('button', { name: 'Chọn vị trí báo cáo' })
+    expect(map).toHaveAttribute('data-location', 'blank')
+
+    await user.type(screen.getByLabelText('Mô tả tình huống'), 'Kiểm tra tọa độ không.')
+    await user.click(map)
+    expect(screen.getByLabelText('Vĩ độ (latitude)')).toHaveValue('0')
+    expect(screen.getByLabelText('Kinh độ (longitude)')).toHaveValue('0')
+    expect(map).toHaveAttribute('data-location', '0,0')
+    await user.click(screen.getByRole('button', { name: 'Gửi báo cáo' }))
+
+    await waitFor(() => expect(mocks.create).toHaveBeenCalledWith(expect.objectContaining({ latitude: 0, longitude: 0 })))
+  })
+
+  it('locks submit and the map while one create request is pending', async () => {
+    const user = userEvent.setup()
+    let finish!: (value: Report) => void
+    mocks.create.mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))
+    renderAt('/reports/new')
+
+    await user.type(screen.getByLabelText('Mô tả tình huống'), 'Không gửi trùng báo cáo.')
+    await user.click(screen.getByRole('button', { name: 'Chọn vị trí báo cáo' }))
+    await user.click(screen.getByRole('button', { name: 'Gửi báo cáo' }))
+    const submit = screen.getByRole('button', { name: 'Đang gửi báo cáo…' })
+    expect(submit).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Chọn vị trí báo cáo' })).toBeDisabled()
+    await user.click(submit)
+    expect(mocks.create).toHaveBeenCalledTimes(1)
+
+    await act(async () => finish(report))
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/my-reports', {
+      state: { selectedReportId: report.id },
+    }))
   })
 
   it('shows an error when creating a report fails', async () => {
@@ -209,6 +260,8 @@ describe('ReportingCitizenPage', () => {
     await user.click(screen.getByRole('button', { name: /Nước đang dâng/ }))
     await waitFor(() => expect(mocks.get).toHaveBeenCalledWith(report.id))
     expect(await screen.findByText('Mã báo cáo')).toBeVisible()
+    expect(screen.getByRole('button', { name: `Vị trí báo cáo ${report.id}` })).toHaveAttribute('data-location', '21.0285,105.8542')
+    expect(screen.getByRole('button', { name: `Vị trí báo cáo ${report.id}` })).toHaveAttribute('data-read-only', 'true')
     expect(screen.getByText('Báo cáo cần được xác minh trước khi có thể phân công cứu hộ.')).toBeVisible()
     expect(mocks.missions).not.toHaveBeenCalled()
   })

@@ -12,6 +12,8 @@ const authorityAccount = {
   email: process.env.DEMO_AUTHORITY_EMAIL,
   password: process.env.DEMO_AUTHORITY_PASSWORD,
 }
+const mapTilerConfigured = Boolean(process.env.VITE_MAPTILER_KEY
+  || process.env.VITE_MAP_STYLE_URL?.includes('maptiler.com'))
 
 async function login(page: Page, account: typeof citizenOne) {
   if (!account.email || !account.password) throw new Error('Configure both demo citizen accounts for B3 browser smoke')
@@ -34,8 +36,9 @@ test('B3 real citizen create, isolation, responsive detail and withdrawal', asyn
   await page.getByLabel('Kinh độ (longitude)').fill('105.8542')
   await page.getByRole('button', { name: 'Gửi báo cáo', exact: true }).click()
   await expect(page).toHaveURL(/\/my-reports$/)
-  await expect(page.getByText(description, { exact: true })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Chi tiết báo cáo' }).getByText(description, { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Chi tiết báo cáo' })).toBeVisible()
+  await expect(page.locator('section.location-map[aria-label^="Vị trí báo cáo "]')).toBeVisible()
 
   for (const width of [360, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 })
@@ -63,7 +66,7 @@ test('B3 real citizen create, isolation, responsive detail and withdrawal', asyn
 
 test('B3 shows real E14 mission lifecycle after report verification', async ({ page, playwright }) => {
   test.setTimeout(90_000)
-  const baseURL = process.env.E2E_API_URL || 'http://127.0.0.1:8080'
+  const baseURL = process.env.E2E_API_URL || 'http://127.0.0.1:18080'
   if (!citizenOne.email || !citizenOne.password || !citizenTwo.email || !citizenTwo.password
     || !authorityAccount.email || !authorityAccount.password) {
     throw new Error('Configure authority and both demo citizen accounts for B3 E14 browser smoke')
@@ -158,4 +161,31 @@ test('B3 shows real E14 mission lifecycle after report verification', async ({ p
     await otherCitizen.dispose()
     await authority.dispose()
   }
+})
+
+test('B3 keeps manual submit and detail available when map tiles fail', async ({ page }) => {
+  test.skip(!mapTilerConfigured, 'MapTiler is not configured for this environment')
+  test.setTimeout(60_000)
+  const description = `B3 map fallback ${Date.now()}`
+  await page.route('https://api.maptiler.com/**', route => route.abort('internetdisconnected'))
+  await login(page, citizenOne)
+  await page.getByRole('link', { name: 'Tạo báo cáo', exact: true }).click()
+  await expect(page.getByText('Không tải được lớp bản đồ. Nhập tọa độ vẫn hoạt động.')).toBeVisible()
+  await page.getByLabel('Mô tả tình huống').fill(description)
+  await page.getByLabel('Vĩ độ (latitude)').fill('0')
+  await page.getByLabel('Kinh độ (longitude)').fill('0')
+  const createResponse = page.waitForResponse(response => response.url().endsWith('/api/reports')
+    && response.request().method() === 'POST')
+  await page.getByRole('button', { name: 'Gửi báo cáo', exact: true }).click()
+  expect((await createResponse).status()).toBe(201)
+  await expect(page).toHaveURL(/\/my-reports$/)
+  await expect(page.getByRole('region', { name: 'Chi tiết báo cáo' }).getByText(description, { exact: true })).toBeVisible()
+  await expect(page.locator('section.location-map[aria-label^="Vị trí báo cáo "]')).toBeVisible()
+  await expect(page.getByText('Không tải được lớp bản đồ. Nhập tọa độ vẫn hoạt động.')).toBeVisible()
+  await page.screenshot({ path: 'test-results/b3-map-failure.png', fullPage: true })
+
+  const row = page.locator('li').filter({ hasText: description })
+  await row.getByRole('button', { name: 'Rút báo cáo' }).click()
+  await page.getByRole('button', { name: 'Xác nhận rút' }).click()
+  await expect(row).toHaveCount(0)
 })

@@ -1,10 +1,11 @@
 # Tiến độ Pha 1
 
-**Trạng thái hiện tại — 15/10/2026, nền merge `df4777f`:** C2 đã merge PR #9 tại `120dec8`
+**Trạng thái hiện tại — 15/10/2026, nền merge `d72ecb1`:** C2 đã merge PR #9 tại `120dec8`
 (implementation `ad7a010`); D1 đã merge PR #11 tại `e380d68`, fix review `888996a`.
 B2/UI01-C1 đã nằm trong nền merge `173a9a4`; D2 và phần nghiệp vụ B3 đã merge lần lượt
 qua PR #13 (`ff652bd`) và PR #14 (`242583c`). Code hiện có E01–E15, V1–V6 và S01–S06;
-B3 vẫn chờ owner hoàn thiện picker/preview vị trí trước khi chuyển DONE theo catalog.
+UI01-C1/C2 bổ sung vị trí đã merge PR #17 tại `d72ecb1`. B3 đã hoàn thiện
+picker/preview vị trí và regression trong working tree, chờ review/commit/merge.
 [Review C2 sau merge](qa/c2-post-merge-review.md): 32 frontend tests, 9 browser tests,
 113 backend tests pass; smoke C2→D1 qua API thật pass. [Handoff D2](handoffs/D2.md)
 ghi 41 frontend tests, 1 browser E2E và 113 backend tests pass sau review.
@@ -12,9 +13,9 @@ ghi 41 frontend tests, 1 browser E2E và 113 backend tests pass sau review.
 **UI bản đồ: UI01-A bổ sung đã merge PR #16 tại `df4777f`.** Phạm vi/prompt duy nhất nằm tại
 [UI vị trí sau C2/D1](PROMPTS_PHA_1_4_NGUOI.md#ui-vi-tri-sau-c2-d1).
 Baseline UI01-A/UI01-C1/C2 đã merge. Shared `LocationMap`, MapLibre/MapTiler config public và
-consumer tối thiểu tại form S05 đã có trên main. Phần picker/preview UI01-C1/C2 đã
-hoàn thiện code và evidence trong working tree hiện tại, nhưng vẫn **IN PROGRESS** đến
-khi được review/commit/merge; sau đó mới qua gate UI01-B/X1/X2.
+consumer tối thiểu tại form S05 đã có trên main. Picker/preview UI01-C1/C2 cũng đã
+merge PR #17; B3 bổ sung vị trí đã có code/evidence nhưng chưa merge. UI01-B/X1/X2
+vẫn giữ nguyên gate riêng.
 
 Sửa review UI01-A 15/10: cô lập lỗi lazy map, sửa đồng bộ marker khi tải tiles,
 lỗi provider sau load và disabled zoom; setup bổ sung config map vào `.env` cũ.
@@ -49,10 +50,10 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | C1 | 3 | P01 | DONE | [Handoff](handoffs/C1.md): E03–E06/S05, V3, DisasterQuery; integration retest 62 backend +15 frontend +4 browser tests pass; list snapshot đã sửa theo P00 |
 | UI01-A | 1 | P00, P01, B1, C1 | DONE baseline; bổ sung vị trí đã merge | [Handoff](handoffs/UI01-A.md): baseline merge PR #6 `78f164b`; shared `LocationMap` + MapLibre/MapTiler config + consumer form S05 merge PR #16 tại `df4777f` |
 | B2 | 2 | B1, C1 | DONE, đã tích hợp | [Handoff](handoffs/B2.md): E10/E11, E08 radius, ReportingQuery, V5; đã có trong nền merge `173a9a4`; evidence hiện tại ở review C2 14/10 |
-| UI01-C1 | 3 | UI01-A, C1 | DONE baseline, đã merge; bổ sung vị trí IN PROGRESS | [Handoff](handoffs/UI01-C1.md): S05 workbench merge PR #8 tại `173a9a4`; picker form dùng component chung được giữ nguyên, detail preview read-only và regression đã pass trong working tree, chờ review/commit/merge |
+| UI01-C1 | 3 | UI01-A, C1 | DONE, bổ sung vị trí đã merge | [Handoff](handoffs/UI01-C1.md): baseline merge PR #8 tại `173a9a4`; picker/detail preview merge PR #17 tại `d72ecb1` |
 | D1 | 4 | B2, C1 | DONE, đã merge | [Handoff](handoffs/D1.md): E12–E15/V6; PR #11 `e380d68`, fix `888996a`; 113 backend tests pass (62 unit/architecture +51 integration) sau review |
-| B3 | 2 | B1, UI01-A; B2/D1 để hoàn tất | IN PROGRESS; nghiệp vụ đã merge | PR #14 `242583c`; [handoff](handoffs/B3.md) ghi S02/S03 E07–E14 đã pass, còn picker/preview vị trí sau khi shared component merge |
-| C2 | 3 | B2, C1, UI01-A | DONE baseline, đã merge; bổ sung vị trí IN PROGRESS | PR #9 `120dec8`; S04 đã có map controlled cho tâm draft/vòng radius và detail preview read-only, regression cũ/mới pass trong working tree; chờ review/commit/merge, Citizen UI vẫn thuộc B3 |
+| B3 | 2 | B1, UI01-A; B2/D1 để hoàn tất | DONE implementation trong working tree; chờ review/merge | Baseline PR #14 `242583c`; [handoff](handoffs/B3.md): S02/S03 E07–E14 + shared picker/preview, fallback map, 70 unit tests và browser B3+C2 5/5 pass; chưa commit/merge phần bổ sung |
+| C2 | 3 | B2, C1, UI01-A | DONE, bổ sung vị trí đã merge | Baseline PR #9 `120dec8`; S04 map tâm/radius + detail preview merge PR #17 tại `d72ecb1`; Citizen UI thuộc B3 |
 | D2 | 4 | D1, UI01-A | DONE | [Handoff](handoffs/D2.md): S06 workbench + E12–E15 client; review đã sửa stale async state, 409 recovery và double-submit; 41 frontend tests, 1 E2E browser test, full backend verify 113 tests |
 | A1 | 1 | UI01-A; audit lại khi B2/D1 merge | TODO | Security/shared behavior; UI foundation thuộc UI01-A |
 | A2 | 1 | UI01-A; hoàn tất UI runtime và X2/CI | TODO | Docker/frontend/CI |
@@ -63,9 +64,9 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | C3 | 3 | X1; bổ sung X2/D3 | TODO | Tài liệu/rubric/demo |
 | A3 | 1 + nhóm | X2, C3, D3, UI01-B và mọi task trước | TODO | Audit cuối; không tuyên bố Pha 1 DONE khi thiếu evidence |
 
-P00/P01/B1/B2/C1/UI01-A/UI01-C1 baseline/C2 baseline/D1/D2 và phần nghiệp vụ
-B3 đã tích hợp trên nền hiện tại. UI01-C1/C2 bổ sung vị trí đang chờ review/merge;
-B3/D2/UI01-B không được suy ra hoàn tất từ phần bổ sung này. A1 cần audit E01–E15,
+P00/P01/B1/B2/C1/UI01-A/UI01-C1/C2/D1/D2 và phần nghiệp vụ B3 đã tích hợp trên nền
+hiện tại. B3 bổ sung vị trí đang chờ review/merge; UI01-B không được suy ra hoàn tất
+từ implementation trong working tree. A1 cần audit E01–E15,
 A2 tiếp tục runtime/CI theo catalog; local Compose + Vite đang chạy không đồng nghĩa A2 hoàn tất.
 UI01-B/X1/X2/A3 vẫn chưa đủ dependency; UI01-B phải bao phủ cả phần UI vị trí bổ sung.
 Chỉ thực hiện prompt được giao; bảng này không tự giao hoặc khởi chạy task tiếp theo.
