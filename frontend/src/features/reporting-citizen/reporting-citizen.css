@@ -1,0 +1,394 @@
+.reporting-citizen-page {
+  max-width: var(--gdrn-content-width);
+  margin: 0 auto;
+}
+
+.reporting-citizen-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--gdrn-space-6);
+  align-items: start;
+}
+
+.reporting-citizen-card {
+  min-width: 0;
+  padding: var(--gdrn-space-6);
+  background: var(--gdrn-surface);
+  border: 1px solid var(--gdrn-border);
+  border-radius: var(--gdrn-radius-panel);
+}
+
+.reporting-citizen-card h2,
+.reporting-citizen-detail h3 {
+  margin-top: 0;
+  color: var(--gdrn-ink);
+}
+
+.report-form,
+.report-form__field {
+  display: grid;
+  gap: var(--gdrn-space-2);
+}
+
+.report-form {
+  gap: var(--gdrn-space-4);
+}
+
+.report-form__field label {
+  font-weight: 600;
+}
+
+.report-form input,
+.report-form select,
+.report-form textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--gdrn-space-3);
+  color: var(--gdrn-ink);
+  background: var(--gdrn-surface);
+  border: 1px solid var(--gdrn-input-border);
+  border-radius: var(--gdrn-radius-control);
+  font: inherit;
+}
+
+.report-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.report-form input:focus-visible,
+.report-form select:focus-visible,
+.report-form textarea:focus-visible,
+.reporting-citizen-page button:focus-visible {
+  outline: 3px solid var(--gdrn-focus);
+  outline-offset: 3px;
+}
+
+.report-form__coordinates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gdrn-space-4);
+}
+
+.report-field-error {
+  margin: 0;
+  color: var(--gdrn-error-text);
+  font-size: var(--gdrn-text-sm);
+}
+
+.report-field-hint,
+.muted {
+  color: var(--gdrn-muted);
+}
+
+.report-form button,
+.reporting-citizen-page button {
+  min-height: 44px;
+  padding: var(--gdrn-space-2) var(--gdrn-space-4);
+  border-radius: var(--gdrn-radius-control);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.report-form button {
+  color: var(--gdrn-on-action);
+  background: var(--gdrn-action);
+  border-color: var(--gdrn-action);
+}
+
+.reporting-citizen-page button.secondary {
+  color: var(--gdrn-ink);
+  background: var(--gdrn-surface);
+  border: 1px solid var(--gdrn-action);
+}
+
+.reporting-citizen-page button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.report-list {
+  display: grid;
+  gap: var(--gdrn-space-4);
+}
+
+.report-list__heading,
+.report-list__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.report-list__heading h2 {
+  margin-bottom: 0;
+}
+
+.report-list__filters {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: var(--gdrn-space-2) var(--gdrn-space-3);
+}
+
+.report-list__filters select {
+  min-width: 0;
+  min-height: 44px;
+  padding: var(--gdrn-space-2) var(--gdrn-space-3);
+  color: var(--gdrn-ink);
+  background: var(--gdrn-surface);
+  border: 1px solid var(--gdrn-input-border);
+  border-radius: var(--gdrn-radius-control);
+  font: inherit;
+}
+
+.report-list__items {
+  display: grid;
+  gap: var(--gdrn-space-3);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.report-list__item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--gdrn-space-2);
+}
+
+.report-list__item {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--gdrn-space-3);
+  text-align: left;
+  background: var(--gdrn-surface);
+  border: 1px solid var(--gdrn-border);
+}
+
+.report-list__item[aria-pressed="true"] {
+  border-color: var(--gdrn-focus);
+  box-shadow: inset 4px 0 var(--gdrn-focus);
+}
+
+.report-list__item-main {
+  display: grid;
+  min-width: 0;
+  gap: var(--gdrn-space-1);
+}
+
+.report-list__item-main span {
+  overflow-wrap: anywhere;
+  font-weight: 400;
+}
+
+.report-list__item-main small {
+  color: var(--gdrn-muted);
+  font-weight: 400;
+}
+
+.report-status {
+  display: inline-block;
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.report-status--pending {
+  color: #80500b;
+  background: #fff2cc;
+}
+
+.report-status--verified {
+  color: #176344;
+  background: #dff5e8;
+}
+
+.report-status--rejected {
+  color: #9b2c31;
+  background: #fde8e8;
+}
+
+.reporting-citizen-detail {
+  margin-bottom: var(--gdrn-space-6);
+  overflow-wrap: anywhere;
+}
+
+.reporting-citizen-detail__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gdrn-space-3);
+  margin-bottom: var(--gdrn-space-4);
+}
+
+.reporting-citizen-detail__heading h2 {
+  margin: 0;
+}
+
+.report-detail-list {
+  display: grid;
+  gap: var(--gdrn-space-3);
+  margin: 0;
+}
+
+.report-detail-list > div {
+  padding-bottom: var(--gdrn-space-3);
+  border-bottom: 1px solid var(--gdrn-border);
+}
+
+.report-detail-list dt {
+  color: var(--gdrn-muted);
+  font-size: var(--gdrn-text-sm);
+}
+
+.report-detail-list dd {
+  margin: var(--gdrn-space-1) 0 0;
+}
+
+.mission-progress {
+  margin-top: var(--gdrn-space-6);
+  padding-top: var(--gdrn-space-6);
+  border-top: 1px solid var(--gdrn-border);
+}
+
+.mission-progress__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gdrn-space-3);
+}
+
+.mission-progress__heading h3 {
+  margin: 0;
+}
+
+.mission-progress__facts {
+  display: grid;
+  gap: var(--gdrn-space-3);
+  margin: 0;
+}
+
+.mission-progress__facts > div {
+  display: grid;
+  grid-template-columns: minmax(8rem, .7fr) minmax(0, 1.3fr);
+  gap: var(--gdrn-space-3);
+}
+
+.mission-progress__facts dt {
+  color: var(--gdrn-muted);
+  font-size: var(--gdrn-text-sm);
+}
+
+.mission-progress__facts dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.mission-status {
+  display: inline-block;
+  padding: var(--gdrn-space-1) var(--gdrn-space-2);
+  border-radius: 999px;
+  font-size: var(--gdrn-text-sm);
+  font-weight: 700;
+}
+
+.mission-status--assigned {
+  color: #80500b;
+  background: #fff2cc;
+}
+
+.mission-status--in_progress {
+  color: #175975;
+  background: #e1f2f8;
+}
+
+.mission-status--completed {
+  color: #176344;
+  background: #dff5e8;
+}
+
+.report-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: var(--gdrn-space-4);
+  background: rgb(16 36 58 / 55%);
+}
+
+.report-withdraw-confirm {
+  width: min(100%, 32rem);
+  padding: var(--gdrn-space-6);
+  background: var(--gdrn-surface);
+  border: 1px solid var(--gdrn-border);
+  border-radius: var(--gdrn-radius-panel);
+  box-shadow: var(--gdrn-shadow);
+}
+
+.report-withdraw-confirm h3 {
+  margin-top: 0;
+}
+
+.report-withdraw-confirm__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--gdrn-space-3);
+}
+
+@media (max-width: 768px) {
+  .reporting-citizen-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--gdrn-space-4);
+  }
+
+  .reporting-citizen-card {
+    padding: var(--gdrn-space-4);
+  }
+}
+
+@media (max-width: 420px) {
+  .report-form__coordinates {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .report-list__item-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .report-list__pagination {
+    flex-wrap: wrap;
+  }
+
+  .mission-progress__facts > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--gdrn-space-1);
+  }
+
+  .mission-progress__heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .reporting-citizen-detail__heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reporting-citizen-page *,
+  .reporting-citizen-page *::before,
+  .reporting-citizen-page *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

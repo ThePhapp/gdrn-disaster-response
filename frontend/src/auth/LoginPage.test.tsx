@@ -29,7 +29,7 @@ describe('Login', () => {
       .mockResolvedValue(new Response(JSON.stringify({ items: [], page: 0, size: 20, totalElements: 0, totalPages: 0 })))
     vi.stubGlobal('fetch', fetcher)
     mount(); await fillAndSubmit()
-    expect(await screen.findByRole('heading', { name: role === 'AUTHORITY' ? 'Duyệt báo cáo sự cố' : 'Đã đăng nhập' })).toBeVisible()
+    expect(await screen.findByRole('heading', { name: role === 'AUTHORITY' ? 'Duyệt báo cáo sự cố' : 'Báo cáo sự cố' })).toBeVisible()
     expect(fetcher.mock.calls.slice(0, 2).map(call => call[0])).toEqual(['/api/auth/login', '/api/auth/me'])
     if (role === 'AUTHORITY') await waitFor(() => expect(fetcher.mock.calls[2][0]).toContain('/api/reports?'))
     expect(session.snapshot().user).toEqual(user)
