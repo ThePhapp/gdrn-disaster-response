@@ -86,6 +86,7 @@ try {
     }
     $values = Read-LocalEnv
     $backendPort = if ($values.APP_PORT) { $values.APP_PORT } else { '8080' }
+    $frontendPort = if ($values.FRONTEND_PORT) { $values.FRONTEND_PORT } else { '5173' }
     if ($Action -eq 'start') {
         if ((node --version) -ne 'v22.14.0') { throw 'Use Node 22.14.0 as pinned in frontend/.nvmrc.' }
         foreach ($key in @('JWT_SECRET_BASE64','POSTGRES_PASSWORD')) {
@@ -95,8 +96,8 @@ try {
         Require-Success 'Compose startup'
         Wait-LocalUrl "http://127.0.0.1:$backendPort/actuator/health"
         if (-not (Managed-Frontend)) {
-            if (Get-NetTCPConnection -State Listen -LocalPort 5173 -ErrorAction SilentlyContinue) {
-                throw 'Port 5173 is occupied by an unmanaged process. Stop it before starting this frontend.'
+            if (Get-NetTCPConnection -State Listen -LocalPort ([int]$frontendPort) -ErrorAction SilentlyContinue) {
+                throw "Port $frontendPort is occupied by an unmanaged process. Stop it before starting this frontend."
             }
             Push-Location $frontendPath
             try { npm.cmd ci; Require-Success 'npm ci' } finally { Pop-Location }
@@ -107,12 +108,12 @@ try {
                 else { Remove-Item "Env:$key" -ErrorAction SilentlyContinue }
             }
             $vitePath = Join-Path $frontendPath 'node_modules/vite/bin/vite.js'
-            $process = Start-Process -FilePath (Get-Command node).Source -ArgumentList @("`"$vitePath`"", '--host', '127.0.0.1') -WorkingDirectory $frontendPath -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $runtimePath 'frontend.log') -RedirectStandardError (Join-Path $runtimePath 'frontend-error.log')
+            $process = Start-Process -FilePath (Get-Command node).Source -ArgumentList @("`"$vitePath`"", '--host', '127.0.0.1', '--port', "$frontendPort") -WorkingDirectory $frontendPath -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $runtimePath 'frontend.log') -RedirectStandardError (Join-Path $runtimePath 'frontend-error.log')
             $managed = Get-CimInstance Win32_Process -Filter "ProcessId = $($process.Id)"
             @{ pid=$process.Id; createdAt=$managed.CreationDate.ToUniversalTime().ToString('o') } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $runtimePath 'frontend.json')
         }
-        Wait-LocalUrl 'http://127.0.0.1:5173/login'
-        Write-Output "Frontend: http://127.0.0.1:5173/login | Backend: http://127.0.0.1:$backendPort | Credentials: .env"
+        Wait-LocalUrl "http://127.0.0.1:$frontendPort/login"
+        Write-Output "Frontend: http://127.0.0.1:$frontendPort/login | Backend: http://127.0.0.1:$backendPort | Credentials: .env"
         return
     }
     if ($Action -eq 'stop') {
