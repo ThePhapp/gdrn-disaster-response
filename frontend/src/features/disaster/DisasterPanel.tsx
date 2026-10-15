@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { EmptyState, ErrorMessage, Loading } from '../../shared/components'
+import { LocationMap } from '../../shared/location'
 import type { Disaster } from './disaster-api'
 import { ResolveDisasterDialog } from './ResolveDisasterDialog'
 import { SeverityBadge, StatusBadge, typeLabels } from './DisasterBadges'
@@ -40,6 +41,12 @@ export function DisasterDetail({ disaster, loading, error, busy, confirming, onE
       <div><dt>Mã thảm họa</dt><dd className="disaster-facts__id">{disaster.id}</dd></div>
       <div><dt>Phiên bản</dt><dd>{disaster.version}</dd></div>
     </dl>
+    <LocationMap
+      value={{ latitude: disaster.latitude, longitude: disaster.longitude }}
+      readOnly
+      label={`Vị trí thảm họa ${disaster.name}`}
+      className="disaster-detail__map"
+    />
     {disaster.status === 'ACTIVE' && <div className="disaster-actions">
       <button type="button" onClick={onEdit} disabled={busy}>Chỉnh sửa</button>
       <button ref={resolveTrigger} type="button" className="danger-secondary" onClick={onConfirm} disabled={busy}>Kết thúc thảm họa</button>

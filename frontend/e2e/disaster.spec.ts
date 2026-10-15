@@ -26,6 +26,7 @@ test('authority creates, edits and resolves a disaster across UI01-C1 viewports'
   await page.getByRole('complementary', { name: 'Tạo thảm họa' })
     .getByRole('button', { name: 'Tạo thảm họa', exact: true }).click()
   await expect(page.getByRole('heading', { name })).toBeVisible()
+  await expect(page.locator(`section.location-map[aria-label="Vị trí thảm họa ${name}"]`)).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   await page.screenshot({ path: 'test-results/ui01-c1-disaster-1280.png', fullPage: true })
 

@@ -311,6 +311,9 @@
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: var(--gdrn-text-sm);
 }
+.disaster-detail__map {
+  margin-bottom: var(--gdrn-space-6);
+}
 
 .disaster-form .field {
   margin: 0 0 var(--gdrn-space-4);

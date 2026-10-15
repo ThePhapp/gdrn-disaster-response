@@ -1,5 +1,7 @@
 import { expect, test, type APIRequestContext } from '@playwright/test'
 
+const mapProviderConfigured = Boolean(process.env.VITE_MAPTILER_KEY || process.env.VITE_MAP_STYLE_URL)
+
 test('C2 real citizen submit → authority verify → citizen reads VERIFIED, rejection/conflict/role and responsive workbench', async ({ page, playwright }) => {
   test.setTimeout(90000)
   const baseURL = process.env.E2E_API_URL || 'http://127.0.0.1:18080'
@@ -56,6 +58,17 @@ test('C2 real citizen submit → authority verify → citizen reads VERIFIED, re
     await page.getByLabel('Mật khẩu', { exact: true }).fill(process.env.DEMO_AUTHORITY_PASSWORD!)
     await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click()
     await expect(page).toHaveURL(/\/operations\/reports$/)
+    const filterMap = page.locator('section.location-map[aria-label="Chọn tâm và xem bán kính lọc"]')
+    await expect(filterMap).toBeVisible()
+    if (mapProviderConfigured) {
+      const canvas = filterMap.locator('.maplibregl-canvas')
+      await expect(canvas).toBeVisible()
+      const box = await canvas.boundingBox()
+      if (!box) throw new Error('C2 filter map has no visible bounding box')
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+      await expect(page.getByLabel('Vĩ độ', { exact: true })).not.toHaveValue('')
+      await expect(page.getByLabel('Kinh độ', { exact: true })).not.toHaveValue('')
+    }
     await page.getByLabel('Trạng thái', { exact: true }).selectOption('PENDING')
     await page.getByLabel('Vĩ độ', { exact: true }).fill('21')
     await page.getByLabel('Kinh độ', { exact: true }).fill('105')
@@ -66,6 +79,7 @@ test('C2 real citizen submit → authority verify → citizen reads VERIFIED, re
     await page.getByRole('button', { name: new RegExp(`${tag} xác minh`) }).click()
     const detail = page.getByRole('complementary', { name: 'Chi tiết và quyết định báo cáo' })
     await expect(detail).toContainText(report.id)
+    await expect(page.locator(`section.location-map[aria-label="Vị trí báo cáo ${report.id}"]`)).toBeVisible()
     for (const width of [360, 768, 1280]) {
       await page.setViewportSize({ width, height: 900 })
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
@@ -148,10 +162,36 @@ test('C2 real citizen submit → authority verify → citizen reads VERIFIED, re
     await page.getByLabel('Email', { exact: true }).fill(process.env.DEMO_CITIZEN_ONE_EMAIL!)
     await page.getByLabel('Mật khẩu', { exact: true }).fill(process.env.DEMO_CITIZEN_ONE_PASSWORD!)
     await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click()
-    await expect(page.getByRole('heading', { name: 'Đã đăng nhập' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Báo cáo sự cố' })).toBeVisible()
     await page.evaluate(() => { history.pushState(null, '', '/operations/reports'); dispatchEvent(new PopStateEvent('popstate')) })
     await expect(page.getByRole('alert')).toContainText('không có quyền')
     // Dispose test disaster via its supported lifecycle; verified reports intentionally remain for traceability.
     expect((await authority.patch(`/api/disasters/${disaster.id}`, { data: { expectedVersion: disaster.version, status: 'RESOLVED' } })).status()).toBe(200)
   } finally { await citizen.dispose(); await authority.dispose() }
+})
+
+test('C2 keeps real radius filtering available when the map provider fails', async ({ page }) => {
+  test.skip(!mapProviderConfigured, 'Map provider is not configured for this environment')
+  const email = process.env.DEMO_AUTHORITY_EMAIL
+  const password = process.env.DEMO_AUTHORITY_PASSWORD
+  if (!email || !password) throw new Error('Set authority credentials for the real C2 backend')
+
+  await page.route('https://api.maptiler.com/**', route => route.abort('internetdisconnected'))
+  await page.goto('/login')
+  await page.getByLabel('Email', { exact: true }).fill(email)
+  await page.getByLabel('Mật khẩu', { exact: true }).fill(password)
+  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click()
+  await expect(page).toHaveURL(/\/operations\/reports$/)
+  await expect(page.getByText('Không tải được lớp bản đồ. Nhập tọa độ vẫn hoạt động.')).toBeVisible()
+
+  await page.getByLabel('Vĩ độ', { exact: true }).fill('0')
+  await page.getByLabel('Kinh độ', { exact: true }).fill('0')
+  await page.getByLabel('Bán kính (m)', { exact: true }).fill('1000')
+  const responsePromise = page.waitForResponse(response => response.url().includes('/api/reports?')
+    && response.url().includes('lat=0') && response.url().includes('lon=0') && response.url().includes('radiusMeters=1000'))
+  await page.getByRole('button', { name: 'Áp dụng bộ lọc' }).click()
+  expect((await responsePromise).status()).toBe(200)
+  await expect(page.getByLabel('Vĩ độ', { exact: true })).toHaveValue('0')
+  await expect(page.getByLabel('Kinh độ', { exact: true })).toHaveValue('0')
+  await page.screenshot({ path: 'test-results/ui01-c2-map-failure.png', fullPage: true })
 })

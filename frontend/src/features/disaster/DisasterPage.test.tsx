@@ -7,7 +7,14 @@ import type { Disaster, DisasterPage as Page } from './disaster-api'
 const mocks = vi.hoisted(() => ({
   list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(),
 }))
-vi.mock('../../shared/location', () => ({ LocationMap: () => <div aria-label="Bản đồ giả lập" /> }))
+vi.mock('../../shared/location', () => ({
+  LocationMap: ({ value, readOnly, label }: {
+    value?: { latitude: number; longitude: number }
+    readOnly?: boolean
+    label?: string
+  }) => <div aria-label={label ?? 'Bản đồ giả lập'} data-location={value ? `${value.latitude},${value.longitude}` : 'blank'}
+    data-read-only={readOnly ? 'true' : 'false'} />,
+}))
 vi.mock('./disaster-api', async importOriginal => ({
   ...await importOriginal<typeof import('./disaster-api')>(),
   listDisasters: mocks.list,
@@ -42,6 +49,8 @@ describe('DisasterPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /Lũ miền Trung/ }))
     expect(await screen.findByRole('heading', { name: 'Lũ miền Trung' })).toBeVisible()
+    expect(screen.getByLabelText('Vị trí thảm họa Lũ miền Trung')).toHaveAttribute('data-location', '16.0471,108.2068')
+    expect(screen.getByLabelText('Vị trí thảm họa Lũ miền Trung')).toHaveAttribute('data-read-only', 'true')
     await userEvent.click(screen.getByRole('button', { name: 'Kết thúc thảm họa' }))
     expect(screen.getByRole('alertdialog')).toHaveTextContent('không thể mở lại')
     await userEvent.click(screen.getByRole('button', { name: 'Xác nhận kết thúc' }))
