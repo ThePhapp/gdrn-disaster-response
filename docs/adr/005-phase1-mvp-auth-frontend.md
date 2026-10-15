@@ -20,6 +20,17 @@ the remaining business scope and deployment work stay planned. This update recor
 implementation evidence, not an unrecorded whole-team approval. See
 [P01 handoff](../handoffs/P01.md) for exact checks and residual A1/A2 work.
 
+A1 integration update (2026-10-15): after B2 and D1 were merged, the shared security
+policy was audited against all E01–E15 operations. The API allowlist is exact for
+the published paths, unknown API paths remain default-denied, and every protected
+runtime OpenAPI operation publishes the `bearerAuth` requirement. The frontend
+continues to use the UI01-A primitives, role-filtered feature routes, a memory-only
+session and generation checks that prevent late responses from crossing logout or
+user changes. Logout and expiry clear the session; an issued JWT is not revoked and
+expires after its fixed 900-second TTL. CSRF remains ignored only for `/api/**`
+because the browser sends Bearer tokens explicitly and no cookie authentication is
+enabled. See the [A1 handoff](../handoffs/A1.md) for the endpoint audit and evidence.
+
 ## Context at P00 (2026-10-08)
 
 Four contributors have 15 working days for a real citizen-to-rescue flow. The current
