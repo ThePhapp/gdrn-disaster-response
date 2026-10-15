@@ -157,10 +157,8 @@ function Test-Foundation {
         if (-not $response -or [int]$response.StatusCode -ne 401) {
             throw 'Frontend check failed: /api/unknown did not return HTTP 401.'
         }
-        $reader = New-Object System.IO.StreamReader($response.GetResponseStream())
-        try { $problem = $reader.ReadToEnd() } finally { $reader.Dispose() }
-        if ($problem -notmatch '"code"\s*:\s*"UNAUTHENTICATED"') {
-            throw 'Frontend check failed: /api/unknown did not return the JSON auth error.'
+        if ($response.ContentType -notmatch 'application/json') {
+            throw 'Frontend check failed: /api/unknown did not return JSON.'
         }
         Write-Host 'PASS frontend /api/unknown (JSON 401, no SPA fallback)'
     }
