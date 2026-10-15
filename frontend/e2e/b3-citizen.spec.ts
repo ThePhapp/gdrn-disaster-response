@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
 const citizenOne = {
   email: process.env.DEMO_CITIZEN_ONE_EMAIL,
@@ -7,6 +7,10 @@ const citizenOne = {
 const citizenTwo = {
   email: process.env.DEMO_CITIZEN_TWO_EMAIL,
   password: process.env.DEMO_CITIZEN_TWO_PASSWORD,
+}
+const authorityAccount = {
+  email: process.env.DEMO_AUTHORITY_EMAIL,
+  password: process.env.DEMO_AUTHORITY_PASSWORD,
 }
 
 async function login(page: Page, account: typeof citizenOne) {
@@ -55,4 +59,103 @@ test('B3 real citizen create, isolation, responsive detail and withdrawal', asyn
   await withdraw.click()
   await page.getByRole('button', { name: 'Xác nhận rút' }).click()
   await expect(reportRow).toHaveCount(0)
+})
+
+test('B3 shows real E14 mission lifecycle after report verification', async ({ page, playwright }) => {
+  test.setTimeout(90_000)
+  const baseURL = process.env.E2E_API_URL || 'http://127.0.0.1:8080'
+  if (!citizenOne.email || !citizenOne.password || !citizenTwo.email || !citizenTwo.password
+    || !authorityAccount.email || !authorityAccount.password) {
+    throw new Error('Configure authority and both demo citizen accounts for B3 E14 browser smoke')
+  }
+
+  async function loginApi(email: string, password: string): Promise<APIRequestContext> {
+    const loginClient = await playwright.request.newContext({ baseURL })
+    const response = await loginClient.post('/api/auth/login', { data: { email, password } })
+    expect(response.status()).toBe(200)
+    const { accessToken } = await response.json()
+    await loginClient.dispose()
+    return playwright.request.newContext({
+      baseURL,
+      extraHTTPHeaders: { Authorization: `Bearer ${accessToken}` },
+    })
+  }
+
+  const authority = await loginApi(authorityAccount.email, authorityAccount.password)
+  const otherCitizen = await loginApi(citizenTwo.email, citizenTwo.password)
+  const tag = `B3 E14 browser smoke ${Date.now()}`
+  let disaster: { id: string, version: number } | undefined
+  let missionId: string | undefined
+  let missionStatus: 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | undefined
+
+  try {
+    const disasterResponse = await authority.post('/api/disasters', {
+      data: { name: tag, type: 'FLOOD', severity: 'HIGH', description: tag, latitude: 21.0285, longitude: 105.8542 },
+    })
+    expect(disasterResponse.status()).toBe(201)
+    const createdDisaster: { id: string, version: number } = await disasterResponse.json()
+    disaster = createdDisaster
+
+    await login(page, citizenOne)
+    await page.getByRole('link', { name: 'Tạo báo cáo', exact: true }).click()
+    await page.getByLabel('Mô tả tình huống').fill(tag)
+    await page.getByLabel('Vĩ độ (latitude)').fill('21.0285')
+    await page.getByLabel('Kinh độ (longitude)').fill('105.8542')
+    const createResponsePromise = page.waitForResponse(response => response.url().endsWith('/api/reports') && response.request().method() === 'POST')
+    await page.getByRole('button', { name: 'Gửi báo cáo', exact: true }).click()
+    const createResponse = await createResponsePromise
+    expect(createResponse.status()).toBe(201)
+    const report = await createResponse.json()
+    await expect(page.getByText('Báo cáo cần được xác minh trước khi có thể phân công cứu hộ.')).toBeVisible()
+
+    const verification = await authority.patch(`/api/reports/${report.id}/verification`, {
+      data: { status: 'VERIFIED', disasterId: createdDisaster.id },
+    })
+    expect(verification.status()).toBe(200)
+
+    const teamsResponse = await authority.get('/api/rescue-teams?page=0&size=20&sort=name%2Casc&availability=AVAILABLE')
+    expect(teamsResponse.status()).toBe(200)
+    const teams = await teamsResponse.json()
+    expect(teams.items.length, 'The demo profile must provide an available rescue team').toBeGreaterThan(0)
+
+    const missionResponse = await authority.post('/api/rescue-missions', {
+      data: { reportId: report.id, teamId: teams.items[0].id },
+    })
+    expect(missionResponse.status()).toBe(201)
+    const mission = await missionResponse.json()
+    missionId = mission.id
+    missionStatus = 'ASSIGNED'
+
+    expect((await otherCitizen.get(`/api/rescue-missions?page=0&size=20&sort=createdAt%2Cdesc&reportId=${report.id}`)).status()).toBe(404)
+
+    await page.getByRole('button', { name: 'Làm mới chi tiết' }).click()
+    await expect(page.getByText('Đã phân công', { exact: true })).toBeVisible()
+
+    const started = await authority.patch(`/api/rescue-missions/${missionId}/status`, { data: { status: 'IN_PROGRESS' } })
+    expect(started.status()).toBe(200)
+    missionStatus = 'IN_PROGRESS'
+    await page.getByRole('button', { name: 'Làm mới tiến độ' }).click()
+    await expect(page.getByText('Đang cứu hộ', { exact: true })).toBeVisible()
+
+    const completed = await authority.patch(`/api/rescue-missions/${missionId}/status`, { data: { status: 'COMPLETED' } })
+    expect(completed.status()).toBe(200)
+    missionStatus = 'COMPLETED'
+    await page.getByRole('button', { name: 'Làm mới tiến độ' }).click()
+    await expect(page.getByText('Đã hoàn thành', { exact: true })).toBeVisible()
+    await expect(page.getByText('Bắt đầu cứu hộ')).toBeVisible()
+    await expect(page.getByText('Hoàn thành', { exact: true })).toBeVisible()
+  } finally {
+    if (missionId && missionStatus === 'ASSIGNED') {
+      const response = await authority.patch(`/api/rescue-missions/${missionId}/status`, { data: { status: 'IN_PROGRESS' } })
+      if (response.ok()) missionStatus = 'IN_PROGRESS'
+    }
+    if (missionId && missionStatus === 'IN_PROGRESS') {
+      await authority.patch(`/api/rescue-missions/${missionId}/status`, { data: { status: 'COMPLETED' } })
+    }
+    if (disaster) {
+      await authority.patch(`/api/disasters/${disaster.id}`, { data: { expectedVersion: disaster.version, status: 'RESOLVED' } })
+    }
+    await otherCitizen.dispose()
+    await authority.dispose()
+  }
 })

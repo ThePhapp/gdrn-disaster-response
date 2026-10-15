@@ -219,6 +219,18 @@
   overflow-wrap: anywhere;
 }
 
+.reporting-citizen-detail__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gdrn-space-3);
+  margin-bottom: var(--gdrn-space-4);
+}
+
+.reporting-citizen-detail__heading h2 {
+  margin: 0;
+}
+
 .report-detail-list {
   display: grid;
   gap: var(--gdrn-space-3);
@@ -361,6 +373,11 @@
   }
 
   .mission-progress__heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .reporting-citizen-detail__heading {
     align-items: stretch;
     flex-direction: column;
   }

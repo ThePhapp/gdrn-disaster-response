@@ -227,6 +227,23 @@ describe('ReportingCitizenPage', () => {
     await waitFor(() => expect(mocks.missions).toHaveBeenCalledTimes(2))
   })
 
+  it('refreshes E09 detail before loading newly available mission progress', async () => {
+    const user = userEvent.setup()
+    mocks.get
+      .mockResolvedValueOnce(report)
+      .mockResolvedValueOnce(verifiedReport)
+    renderAt('/my-reports')
+
+    await user.click(await screen.findByRole('button', { name: /Nước đang dâng/ }))
+    expect(await screen.findByText('Báo cáo cần được xác minh trước khi có thể phân công cứu hộ.')).toBeVisible()
+
+    await user.click(screen.getByRole('button', { name: 'Làm mới chi tiết' }))
+
+    await waitFor(() => expect(mocks.get).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(mocks.missions).toHaveBeenCalledWith(verifiedReport.id))
+    expect(await screen.findByText('Chưa có nhiệm vụ cứu hộ cho báo cáo này.')).toBeVisible()
+  })
+
   it('shows mission progress from E14', async () => {
     const user = userEvent.setup()
     mocks.list.mockResolvedValue(page([verifiedReport]))

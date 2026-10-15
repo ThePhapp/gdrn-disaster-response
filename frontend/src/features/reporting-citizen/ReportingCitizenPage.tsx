@@ -377,6 +377,7 @@ function ReportDetail({ reportId }: { reportId?: string }) {
   const [report, setReport] = useState<Report>()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -389,7 +390,7 @@ function ReportDetail({ reportId }: { reportId?: string }) {
       .catch(cause => { if (active) setError(getErrorMessage(cause)) })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [reportId])
+  }, [reportId, refreshKey])
 
   if (!reportId) return <EmptyState>Chọn một báo cáo để xem chi tiết.</EmptyState>
   if (loading) return <Loading>Đang tải chi tiết báo cáo…</Loading>
@@ -398,7 +399,12 @@ function ReportDetail({ reportId }: { reportId?: string }) {
 
   return (
     <div className="reporting-citizen-detail" aria-live="polite">
-      <h2>Chi tiết báo cáo</h2>
+      <div className="reporting-citizen-detail__heading">
+        <h2>Chi tiết báo cáo</h2>
+        <button type="button" className="secondary" onClick={() => setRefreshKey(value => value + 1)}>
+          Làm mới chi tiết
+        </button>
+      </div>
       <dl className="report-detail-list">
         <div><dt>Mã báo cáo</dt><dd>{report.id}</dd></div>
         <div><dt>Loại</dt><dd>{reportTypeLabels[report.type]}</dd></div>
