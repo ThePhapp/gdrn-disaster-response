@@ -5,7 +5,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   create: vi.fn(),
+  get: vi.fn(),
   list: vi.fn(),
+  missions: vi.fn(),
   withdraw: vi.fn(),
   navigate: vi.fn(),
 }))
@@ -13,7 +15,9 @@ const mocks = vi.hoisted(() => ({
 vi.mock('./reporting-api', async importOriginal => ({
   ...await importOriginal<typeof import('./reporting-api')>(),
   createReport: mocks.create,
+  getReport: mocks.get,
   listReports: mocks.list,
+  listReportMissions: mocks.missions,
   withdrawReport: mocks.withdraw,
 }))
 
@@ -37,10 +41,18 @@ const report: Report = {
   updatedAt: '2026-10-14T08:00:00Z',
 }
 
+const verifiedReport: Report = {
+  ...report,
+  status: 'VERIFIED',
+  disasterId: '00000000-0000-0000-0000-000000000020',
+  verifiedAt: '2026-10-14T09:00:00Z',
+  updatedAt: '2026-10-14T09:00:00Z',
+}
+
 const page = (items: Report[] = [report]): ReportPage => ({
   items,
   page: 0,
-  size: 10,
+  size: 20,
   totalElements: items.length,
   totalPages: items.length ? 1 : 0,
 })
@@ -58,6 +70,8 @@ describe('ReportingCitizenPage', () => {
     vi.clearAllMocks()
     mocks.list.mockResolvedValue(page())
     mocks.create.mockResolvedValue(report)
+    mocks.get.mockResolvedValue(report)
+    mocks.missions.mockResolvedValue({ items: [], page: 0, size: 20, totalElements: 0, totalPages: 0 })
     mocks.withdraw.mockResolvedValue(undefined)
   })
 
@@ -65,11 +79,13 @@ describe('ReportingCitizenPage', () => {
     renderAt('/my-reports')
 
     expect(await screen.findByText(report.description)).toBeVisible()
-    expect(screen.getByText('Đang chờ xác minh')).toBeVisible()
+    expect(screen.getAllByText('Đang chờ xác minh')).toHaveLength(2)
     expect(mocks.list).toHaveBeenCalledWith({
       page: 0,
-      size: 10,
+      size: 20,
       sort: 'createdAt,desc',
+      status: undefined,
+      type: undefined,
     })
   })
 
@@ -123,7 +139,9 @@ describe('ReportingCitizenPage', () => {
         longitude: 105.8542,
       })
     })
-    expect(mocks.navigate).toHaveBeenCalledWith('/my-reports')
+    expect(mocks.navigate).toHaveBeenCalledWith('/my-reports', {
+      state: { selectedReportId: report.id },
+    })
   })
 
   it('shows an error when creating a report fails', async () => {
@@ -150,11 +168,92 @@ describe('ReportingCitizenPage', () => {
     await screen.findByText(report.description)
     await user.click(screen.getByRole('button', { name: 'Rút báo cáo' }))
     expect(screen.getByRole('alertdialog')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Hủy' })).toHaveFocus()
 
     await user.click(screen.getByRole('button', { name: 'Hủy' }))
 
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(mocks.withdraw).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Rút báo cáo' })).toHaveFocus()
+  })
+
+  it('closes the withdrawal dialog with Escape and returns focus', async () => {
+    const user = userEvent.setup()
+    renderAt('/my-reports')
+
+    await screen.findByText(report.description)
+    const trigger = screen.getByRole('button', { name: 'Rút báo cáo' })
+    await user.click(trigger)
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
+  })
+
+  it('filters reports and loads fresh detail through E09', async () => {
+    const user = userEvent.setup()
+    renderAt('/my-reports')
+
+    await screen.findByText(report.description)
+    await user.selectOptions(screen.getByLabelText('Trạng thái'), 'PENDING')
+    await waitFor(() => {
+      expect(mocks.list).toHaveBeenLastCalledWith({
+        page: 0,
+        size: 20,
+        sort: 'createdAt,desc',
+        status: 'PENDING',
+        type: undefined,
+      })
+    })
+
+    await user.click(screen.getByRole('button', { name: /Nước đang dâng/ }))
+    await waitFor(() => expect(mocks.get).toHaveBeenCalledWith(report.id))
+    expect(await screen.findByText('Mã báo cáo')).toBeVisible()
+    expect(screen.getByText('Báo cáo cần được xác minh trước khi có thể phân công cứu hộ.')).toBeVisible()
+    expect(mocks.missions).not.toHaveBeenCalled()
+  })
+
+  it('shows an empty mission state for a verified report without an assignment', async () => {
+    const user = userEvent.setup()
+    mocks.list.mockResolvedValue(page([verifiedReport]))
+    mocks.get.mockResolvedValue(verifiedReport)
+    renderAt('/my-reports')
+
+    await user.click(await screen.findByRole('button', { name: /Nước đang dâng/ }))
+
+    await waitFor(() => expect(mocks.missions).toHaveBeenCalledWith(verifiedReport.id))
+    expect(await screen.findByText('Chưa có nhiệm vụ cứu hộ cho báo cáo này.')).toBeVisible()
+    await user.click(screen.getByRole('button', { name: 'Làm mới tiến độ' }))
+    await waitFor(() => expect(mocks.missions).toHaveBeenCalledTimes(2))
+  })
+
+  it('shows mission progress from E14', async () => {
+    const user = userEvent.setup()
+    mocks.list.mockResolvedValue(page([verifiedReport]))
+    mocks.get.mockResolvedValue(verifiedReport)
+    mocks.missions.mockResolvedValue({
+      items: [{
+        id: '00000000-0000-0000-0000-000000000030',
+        reportId: verifiedReport.id,
+        teamId: '00000000-0000-0000-0000-000000000040',
+        status: 'COMPLETED',
+        assignedAt: '2026-10-14T10:00:00Z',
+        startedAt: '2026-10-14T10:10:00Z',
+        completedAt: '2026-10-14T11:00:00Z',
+        updatedAt: '2026-10-14T11:00:00Z',
+      }],
+      page: 0,
+      size: 20,
+      totalElements: 1,
+      totalPages: 1,
+    })
+    renderAt('/my-reports')
+
+    await user.click(await screen.findByRole('button', { name: /Nước đang dâng/ }))
+
+    expect(await screen.findByText('Đã hoàn thành')).toBeVisible()
+    expect(screen.getByText('Bắt đầu cứu hộ')).toBeVisible()
+    expect(screen.getByText('Hoàn thành')).toBeVisible()
   })
 
   it('withdraws a pending report and reloads the list', async () => {
@@ -178,7 +277,7 @@ describe('ReportingCitizenPage', () => {
   it('shows a conflict and reloads the list when withdrawal returns 409', async () => {
     const user = userEvent.setup()
     mocks.withdraw.mockRejectedValueOnce(
-    new (await import('../../shared/api')).ApiError(409, {
+      new (await import('../../shared/api')).ApiError(409, {
         timestamp: '2026-10-14T10:00:00Z',
         status: 409,
         code: 'INVALID_TRANSITION',
@@ -203,5 +302,4 @@ describe('ReportingCitizenPage', () => {
     })
     expect(mocks.withdraw).toHaveBeenCalledTimes(1)
   })
-
 })

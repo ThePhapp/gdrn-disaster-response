@@ -26,25 +26,26 @@ describe('Login', () => {
     const user = { id: 'one', email: 'one@example.test', role }
     const fetcher = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: 'opaque', tokenType: 'Bearer', expiresIn: 900, expiresAt: new Date(Date.now() + 900_000).toISOString(), user })))
       .mockResolvedValueOnce(new Response(JSON.stringify(user)))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ items: [], page: 0, size: 20, totalElements: 0, totalPages: 0 })))
     vi.stubGlobal('fetch', fetcher)
     mount(); await fillAndSubmit()
     if (role === 'CITIZEN') {
-    expect(await screen.findByRole('heading', { level: 1, name: 'Báo cáo sự cố' })).toBeVisible()
-  } else {
-    expect(await screen.findByRole('heading', { name: 'Đã đăng nhập' })).toBeVisible()
-  }
-   expect(fetcher.mock.calls.slice(0, 2).map(call => call[0])).toEqual([
-    '/api/auth/login',
-    '/api/auth/me'
-  ])
+      expect(await screen.findByRole('heading', { level: 1, name: 'Báo cáo sự cố' })).toBeVisible()
+    } else {
+      expect(await screen.findByRole('heading', { name: 'Đã đăng nhập' })).toBeVisible()
+    }
+    expect(fetcher.mock.calls.slice(0, 2).map(call => call[0])).toEqual([
+      '/api/auth/login',
+      '/api/auth/me',
+    ])
 
-  if (role === 'CITIZEN') {
-    await waitFor(() => {
-      expect(fetcher.mock.calls.map(call => call[0])).toContain(
-        '/api/reports?page=0&size=10&sort=createdAt%2Cdesc'
-      )
-    })
-  }
+    if (role === 'CITIZEN') {
+      await waitFor(() => {
+        expect(fetcher.mock.calls.map(call => call[0])).toContain(
+          '/api/reports?page=0&size=20&sort=createdAt%2Cdesc',
+        )
+      })
+    }
     expect(session.snapshot().user).toEqual(user)
     expect(Boolean(screen.queryByRole('link', { name: 'Thảm họa' }))).toBe(role === 'AUTHORITY')
     expect(localStorage.length).toBe(0)

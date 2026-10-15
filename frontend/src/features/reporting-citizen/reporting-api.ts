@@ -1,4 +1,3 @@
-
 import { api } from '../../shared/api'
 
 export const reportTypes = [
@@ -13,6 +12,7 @@ export const reportStatuses = ['PENDING', 'VERIFIED', 'REJECTED'] as const
 
 export type ReportType = typeof reportTypes[number]
 export type ReportStatus = typeof reportStatuses[number]
+export type MissionStatus = 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED'
 
 export type CreateReportRequest = {
   type: ReportType
@@ -39,6 +39,25 @@ export type Report = {
 
 export type ReportPage = {
   items: Report[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+}
+
+export type Mission = {
+  id: string
+  reportId: string
+  teamId: string
+  status: MissionStatus
+  assignedAt: string
+  startedAt?: string
+  completedAt?: string
+  updatedAt: string
+}
+
+export type MissionPage = {
+  items: Mission[]
   page: number
   size: number
   totalElements: number
@@ -75,6 +94,16 @@ export function listReports(filters: ReportFilters) {
 
 export function getReport(id: string) {
   return api<Report>(`/api/reports/${encodeURIComponent(id)}`)
+}
+
+export function listReportMissions(reportId: string) {
+  const query = new URLSearchParams({
+    page: '0',
+    size: '20',
+    sort: 'createdAt,desc',
+    reportId,
+  })
+  return api<MissionPage>(`/api/rescue-missions?${query}`)
 }
 
 export function withdrawReport(id: string) {

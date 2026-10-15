@@ -1,4 +1,3 @@
-
 import type { FeatureRoute } from '../../app/feature-routes'
 import { ReportingCitizenPage } from './ReportingCitizenPage'
 
