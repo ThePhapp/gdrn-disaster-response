@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Field } from '../../shared/components'
+import { LocationMap, type LocationValue } from '../../shared/location'
 import { severityLabels, typeLabels } from './DisasterBadges'
 import {
   disasterTypes,
@@ -52,9 +53,22 @@ export function DisasterForm({ disaster, busy, onCancel, onCreate, onEdit }: {
   const [errors, setErrors] = useState<Errors>({})
   const editing = Boolean(disaster)
 
+  const latitude = value.latitude.trim() === '' ? undefined : Number(value.latitude)
+  const longitude = value.longitude.trim() === '' ? undefined : Number(value.longitude)
+  const location = latitude !== undefined && longitude !== undefined
+    && Number.isFinite(latitude) && latitude >= -90 && latitude <= 90
+    && Number.isFinite(longitude) && longitude >= -180 && longitude <= 180
+    ? { latitude, longitude }
+    : undefined
+
   function set<K extends keyof FormValue>(field: K, next: FormValue[K]) {
     setValue(current => ({ ...current, [field]: next }))
     setErrors(current => ({ ...current, [field]: undefined, form: undefined }))
+  }
+
+  function setLocation(next: LocationValue) {
+    setValue(current => ({ ...current, latitude: String(next.latitude), longitude: String(next.longitude) }))
+    setErrors(current => ({ ...current, latitude: undefined, longitude: undefined, form: undefined }))
   }
 
   async function submit(event: FormEvent) {
@@ -110,6 +124,7 @@ export function DisasterForm({ disaster, busy, onCancel, onCreate, onEdit }: {
         hint="Từ -180 đến 180." onChange={event => set('longitude', event.target.value)}
         error={errors.longitude} disabled={busy} required />
     </div>
+    <LocationMap value={location} onChange={setLocation} disabled={busy} />
     {errors.form && <p className="field-error" role="alert">{errors.form}</p>}
     <div className="disaster-actions">
       <button type="submit" disabled={busy}>{busy ? 'Đang lưu…' : editing ? 'Lưu thay đổi' : 'Tạo thảm họa'}</button>

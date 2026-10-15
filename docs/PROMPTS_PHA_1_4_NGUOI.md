@@ -937,7 +937,7 @@ B3/S02–S03 và D2/S06 chưa có; không lấy việc D1 hoàn tất làm bằn
 S04 hiện nhập tâm/bán kính bằng số; S05 nhập tọa độ bằng số; chi tiết chỉ hiện cặp số.
 Giữ cả ba cách nhập/chọn/xem ở cùng feature, không tạo route bản đồ thứ bảy.
 
-Phạm vi được lập kế hoạch: Leaflet + raster tiles, một điểm được chọn, preview vị trí,
+Phạm vi được lập kế hoạch: MapLibre GL + MapTiler vector style, một điểm được chọn, preview vị trí,
 vòng tròn bán kính. Không routing, geocoding/autocomplete/reverse geocoding, GPS tự động,
 cluster, heatmap, polygon, theo dõi đội, bản đồ tất cả reports hoặc cache/offline tiles.
 Không thêm backend endpoint/schema/migration; không đổi 15 operations/6 screens,
@@ -966,7 +966,7 @@ UI01-B/X1 phải kiểm tra thêm phần bổ sung; không kéo lại dependency
 
 - Người 1 sở hữu dependency/lockfile và `frontend/src/shared/location/` (chỉ tạo khi
   implement với consumer thật); không đưa business/API client của module vào đó.
-  Dùng Leaflet trực tiếp với React lifecycle hoặc wrapper tương thích đã kiểm chứng;
+  Dùng MapLibre GL trực tiếp với React lifecycle và worker URL tương thích Vite đã kiểm chứng;
   pin phiên bản trong lockfile sau kiểm tra Node/React hiện tại. Không dùng CDN script.
 - Model component: giá trị `{latitude, longitude}` hoặc chưa chọn; callback đổi điểm,
   disabled/readOnly, tùy chọn `radiusMeters`. Tên public cuối cùng ghi trong handoff.
@@ -992,10 +992,11 @@ UI01-B/X1 phải kiểm tra thêm phần bổ sung; không kéo lại dependency
   pagination và các API còn hoạt động. Lazy-load map, không mount map ở từng list item.
   Không gửi token, reporterId, nội dung báo cáo hay thông tin tài khoản sang tile host.
   Map SDK/tiles không đi qua shared authenticated `/api` client.
-- Config public dự kiến `VITE_MAP_TILE_URL`, `VITE_MAP_ATTRIBUTION`; chỉ phục vụ tile
-  provider, không thay API_PROXY_TARGET. Không nhúng secret vào biến VITE. Browser
-  tải tiles trực tiếp; HTTPS, attribution luôn nhìn thấy, dùng cache HTTP tiêu chuẩn.
-  OSM public tiles chỉ dùng demo lưu lượng nhỏ theo policy, không SLA/bulk download.
+- Config public `VITE_MAPTILER_KEY`, `VITE_MAP_STYLE_URL`, `VITE_MAP_ATTRIBUTION`; chỉ phục vụ
+  map provider, không thay `API_PROXY_TARGET`. Mọi biến `VITE_*`, kể cả browser API key,
+  đều nhìn thấy ở client: key thật chỉ nằm trong env bị ignore và phải giới hạn theo HTTP origin.
+  Style custom phải dùng HTTPS và có attribution. Browser tải style/tiles trực tiếp, không qua
+  `/api`; luôn hiển thị attribution và dùng cache HTTP tiêu chuẩn, không bulk/offline download.
   A2 ghi cấu hình build frontend và cách đổi provider; không thêm proxy/backend API.
 - Trạng thái vị trí riêng theo form/session; clear khi logout/401. Bàn phím, focus,
   touch, 360/768/1280px, reduced motion và tương phản giữ design system. Không để
@@ -1086,8 +1087,9 @@ nhật handoff D2/progress; không khởi chạy benchmark hoặc UI01-B thay ow
 
 UI01-B/X1/X2 tiếp tục dùng prompt gốc và ma trận acceptance bổ sung ở trên, không
 chạy trước dependency. Nguồn kỹ thuật cho implementation (kiểm tra lại khi chọn version):
-[Leaflet](https://leafletjs.com/examples/quick-start/),
-[OSM tile policy](https://operations.osmfoundation.org/policies/tiles/),
+[MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/),
+[MapLibre Vite worker setup](https://maplibre.org/maplibre-gl-js/docs/guides/v5-to-v6-migration-guide/),
+[MapTiler API key restrictions](https://docs.maptiler.com/guides/credentials/api-key/),
 [Nominatim policy](https://operations.osmfoundation.org/policies/nominatim/)
 (public Nominatim không dùng cho autocomplete; geocoding chưa thuộc scope).
 

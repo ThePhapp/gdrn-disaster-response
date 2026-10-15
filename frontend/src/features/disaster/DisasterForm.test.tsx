@@ -1,6 +1,16 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('../../shared/location', () => ({
+  LocationMap: ({ value, onChange, disabled }: {
+    value?: { latitude: number; longitude: number }
+    onChange: (value: { latitude: number; longitude: number }) => void
+    disabled?: boolean
+  }) => <button type="button" aria-label="Chọn điểm giả lập" disabled={disabled}
+    data-location={value ? `${value.latitude},${value.longitude}` : 'blank'}
+    onClick={() => onChange({ latitude: 0, longitude: 0 })}>Chọn (0,0)</button>,
+}))
 import { DisasterForm } from './DisasterForm'
 import type { Disaster } from './disaster-api'
 
@@ -50,5 +60,29 @@ describe('DisasterForm', () => {
     await userEvent.type(name, 'Lũ miền Trung mở rộng')
     await userEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }))
     expect(edit).toHaveBeenCalledWith({ expectedVersion: 2, name: 'Lũ miền Trung mở rộng' })
+  })
+
+  it('keeps manual input controlled, treats blank as unselected, and submits a map click at zero', async () => {
+    const create = vi.fn().mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    render(<DisasterForm busy={false} onCancel={vi.fn()} onCreate={create} onEdit={vi.fn()} />)
+    expect(await screen.findByRole('button', { name: 'Chọn điểm giả lập' })).toHaveAttribute('data-location', 'blank')
+    await user.type(screen.getByLabelText('Tên thảm họa'), 'Kiểm tra tọa độ không')
+    await user.type(screen.getByLabelText('Mô tả'), 'Không được biến ô trống thành số không.')
+    await user.click(screen.getByRole('button', { name: 'Tạo thảm họa' }))
+    expect(create).not.toHaveBeenCalled()
+    expect(screen.getByLabelText('Vĩ độ')).toHaveAttribute('aria-invalid', 'true')
+
+    await user.type(screen.getByLabelText('Vĩ độ'), '12.5')
+    await user.type(screen.getByLabelText('Kinh độ'), '-45.25')
+    expect(screen.getByRole('button', { name: 'Chọn điểm giả lập' })).toHaveAttribute('data-location', '12.5,-45.25')
+    await user.clear(screen.getByLabelText('Vĩ độ'))
+    await user.clear(screen.getByLabelText('Kinh độ'))
+    await user.click(screen.getByRole('button', { name: 'Chọn điểm giả lập' }))
+    expect(screen.getByLabelText('Vĩ độ')).toHaveValue(0)
+    expect(screen.getByLabelText('Kinh độ')).toHaveValue(0)
+    expect(screen.getByRole('button', { name: 'Chọn điểm giả lập' })).toHaveAttribute('data-location', '0,0')
+    await user.click(screen.getByRole('button', { name: 'Tạo thảm họa' }))
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ latitude: 0, longitude: 0 }))
   })
 })

@@ -7,6 +7,7 @@ import type { Disaster, DisasterPage as Page } from './disaster-api'
 const mocks = vi.hoisted(() => ({
   list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(),
 }))
+vi.mock('../../shared/location', () => ({ LocationMap: () => <div aria-label="Bản đồ giả lập" /> }))
 vi.mock('./disaster-api', async importOriginal => ({
   ...await importOriginal<typeof import('./disaster-api')>(),
   listDisasters: mocks.list,
