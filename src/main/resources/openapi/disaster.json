@@ -5,6 +5,11 @@
       "get": {
         "operationId": "E03",
         "summary": "E03 GET /api/disasters",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "tags": [
           "C1"
         ],
@@ -256,6 +261,11 @@
       "post": {
         "operationId": "E05",
         "summary": "E05 POST /api/disasters",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "tags": [
           "C1"
         ],
@@ -488,6 +498,11 @@
       "get": {
         "operationId": "E04",
         "summary": "E04 GET /api/disasters/{id}",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "tags": [
           "C1"
         ],
@@ -713,6 +728,11 @@
       "patch": {
         "operationId": "E06",
         "summary": "E06 PATCH /api/disasters/{id}",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "tags": [
           "C1"
         ],

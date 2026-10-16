@@ -101,6 +101,14 @@ function Get-ApplicationUrl {
     return "http://127.0.0.1:$($Matches[1])"
 }
 
+function Get-PublishedUrl([string]$service, [int]$containerPort) {
+    $binding = Invoke-Docker -DockerArguments @('compose', 'port', $service, "$containerPort")
+    if ($binding -notmatch '^(?:127\.0\.0\.1|0\.0\.0\.0|\[::\]):(\d+)$') {
+        throw "Cannot resolve the $service port. Start Compose first."
+    }
+    return "http://127.0.0.1:$($Matches[1])"
+}
+
 function Test-Foundation {
     $url = Get-ApplicationUrl
     foreach ($path in @('/actuator/health', '/actuator/health/liveness', '/actuator/health/readiness')) {
@@ -131,6 +139,56 @@ function Test-Foundation {
     }
     Write-Host 'PASS /swagger-ui/index.html'
     Write-Host "Swagger: $url/swagger-ui/index.html"
+
+    # An explicit BaseUrl is the documented host-JVM/backend-only smoke mode.
+    # The default mode resolves both services from Compose and verifies the
+    # production Nginx SPA/proxy path as part of the full-stack check.
+    if ($BaseUrl) {
+        Write-Host 'SKIP frontend checks (explicit backend BaseUrl supplied)'
+        return
+    }
+
+    $frontend = Get-PublishedUrl 'frontend' 80
+    foreach ($path in @('/login', '/operations/rescue')) {
+        $page = Invoke-WebRequest -UseBasicParsing -Uri "$frontend$path" -TimeoutSec 10
+        if ($page.StatusCode -ne 200 -or $page.Content -notmatch '<div id="root"></div>') {
+            throw "Frontend check failed: $path is not served as the SPA shell."
+        }
+        Write-Host "PASS frontend $path (SPA shell)"
+    }
+    $request = @{
+        UseBasicParsing = $true
+        Uri             = "$frontend/api/unknown"
+        TimeoutSec      = 10
+        Headers         = @{ Accept = 'application/json' }
+    }
+    $response = $null
+    $skipHttpErrorCheck = (Get-Command Invoke-WebRequest).Parameters.ContainsKey('SkipHttpErrorCheck')
+    if ($skipHttpErrorCheck) {
+        # PowerShell 7 keeps non-success HTTP responses in the result object.
+        $response = Invoke-WebRequest @request -SkipHttpErrorCheck
+    } else {
+        # Windows PowerShell 5.1 exposes the response through WebException.
+        try {
+            $response = Invoke-WebRequest @request
+        } catch [System.Net.WebException] {
+            $response = $_.Exception.Response
+        }
+    }
+    if (-not $response -or [int]$response.StatusCode -ne 401) {
+        throw 'Frontend check failed: /api/unknown did not return HTTP 401.'
+    }
+    $contentType = $null
+    if ($response.PSObject.Properties.Name -contains 'ContentType') {
+        $contentType = $response.ContentType
+    }
+    if (-not $contentType -and $response.PSObject.Properties.Name -contains 'Headers') {
+        $contentType = $response.Headers['Content-Type']
+    }
+    if ($contentType -notmatch 'application/json') {
+        throw 'Frontend check failed: /api/unknown did not return JSON.'
+    }
+    Write-Host 'PASS frontend /api/unknown (JSON 401, no SPA fallback)'
 }
 
 Push-Location -LiteralPath $repositoryRoot

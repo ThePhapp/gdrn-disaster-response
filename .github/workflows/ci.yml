@@ -18,9 +18,9 @@ jobs:
       - name: Show Java and Maven toolchains
         run: |
           java --version
-          mvn --version
+          bash ./mvnw --version
       - name: Compile, test architecture, integrate with PostGIS, and package
-        run: mvn --batch-mode --no-transfer-progress clean verify
+        run: bash ./mvnw --batch-mode --no-transfer-progress clean verify
       - name: Publish unit and integration test reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -35,6 +35,8 @@ jobs:
           retention-days: 7
       - name: Validate Compose
         run: docker compose --env-file .env.example config --quiet
+      - name: Build Compose images
+        run: docker compose --env-file .env.example build backend frontend
       - name: Build and smoke-test the running foundation
         shell: pwsh
         run: ./scripts/dev.ps1 up

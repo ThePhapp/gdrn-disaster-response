@@ -55,8 +55,8 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | B3 | 2 | B1, UI01-A; B2/D1 để hoàn tất | DONE implementation trong working tree; chờ review/merge | Baseline PR #14 `242583c`; [handoff](handoffs/B3.md): S02/S03 E07–E14 + shared picker/preview, fallback map, 70 unit tests và browser B3+C2 5/5 pass; chưa commit/merge phần bổ sung |
 | C2 | 3 | B2, C1, UI01-A | DONE, bổ sung vị trí đã merge | Baseline PR #9 `120dec8`; S04 map tâm/radius + detail preview merge PR #17 tại `d72ecb1`; Citizen UI thuộc B3 |
 | D2 | 4 | D1, UI01-A | DONE | [Handoff](handoffs/D2.md): S06 workbench + E12–E15 client; review đã sửa stale async state, 409 recovery và double-submit; 41 frontend tests, 1 E2E browser test, full backend verify 113 tests |
-| A1 | 1 | UI01-A; audit lại khi B2/D1 merge | TODO | Security/shared behavior; UI foundation thuộc UI01-A |
-| A2 | 1 | UI01-A; hoàn tất UI runtime và X2/CI | TODO | Docker/frontend/CI |
+| A1 | 1 | UI01-A; audit lại khi B2/D1 merge | DONE trên nhánh A1 | [Handoff](handoffs/A1.md): security allowlist/OpenAPI và shared route behavior đã audit |
+| A2 | 1 | UI01-A; hoàn tất UI runtime và X2/CI | IN_PROGRESS trên nhánh A1 | [Handoff](handoffs/A2.md): frontend Compose/runtime và CI checks đã có; chờ X2 cho browser CI |
 | UI01-B | 1 + owners | B3, C2, D2, UI01-C1 | TODO | Audit đồng nhất/accessibility đủ 6 màn hình; gate trước X1 |
 | X1 | 1 + owners | UI01-B, A1, A2 runtime | TODO | Tích hợp thật/feature freeze |
 | X2 | 2 + 1 ghép CI | X1 | TODO | Browser E2E/hồi quy |
@@ -70,6 +70,16 @@ từ implementation trong working tree. A1 cần audit E01–E15,
 A2 tiếp tục runtime/CI theo catalog; local Compose + Vite đang chạy không đồng nghĩa A2 hoàn tất.
 UI01-B/X1/X2/A3 vẫn chưa đủ dependency; UI01-B phải bao phủ cả phần UI vị trí bổ sung.
 Chỉ thực hiện prompt được giao; bảng này không tự giao hoặc khởi chạy task tiếp theo.
+
+**Cập nhật A1 trên nhánh `feat/a1-security-audit`:** audit sau B2/D1 đã hoàn tất.
+Security allowlist, OpenAPI Bearer metadata, default-deny path regression và frontend
+route/role registry đã được kiểm tra; xem [handoff A1](handoffs/A1.md). A2, UI01-B,
+X1, X2 và A3 vẫn là các cổng riêng theo catalog.
+
+**Cập nhật A2 runtime trên cùng nhánh:** frontend production multi-stage, Compose
+health/dependency, host port `FRONTEND_PORT`, Nginx SPA fallback và `/api` proxy đã
+được kiểm chứng bằng Docker thật. CI đã thêm bước build Compose images; browser E2E
+CI vẫn chờ X2 theo gate của catalog.
 
 ## Rà soát tài liệu 10/10/2026
 
