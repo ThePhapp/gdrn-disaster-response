@@ -1,5 +1,5 @@
-import { MemoryRouter } from 'react-router-dom'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { MemoryRouter, useNavigate } from 'react-router-dom'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../shared/api'
@@ -13,6 +13,8 @@ vi.mock('./rescue-api', async importOriginal => ({
   ...await importOriginal<typeof import('./rescue-api')>(),
   ...mocks,
 }))
+
+vi.mock('../../shared/location', () => ({ LocationMap: ({ value, readOnly }: { value: { latitude: number; longitude: number }; readOnly: boolean }) => <div data-testid="report-map" data-readonly={String(readOnly)}>{value.latitude},{value.longitude}</div> }))
 
 import { RescuePage } from './RescuePage'
 
@@ -135,6 +137,79 @@ describe('RescuePage', () => {
 
     resolveFirst(report)
     await waitFor(() => expect(screen.queryByText(report.description)).not.toBeInTheDocument())
+    expect(screen.getByText(secondReport.description)).toBeVisible()
+  })
+  it.each([403, 404])('shows E09 %s from a deep link and never assigns', async status => {
+    mocks.getReport.mockRejectedValueOnce(new ApiError(status, { status, code: 'NOT_FOUND', message: 'Không thể đọc báo cáo', timestamp: '', path: '', fieldErrors: [] }))
+    renderPage(`/operations/rescue?reportId=${report.id}`)
+    expect(await screen.findByRole('alert')).toBeVisible()
+    expect(screen.queryByTestId('report-map')).not.toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Tạo phân công' })[1]).toBeDisabled()
+    expect(mocks.createMission).not.toHaveBeenCalled()
+  })
+
+  it('removes the previous preview while the next report loads and on failure', async () => {
+    const user = userEvent.setup()
+    const second = { ...assigned, id: 'second-mission', reportId: 'second-report' }
+    mocks.listMissions.mockResolvedValue(page([assigned, second]))
+    renderPage()
+    await user.click(await screen.findByRole('button', { name: /Nhiệm vụ 00000000/ }))
+    expect(await screen.findByTestId('report-map')).toHaveAttribute('data-readonly', 'true')
+    let reject!: (error: Error) => void
+    mocks.getReport.mockImplementationOnce(() => new Promise((_, fail) => { reject = fail }))
+    await user.click(screen.getByRole('button', { name: /Nhiệm vụ second/ }))
+    expect(screen.queryByTestId('report-map')).not.toBeInTheDocument()
+    reject(new Error('offline'))
+    expect(await screen.findByRole('alert')).toBeVisible()
+    expect(screen.queryByTestId('report-map')).not.toBeInTheDocument()
+  })
+
+  it('uses report and team page 2 without losing pagination and clears preview on report page change', async () => {
+    const user = userEvent.setup()
+    mocks.listVerifiedReports.mockResolvedValue({ ...page([report]), totalPages: 2, totalElements: 21 })
+    mocks.listRescueTeams.mockResolvedValue({ ...page([team]), totalPages: 2, totalElements: 21 })
+    renderPage(`/operations/rescue?reportId=${report.id}`)
+    expect(await screen.findByTestId('report-map')).toBeVisible()
+    await user.click(within(screen.getByRole('navigation', { name: 'Phân trang báo cáo' })).getByRole('button', { name: 'Trang sau' }))
+    await waitFor(() => expect(mocks.listVerifiedReports).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1 })))
+    expect(screen.queryByTestId('report-map')).not.toBeInTheDocument()
+    await user.click(within(screen.getByRole('navigation', { name: 'Phân trang đội cứu hộ' })).getByRole('button', { name: 'Trang sau' }))
+    await waitFor(() => expect(mocks.listRescueTeams).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, availability: 'AVAILABLE' })))
+  })
+
+  it.each([true, false])('retry reloads the selected report after failure (deep link: %s)', async deepLink => {
+    const user = userEvent.setup()
+    const secondReport = { ...report, id: 'second-report', description: 'Selected B' }
+    mocks.listVerifiedReports.mockResolvedValue(page([report, secondReport]))
+    renderPage(deepLink ? `/operations/rescue?reportId=${report.id}` : '/operations/rescue')
+    if (deepLink) expect(await screen.findByTestId('report-map')).toBeVisible()
+    else await user.click(screen.getByRole('button', { name: 'Tạo phân công' }))
+    mocks.getReport.mockRejectedValueOnce(new Error('offline'))
+    await user.click(screen.getByRole('button', { name: /Báo cáo second/ }))
+    expect(await screen.findByRole('alert')).toBeVisible()
+    await user.click(screen.getByRole('button', { name: 'Tải lại lựa chọn' }))
+    expect(mocks.getReport).toHaveBeenLastCalledWith(secondReport.id)
+  })
+
+  it.each(['success', 'conflict'])('ignores a previous assignment %s after navigating to a newer deep link', async outcome => {
+    const user = userEvent.setup()
+    const secondReport = { ...report, id: 'second-report', description: 'Selected B' }
+    let navigate!: ReturnType<typeof useNavigate>
+    function Navigation() { navigate = useNavigate(); return null }
+    mocks.getReport.mockImplementation(async (id: string) => id === report.id ? report : secondReport)
+    let finish!: (mission: Mission) => void
+    let fail!: (error: Error) => void
+    mocks.createMission.mockImplementation(() => new Promise((resolve, reject) => { finish = resolve; fail = reject }))
+    render(<MemoryRouter initialEntries={[`/operations/rescue?reportId=${report.id}`]}><Navigation /><RescuePage /></MemoryRouter>)
+    expect(await screen.findByTestId('report-map')).toBeVisible()
+    await user.click(screen.getByRole('button', { name: /Đội cứu hộ miền Trung/ }))
+    await user.click(screen.getAllByRole('button', { name: 'Tạo phân công' })[1])
+    await act(async () => navigate('/operations/rescue?reportId=second-report'))
+    expect(await screen.findByText(secondReport.description)).toBeVisible()
+    await act(async () => {
+      if (outcome === 'success') finish(assigned)
+      else fail(new ApiError(409, { timestamp: '', status: 409, code: 'REPORT_ALREADY_ASSIGNED', message: '', path: '', fieldErrors: [] }))
+    })
     expect(screen.getByText(secondReport.description)).toBeVisible()
   })
 })

@@ -47,7 +47,7 @@ beforeEach(() => {
   vi.stubGlobal('fetch', fetcher)
 })
 async function openReport() {
-  render(<ReportingOperationsPage />)
+  render(<MemoryRouter><ReportingOperationsPage /></MemoryRouter>)
   await userEvent.click(await screen.findByRole('button', { name: /Nước ngập lối vào/ }))
   await screen.findByRole('button', { name: 'Xác minh báo cáo' })
 }
@@ -59,7 +59,7 @@ async function reject() {
 }
 
 it('validates complete geography before any request, applies wire filters and clears them', async () => {
-  render(<ReportingOperationsPage />)
+  render(<MemoryRouter><ReportingOperationsPage /></MemoryRouter>)
   await screen.findByRole('button', { name: /Nước ngập lối vào/ })
   const map = screen.getByRole('button', { name: 'Chọn tâm và xem bán kính lọc' })
   expect(map).toHaveAttribute('data-location', 'blank')
@@ -88,7 +88,7 @@ it('validates complete geography before any request, applies wire filters and cl
 })
 
 it('keeps the map as draft state, accepts a zero center click and only filters after apply', async () => {
-  render(<ReportingOperationsPage />)
+  render(<MemoryRouter><ReportingOperationsPage /></MemoryRouter>)
   await screen.findByRole('button', { name: /Nước ngập lối vào/ })
   const map = screen.getByRole('button', { name: 'Chọn tâm và xem bán kính lọc' })
   await userEvent.click(map)
@@ -164,7 +164,7 @@ it('clears the actionable detail if a 409 refresh fails after withdrawal', async
 it('ignores a late detail response after filters have changed', async () => {
   let resolve!: (response: Response) => void
   fetcher.mockImplementation(async (path: string) => path.includes('/api/reports?') ? json(page([report])) : new Promise<Response>(done => { resolve = done }))
-  render(<ReportingOperationsPage />)
+  render(<MemoryRouter><ReportingOperationsPage /></MemoryRouter>)
   await userEvent.click(await screen.findByRole('button', { name: /Nước ngập lối vào/ }))
   await userEvent.click(screen.getByRole('button', { name: 'Xóa bộ lọc' }))
   await act(async () => resolve(json(report)))
@@ -215,7 +215,7 @@ it('moves back from an emptied last page after a decision removes its last pendi
     }
     return fallback(path, options)
   })
-  render(<ReportingOperationsPage />)
+  render(<MemoryRouter><ReportingOperationsPage /></MemoryRouter>)
   await screen.findByRole('button', { name: /Nước ngập lối vào/ })
   await userEvent.click(within(screen.getByRole('navigation', { name: 'Phân trang báo cáo' })).getByRole('button', { name: 'Trang sau' }))
   await userEvent.click(await screen.findByRole('button', { name: /Nước ngập lối vào/ }))

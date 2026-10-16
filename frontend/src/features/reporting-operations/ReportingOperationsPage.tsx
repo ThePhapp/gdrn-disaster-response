@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError } from '../../shared/api'
 import { EmptyState, ErrorMessage, Loading, PageHeader } from '../../shared/components'
@@ -154,6 +155,7 @@ export function ReportingOperationsPage() {
             </dl>
             <LocationMap value={{ latitude: selected.latitude, longitude: selected.longitude }} readOnly
               label={`Vị trí báo cáo ${selected.id}`} className="report-detail__map" />
+            {selected.status === 'VERIFIED' && !forbidden && <Link to={`/operations/rescue?reportId=${encodeURIComponent(selected.id)}`}>Điều phối cứu hộ cho báo cáo</Link>}
             {selected.status === 'PENDING' && !forbidden ? <section className="report-decision" aria-label="Quyết định">
               {!decision ? <><h3>Quyết định</h3><div className="report-actions">
                 <button type="button" disabled={locked} onClick={() => { setDecision('verify'); setFieldError('') }}>Xác minh báo cáo</button>

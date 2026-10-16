@@ -1,3 +1,4 @@
+import { LocationMap } from '../../shared/location'
 import { EmptyState, ErrorMessage, Loading } from '../../shared/components'
 import type { Page, Report, RescueTeam } from './rescue-api'
 import { AvailabilityBadge, reportTypeLabels } from './RescueBadges'
@@ -31,7 +32,7 @@ export function RescueAssignmentForm({ reports, reportsLoading, reportsError, se
   onCancel: () => void
 }) {
   const reportEligible = selectedReport?.status === 'VERIFIED' && !reportDetailLoading && !reportDetailError
-  const canSubmit = Boolean(reportEligible && selectedTeamId) && !busy
+  const canSubmit = Boolean(reportEligible && selectedTeamId) && !busy && !teamsLoading && !teamsError
   return <div className="rescue-assignment-form">
     <section className="rescue-picker" aria-labelledby="rescue-report-picker-title">
       <div className="rescue-picker__header"><div><p className="eyebrow">BƯỚC 1</p><h3 id="rescue-report-picker-title">Chọn báo cáo đã xác minh</h3></div>
@@ -42,7 +43,7 @@ export function RescueAssignmentForm({ reports, reportsLoading, reportsError, se
       {reports?.items.length ? <div className="rescue-choice-list" role="list" aria-label="Báo cáo đã xác minh">
         {reports.items.map(report => <div role="listitem" key={report.id}>
           <button type="button" className={`rescue-choice${selectedReport?.id === report.id ? ' is-selected' : ''}`}
-            aria-pressed={selectedReport?.id === report.id} onClick={() => onSelectReport(report)}>
+            disabled={busy || reportsLoading || Boolean(reportsError)} aria-pressed={selectedReport?.id === report.id} onClick={() => onSelectReport(report)}>
             <span><strong>{reportTypeLabels[report.type] ?? report.type}</strong>
               <small>Báo cáo {compactId(report.id)} · {dateTime.format(new Date(report.createdAt))}</small></span>
             <span className="rescue-choice__mark" aria-hidden="true">{selectedReport?.id === report.id ? 'Đã chọn' : 'Chọn'}</span>
@@ -50,13 +51,15 @@ export function RescueAssignmentForm({ reports, reportsLoading, reportsError, se
         </div>)}
       </div> : null}
       {reports && <RescuePagination result={reports} label="báo cáo" disabled={reportsLoading} onPageChange={onReportPageChange} />}
+      {reportDetailLoading && <Loading>Đang tải chi tiết báo cáo…</Loading>}
+      {reportDetailError && <ErrorMessage>{reportDetailError}</ErrorMessage>}
       {selectedReport && <div className="rescue-selected-report">
         <div><span className="rescue-fact-label">Nội dung báo cáo</span>
           {reportDetailLoading ? <Loading>Đang tải chi tiết báo cáo…</Loading> : <p>{selectedReport.description}</p>}</div>
-        {reportDetailError && <ErrorMessage>{reportDetailError}</ErrorMessage>}
         {selectedReport.status !== 'VERIFIED' && <ErrorMessage>Báo cáo không còn ở trạng thái đã xác minh. Hãy chọn báo cáo khác.</ErrorMessage>}
         <dl><div><dt>Tọa độ</dt><dd>{selectedReport.latitude}, {selectedReport.longitude}</dd></div>
           <div><dt>Mã báo cáo</dt><dd className="rescue-breakable">{selectedReport.id}</dd></div></dl>
+        <LocationMap value={{ latitude: selectedReport.latitude, longitude: selectedReport.longitude }} readOnly label={`Vị trí báo cáo ${selectedReport.id}`} />
       </div>}
     </section>
 
@@ -69,7 +72,7 @@ export function RescueAssignmentForm({ reports, reportsLoading, reportsError, se
       {teams?.items.length ? <div className="rescue-choice-list" role="list" aria-label="Đội cứu hộ sẵn sàng">
         {teams.items.map(team => <div role="listitem" key={team.id}>
           <button type="button" className={`rescue-choice${selectedTeamId === team.id ? ' is-selected' : ''}`}
-            aria-pressed={selectedTeamId === team.id} onClick={() => onSelectTeam(team)}>
+            disabled={busy || teamsLoading || Boolean(teamsError)} aria-pressed={selectedTeamId === team.id} onClick={() => onSelectTeam(team)}>
             <span><strong>{team.name}</strong><small>Mã đội {compactId(team.id)}</small></span>
             <AvailabilityBadge availability={team.availability} />
           </button>
