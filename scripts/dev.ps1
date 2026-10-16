@@ -140,6 +140,14 @@ function Test-Foundation {
     Write-Host 'PASS /swagger-ui/index.html'
     Write-Host "Swagger: $url/swagger-ui/index.html"
 
+    # An explicit BaseUrl is the documented host-JVM/backend-only smoke mode.
+    # The default mode resolves both services from Compose and verifies the
+    # production Nginx SPA/proxy path as part of the full-stack check.
+    if ($BaseUrl) {
+        Write-Host 'SKIP frontend checks (explicit backend BaseUrl supplied)'
+        return
+    }
+
     $frontend = Get-PublishedUrl 'frontend' 80
     foreach ($path in @('/login', '/operations/rescue')) {
         $page = Invoke-WebRequest -UseBasicParsing -Uri "$frontend$path" -TimeoutSec 10
