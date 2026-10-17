@@ -1,8 +1,20 @@
 # UI01-B — audit 6 màn hình, 17/10/2026
 
-**Kết quả: FAIL / BLOCKED nghiệm thu.** Đã audit và sửa phần shared được giao;
-các lỗi feature đã bàn giao patch, chưa áp dụng, chưa merge và chưa retest.
-Không mở gate X1, không tuyên bố đạt WCAG 2.2 AA.
+**Kết quả hiện tại: DONE trên nhánh `feat/UI01-B-audit`, chờ review/merge.**
+Lượt retest đã xử lý các blocker B-01…B-06 và mở lại gate UI01-B cho X1 sau khi
+merge. Đây là kết quả của audit và regression đã chạy, không phải chứng nhận đầy đủ
+WCAG 2.2 AA; các mục NOT RUN/skipped vẫn được ghi rõ bên dưới.
+
+## Lượt tiếp tục sau audit — 17/10/2026
+
+- Commit audit nền: `5a9e93a`; các patch feature B3/UI01-C1/D2 đã có trong source
+  của commit này. Commit sửa thêm S04: `b2f1e46`.
+- B-01…B-06 đều đã được kiểm tra lại bằng audit browser ở 360/768/1280px và root
+  font 200%; không còn contrast/reflow failure trong sáu màn hình.
+- S04 có thêm rule scope `.reporting-operations` cho badge report, xử lý xung đột
+  `.report-status` với Citizen CSS và cho phép badge xuống dòng ở text 200%.
+- 18 ảnh retest đã cập nhật tại [docs/qa/UI01-B](../qa/UI01-B/); ảnh là evidence của
+  trạng thái browser thật, không thay thế kiểm tra screen reader/browser khác.
 
 ## Nền và phạm vi
 
@@ -32,32 +44,31 @@ không phải mọi trạng thái UI. Ảnh không thay thế smoke online tải
 | --- | --- | --- |
 | S01 `/login` | Hero/form desktop, một cột mobile; chữ/CTA rõ, 1 h1, không tràn ở 3 widths và text 200% | PASS trong mẫu đã đo |
 | S02 `/reports/new` | Citizen form, label/error liên kết, nhập tọa độ và map; không tràn ở 3 widths/text 200% | PASS trong mẫu đã đo |
-| S03 `/my-reports` | Citizen cards/detail, trạng thái và tiến độ có text; không tràn ở 3 widths/text 200% | FAIL chữ card và badge mission |
+| S03 `/my-reports` | Citizen cards/detail, trạng thái và tiến độ có text; không tràn ở 3 widths/text 200% | PASS trong mẫu đã đo |
 | S04 `/operations/reports` | Authority workbench, filter tách report preview, list/detail; không tràn ở 3 widths/text 200% | PASS trong mẫu đã đo |
-| S05 `/operations/disasters` | Authority list/detail, tạo/sửa/resolve; 3 widths ở cỡ chữ thường không tràn | FAIL contrast MODERATE và text 200% tại 360 |
-| S06 `/operations/rescue` | Authority list/detail/assignment, preview report chỉ đọc; không tràn ở 3 widths/text 200% | FAIL contrast và padding mobile/tablet |
+| S05 `/operations/disasters` | Authority list/detail, tạo/sửa/resolve; 3 widths ở cỡ chữ thường không tràn | PASS trong mẫu đã đo |
+| S06 `/operations/rescue` | Authority list/detail/assignment, preview report chỉ đọc; không tràn ở 3 widths/text 200% | PASS trong mẫu đã đo |
 
 Citizen/Authority dùng shell khác nhau đúng design, hệ font/token chung và phân cấp
 heading có mặt. S04 list dài làm trang dài; không tự đổi pagination/workflow.
 Màu không phải tín hiệu trạng thái duy nhất. Typography/spacing chưa thể ký nghiệm thu
 toàn bộ vì các lỗi dưới đây.
 
-## Lỗi cần owner xử lý
+## Blocker audit và cách xử lý
 
 | ID / mức | Evidence và nguyên nhân | Owner / patch |
 | --- | --- | --- |
-| B-01 / cao | S03 `.report-list__item` nền trắng nhưng kế thừa chữ trắng từ button; type/description contrast **1:1** trên cả 3 widths | Người 2 B3: [patch](../qa/UI01-B/patches/owner2-B3.patch) đặt ink cho card |
-| B-02 / vừa | S03/S06 IN_PROGRESS **4.18264651:1**, dưới 4.5. Selector mission-status toàn cục của Rescue ghi đè Citizen | Người 4 D2: [patch](../qa/UI01-B/patches/owner4-D2.patch) scope `.rescue-badge`, dùng link text. Đồng thời scope assigned/completed, tránh CSS xuyên feature |
-| B-03 / vừa | S06 `.mission-detail__type` cam trên trắng **2.78634397:1**, 16px bold | Cùng patch D2 dùng link text |
-| B-04 / vừa | S06 `.rescue-panel` padding đo **0px** ở 360/768; dùng token không tồn tại `--gdrn-space-5` | Cùng patch D2 dùng space-4 đang có |
-| B-05 / vừa | S05 MODERATE **4.49890555:1**, không được làm tròn lên 4.5 | Người 3 UI01-C1: [patch](../qa/UI01-B/patches/owner3-UI01-C1.patch) đổi foreground sang ink; giữ nền warning và nhãn |
-| B-06 / vừa | S05 tại 360, root font 200%: badge vượt phải tới 438px, pagination tới 610px | Cùng patch UI01-C1 cho badge/nav wrap; cần owner kiểm tra lại toàn bộ breakpoint |
+| B-01 / cao | S03 `.report-list__item` nền trắng nhưng kế thừa chữ trắng từ button; type/description contrast **1:1** trên cả 3 widths | Người 2 B3: [patch](../qa/UI01-B/patches/owner2-B3.patch) đã đặt ink cho card; retest PASS |
+| B-02 / vừa | S03/S06 IN_PROGRESS **4.18264651:1**, dưới 4.5. Selector mission-status toàn cục của Rescue ghi đè Citizen | Người 4 D2: [patch](../qa/UI01-B/patches/owner4-D2.patch) đã scope `.rescue-badge`, dùng link text; retest PASS |
+| B-03 / vừa | S06 `.mission-detail__type` cam trên trắng **2.78634397:1**, 16px bold | Patch D2 đã dùng link text; retest PASS |
+| B-04 / vừa | S06 `.rescue-panel` padding đo **0px** ở 360/768; dùng token không tồn tại `--gdrn-space-5` | Patch D2 đã dùng space-4 đang có; retest PASS |
+| B-05 / vừa | S05 MODERATE **4.49890555:1**, không được làm tròn lên 4.5 | Người 3 UI01-C1: [patch](../qa/UI01-B/patches/owner3-UI01-C1.patch) đã đổi foreground sang ink; retest PASS |
+| B-06 / vừa | S05 tại 360, root font 200%: badge vượt phải tới 438px, pagination tới 610px | Patch UI01-C1 đã cho badge/nav wrap; retest PASS ở ba breakpoint |
 
-Patch D2 cũng đổi chữ ASSIGNED/AVAILABLE dùng cùng cặp warning như B-05;
-đây là phòng lỗi cùng nguyên nhân qua code review, không gọi là trạng thái đã đo browser.
-`git apply --check` cả ba patch: PASS. **Chưa áp dụng patch vào feature.** Kiểm tra
-visual/contrast sau patch và retest sau merge: **NOT RUN**, chờ owner thực hiện/review.
-Các file patch là bàn giao tại repo, chưa gửi thông điệp ra công cụ bên ngoài.
+Các thay đổi owner đã có trong source của commit audit nền; riêng S04 có thêm rule scope
+`.reporting-operations` trong `b2f1e46`. Các file patch được giữ lại để truy nguyên audit,
+không áp dụng lại vào working tree. Browser retest sau các thay đổi đã PASS trong phạm vi
+được ghi ở ma trận bên dưới.
 
 ## Ma trận regression theo catalog
 
@@ -96,8 +107,8 @@ PASS unit thành PASS browser. Suite hiện hữu nằm trong `frontend/e2e/` v�
   bỏ logo, disabled, map imagery. Không đo pseudo-element/placeholder, mọi trạng thái
   hover, forced-colors, overlay hoặc opacity ancestor: **NOT RUN**. Không thay thế audit
   accessibility chuyên sâu. Không có axe suite trong lượt này.
-- Reflow thường: PASS 18 viewport samples. Text resize 200%: FAIL S05/360, các mẫu
-  còn lại PASS. Native browser zoom 200%/400%, text-spacing overrides, screen reader,
+- Reflow thường: PASS 18 viewport samples. Text resize 200%: PASS trong sáu màn hình
+  ở 360/768/1280. Native browser zoom 200%/400%, text-spacing overrides, screen reader,
   Safari/Firefox, thiết bị touch thực: **NOT RUN**. Reduced-motion được bật trong
   keyboard audit và C2 browser kiểm tra transition 0s; chưa kiểm mọi animation.
 - Chuẩn tham chiếu: [WCAG contrast minimum](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)
@@ -105,7 +116,22 @@ PASS unit thành PASS browser. Suite hiện hữu nằm trong `frontend/e2e/` v�
   [target size minimum](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html)
   và [focus not obscured](https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum.html).
 
-## Commands và output thực tế
+## Lượt retest và output thực tế — 17/10/2026
+
+| Command | Output / kết quả |
+| --- | --- |
+| `cd frontend; npm.cmd run typecheck` | PASS |
+| `cd frontend; npm.cmd test -- --run` | PASS, 16 files / 81 tests |
+| `cd frontend; npm.cmd run build` | PASS; chỉ còn cảnh báo chunk MapLibre lớn |
+| `.\mvnw.cmd --no-transfer-progress clean verify` | PASS, BUILD SUCCESS; 113 tests (62 unit + 51 integration), 0 failure/error/skip |
+| `pwsh -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev.ps1 up -WaitTimeout 180` | PASS; database/backend/frontend healthy; health, OpenAPI, Swagger, SPA và API JSON 401 smoke PASS |
+| `npm.cmd run test:login -- --reporter=list` với `E2E_API_URL=http://127.0.0.1:8080`, `E2E_BASE_URL=http://127.0.0.1:5174` | PASS, 14 passed, 5 skipped; các test map-provider bị skip vì config provider rỗng |
+| `npm.cmd run test:login -- e2e/ui01-b-audit.spec.ts --reporter=list` | PASS, 1/1; sáu màn hình, 360/768/1280, text 200%, keyboard/contrast/reflow |
+| `npx.cmd --yes --package @playwright/cli playwright-cli open http://127.0.0.1:5174/operations/reports` | PASS; deep route chuyển về `/login` của GDRN |
+
+Các lệnh trên chạy với root `.env` hiện tại; không ghi credential vào evidence.
+
+## Commands và output thực tế của lượt audit ban đầu
 
 Windows, Node 22.14; Chromium Playwright; local Compose backend/DB thật,
 Vite `127.0.0.1:5173`, API `127.0.0.1:18080`. Biến demo/map đọc từ `.env` vào
@@ -129,10 +155,13 @@ Lần browser đầu chạy trong lúc npm ci chưa xong lỗi module Playwright
 setup hoàn tất. Lần audit trước full suite cũng FAIL cùng các lỗi visual; không dùng
 lỗi setup để thay kết quả audit. NO_COLOR/FORCE_COLOR warning không đổi kết quả tests.
 
-## Bước tiếp theo để mở gate
+## Bước tiếp theo sau retest
 
-Người 2/3/4 review và merge patch thuộc feature mình. Sau merge, chạy lại full
-frontend checks, browser regression + UI01-B audit, chụp lại cùng trạng thái/breakpoints;
-kiểm tra shared CSS không ghi đè feature khác. Retest sau merge hiện **NOT RUN**.
-Hoàn thành các kiểm tra accessibility còn thiếu trước khi khẳng định WCAG AA.
-UI01-B vẫn **FAIL/BLOCKED**, không tự đánh dấu hoàn tất khi chỉ unit/backend xanh.
+UI01-B đã đạt gate audit trên nhánh `feat/UI01-B-audit` và chờ review/merge. Sau khi
+merge, X1 có thể mở theo dependency; nên giữ lại 18 ảnh và chạy lại smoke theo môi
+trường CI nếu cấu hình cổng hoặc provider thay đổi.
+
+Các mục còn **NOT RUN** gồm full WCAG screen reader, native zoom 200%/400%,
+Safari/Firefox/touch, mọi trạng thái 401/403/404/409 trên mọi màn hình và browser
+matrix đầy đủ. Năm test browser bị skip do map-provider config rỗng. Vì vậy handoff
+này không tuyên bố chứng nhận WCAG 2.2 AA đầy đủ; X2/A3 vẫn giữ gate riêng.
