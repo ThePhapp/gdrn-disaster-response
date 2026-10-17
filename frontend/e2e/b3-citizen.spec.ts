@@ -181,7 +181,7 @@ test('B3 keeps manual submit and detail available when map tiles fail', async ({
   await expect(page).toHaveURL(/\/my-reports$/)
   await expect(page.getByRole('region', { name: 'Chi tiết báo cáo' }).getByText(description, { exact: true })).toBeVisible()
   await expect(page.locator('section.location-map[aria-label^="Vị trí báo cáo "]')).toBeVisible()
-  await expect(page.getByText('Không tải được lớp bản đồ. Nhập tọa độ vẫn hoạt động.')).toBeVisible()
+  await expect(page.getByText('Không tải được lớp bản đồ. Tọa độ vẫn hiển thị trong chi tiết.')).toBeVisible()
   await page.screenshot({ path: 'test-results/b3-map-failure.png', fullPage: true })
 
   const row = page.locator('li').filter({ hasText: description })

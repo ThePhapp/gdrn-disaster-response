@@ -1,0 +1,47 @@
+--- a/frontend/src/features/rescue/rescue.css
++++ b/frontend/src/features/rescue/rescue.css
+@@ -170,19 +170,19 @@
+   text-align: center;
+ }
+ 
+-.mission-status--assigned,
+-.availability--available {
+-  color: var(--gdrn-warning);
++.rescue-badge.mission-status--assigned,
++.rescue-badge.availability--available {
++  color: var(--gdrn-ink);
+   background: color-mix(in srgb, var(--gdrn-warning) 10%, var(--gdrn-surface));
+ }
+ 
+-.mission-status--in_progress {
+-  color: var(--gdrn-ocean);
++.rescue-badge.mission-status--in_progress {
++  color: var(--gdrn-link);
+   background: color-mix(in srgb, var(--gdrn-ocean) 10%, var(--gdrn-surface));
+ }
+ 
+-.mission-status--completed,
+-.availability--busy {
++.rescue-badge.mission-status--completed,
++.rescue-badge.availability--busy {
+   color: var(--gdrn-success);
+   background: color-mix(in srgb, var(--gdrn-success) 10%, var(--gdrn-surface));
+ }
+@@ -335,7 +335,7 @@
+ }
+ 
+ .mission-detail__type {
+-  color: var(--gdrn-rescue);
++  color: var(--gdrn-link);
+   font-weight: 700;
+ }
+ 
+@@ -520,7 +520,7 @@
+   }
+ 
+   .rescue-panel {
+-    padding: var(--gdrn-space-5);
++    padding: var(--gdrn-space-4);
+   }
+ 
+   .rescue-pagination {
