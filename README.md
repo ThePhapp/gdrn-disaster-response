@@ -24,36 +24,45 @@ Không commit `.env`. Nếu volume DB đã tồn tại, phải dùng credentials
 .\scripts\local.ps1 -Action stop  # Giữ database volume
 ```
 
-Backend dùng `APP_PORT`, DB dùng `DB_PORT` trong `.env` (mặc định 8080/5432).
+Backend dùng `APP_PORT`, DB dùng `DB_PORT`, frontend production dùng `FRONTEND_PORT`
+trong `.env` (mặc định 8080/5432/5173). Chạy toàn bộ stack bằng Docker với:
+
+```powershell
+.\scripts\dev.ps1 init
+.\scripts\dev.ps1 up
+```
+
+Mở [frontend production](http://127.0.0.1:5173/login); Nginx phục vụ SPA và proxy
+relative `/api` tới backend qua mạng Compose. Cách `scripts/local.ps1` ở trên vẫn
+dùng Vite host để phát triển nhanh.
+
 Swagger ở `http://127.0.0.1:<APP_PORT>/swagger-ui/index.html`. Frontend port 5173
-khác backend port; browser chỉ gọi `/api` qua Vite proxy. JWT nằm trong memory,
-reload/new tab cần login lại. Frontend production container/proxy thuộc A2, chưa có.
+khác backend port; browser chỉ gọi `/api` qua Vite proxy hoặc Nginx proxy khi chạy
+production. JWT nằm trong memory, reload/new tab cần login lại.
 
 Hướng dẫn đầy đủ: [cài đặt/chạy/debug](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md) và
-[env, auth, seed, frontend local](docs/P01_LOCAL.md). `scripts/dev.ps1` chỉ quản lý
-backend/database và smoke/verify; dùng `local.ps1` khi muốn chạy thêm frontend.
+[env, auth, seed, frontend local](docs/P01_LOCAL.md). `scripts/dev.ps1` quản lý
+Compose production và smoke/verify; dùng `local.ps1` khi muốn chạy Vite host.
 
 ## Runtime hiện có
 
-B2 trên nhánh `feat/b2-report-verification`, nền main `ca3751d`, ngày 10/10/2026 (chờ review/merge). Trạng thái merge và evidence tiếp tục được
-cập nhật tại [progress](docs/phase1-progress.md), không suy ra từ việc prompt đã tồn tại.
+Nền hiện tại đã tích hợp E01–E15, S01–S06, UI01-A/UI01-C1 và A1 security audit.
+Trạng thái merge và evidence tiếp tục được cập nhật tại [progress](docs/phase1-progress.md).
 
 | Phần | Đã triển khai | Còn lại theo catalog |
 | --- | --- | --- |
-| Identity / P01 | E01 login, E02 me; JWT/BCrypt/demo seed; CITIZEN/AUTHORITY | Audit A1 khi các API tiếp theo merge |
-| Disaster / C1 | E03–E06; ACTIVE→RESOLVED; DisasterQuery; S05 `/operations/disasters` cho AUTHORITY | UI01-C1 đồng bộ giao diện; C2 triển khai S04 |
-| Reporting / B1+B2 | E07–E11; verify/reject, soft-delete, ownership/radius/page/sort, ReportingQuery | B3 S02/S03; C2 S04 |
-| Shared UI / UI01-A | Crisis Command tokens/layout/primitives và S01 `/login`, API thật | UI01-B audit đủ 6 màn hình sau các owner |
-| Rescue | Chưa có runtime nghiệp vụ | D1 E12–E15 và D2 S06 |
+| Identity / P01 | E01 login, E02 me; JWT/BCrypt/demo seed; CITIZEN/AUTHORITY | A2 CI/E2E và các cổng tích hợp sau |
+| Disaster / C1 | E03–E06; ACTIVE→RESOLVED; S05 `/operations/disasters` | UI01-B audit chung |
+| Reporting / B1+B2+B3 | E07–E11; S02/S03/S04; ownership/radius/mission progress | UI01-B/X2 hồi quy xuyên luồng |
+| Rescue / D1+D2 | E12–E15; S06 `/operations/rescue`; concurrency | UI01-B/X2 hồi quy xuyên luồng |
+| Shared UI / A1 | Role nav/guard, memory session, error behavior, exact API allowlist | A2 runtime đã có; CI E2E chờ X2 |
 
-Swagger runtime công bố **E01–E11**. P00 mô tả baseline đích **15 operations/6 screens**;
-E12–E15 chưa mở, S02/S03/S04/S06 chưa có. S01 hiện hiển thị tài khoản sau login vì
-route đích của B3/C2 chưa đăng ký; Authority mở S05 bằng nav Thảm họa.
+Swagger runtime công bố **E01–E15** và frontend production chạy cùng origin qua Nginx.
+Browser không dùng hostname `backend`; mọi client API dùng path tương đối `/api`.
 
-Flyway trên nhánh B2 có **V1–V5**: V5 mở lifecycle Reporting, metadata duyệt/rút và GiST.
-Migration không chứa credentials/demo accounts; Hibernate validate schema. D1 nhận
-version tiếp theo từ [ledger](docs/architecture/phase1-module-contracts.md) sau B2 merge.
-Xem [handoff B2](docs/handoffs/B2.md) cho contract, API examples và evidence.
+Flyway hiện có **V1–V6** theo migration ledger; migration không chứa credentials/demo
+accounts và Hibernate validate schema. Xem [progress](docs/phase1-progress.md) và
+các handoff module cho contract, API examples và evidence.
 
 ## Nguồn tài liệu và cách phát triển
 
@@ -71,7 +80,8 @@ Xem [handoff B2](docs/handoffs/B2.md) cho contract, API examples và evidence.
 Dependency đi vào domain/application; domain plain Java, không JPA/Spring/HTTP.
 Không truy cập infrastructure/table của module khác. Chiều published query mục tiêu
 là Rescue → Reporting → Disaster; E09 không gọi Rescue, UI tiến độ dùng E09 +E14.
-ReportingQuery đã có trong B2; Rescue còn chờ D1. Shared chỉ dành cho technical concerns nhỏ có nhu cầu.
+ReportingQuery đã có trong B2 và Rescue dùng published query contracts. Shared chỉ dành
+cho technical concerns nhỏ có nhu cầu.
 
 Resource/Alert, map/risk, user administration, refresh/register và event bus ngoài
 scope MVP. Không đưa microservices, broker, Redis hoặc hạ tầng Pha2 vào Pha1;
@@ -102,7 +112,7 @@ process env; xem [hướng dẫn checks](docs/P01_LOCAL.md#checks). Suite hiện
 login, S05 và UI01; không phải toàn bộ luồng X2. C1 E2E tạo một disaster test thật
 và kết thúc nó trong DB local, không xóa dữ liệu qua SQL để làm test xanh.
 
-CI hiện chạy backend verify/Compose smoke và frontend typecheck/test/build;
-chưa có full browser E2E job (A2/X2). Test counts và giới hạn môi trường được ghi
+CI hiện chạy backend verify, validate/build Compose images, Compose smoke và frontend
+typecheck/test/build; full browser E2E job chỉ ghép sau X2. Test counts và giới hạn môi trường được ghi
 theo từng lần chạy trong handoff, không dùng con số cũ làm bằng chứng cho commit mới.
 Khi Maven mirror/IDE gây lỗi, xem phần xử lý trong [runbook](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md).

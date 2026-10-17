@@ -36,10 +36,13 @@ public class SecurityConfiguration {
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").hasAnyRole("CITIZEN", "AUTHORITY")
-                        .requestMatchers(HttpMethod.GET, "/api/disasters", "/api/disasters/**")
+                        // Keep the allowlist aligned with the published operations. A broad
+                        // /** matcher would authenticate unknown nested paths before MVC can
+                        // reject them, which weakens the default-deny API boundary.
+                        .requestMatchers(HttpMethod.GET, "/api/disasters", "/api/disasters/*")
                         .hasAnyRole("CITIZEN", "AUTHORITY")
                         .requestMatchers(HttpMethod.POST, "/api/disasters").hasRole("AUTHORITY")
-                        .requestMatchers(HttpMethod.PATCH, "/api/disasters/**").hasRole("AUTHORITY")
+                        .requestMatchers(HttpMethod.PATCH, "/api/disasters/*").hasRole("AUTHORITY")
                         .requestMatchers(HttpMethod.POST, "/api/reports").hasRole("CITIZEN")
                         .requestMatchers(HttpMethod.PATCH, "/api/reports/*/verification").hasRole("AUTHORITY")
                         .requestMatchers(HttpMethod.DELETE, "/api/reports/*").hasRole("CITIZEN")

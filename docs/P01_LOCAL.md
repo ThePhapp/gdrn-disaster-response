@@ -24,7 +24,7 @@ volume `database-data` của project; chạy Vite dev local và proxy tới `APP
 Sau khi máy khởi động lại, chạy `start` để mở lại. Chạy lại không reset mật khẩu/role
 đã lưu. Không đổi Compose project name nếu muốn tiếp tục dùng volume hiện tại.
 
-- Frontend: `http://127.0.0.1:5173/login`.
+- Frontend dev: `http://127.0.0.1:5173/login` (host Vite; production dùng `FRONTEND_PORT`).
 - Backend/Swagger: host port `APP_PORT` trong `.env` (máy này: 18080).
 - Database: `127.0.0.1:DB_PORT` (máy này: 55432), DB/user/password theo `.env`.
 - Frontend logs: `.tools/local/frontend.log`, `.tools/local/frontend-error.log`.
@@ -37,10 +37,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local.ps1 -Action st
 
 `stop` dừng frontend do script quản lý và hai service Compose, **giữ volume/database**.
 Không dùng `down -v`. Đây là local development: frontend Vite chạy trên host; frontend
-container phục vụ production vẫn thuộc A2. Những cách chạy thủ công dưới đây vẫn dùng được.
+production container chạy bằng `scripts/dev.ps1 up`. Những cách chạy thủ công dưới đây
+vẫn dùng được.
 
-Runtime hiện có E01–E11, S01 `/login`, S05 `/operations/disasters` và theme UI01-A.
-E12–E15/S02/S03/S04/S06 chưa triển khai. Không register/refresh/logout API.
+Runtime hiện có E01–E15 và S01–S06. Không register/refresh/logout API.
 Yêu cầu: Docker đang chạy, Node **22.14.0**, npm đi kèm Node; Java 21 chỉ cần cho
 backend host/Maven tests, không cần khi chạy backend bằng Compose. CI dùng cùng
 Node từ `frontend/.nvmrc`. [Hướng dẫn DB/Docker](HUONG_DAN_CAI_DAT_VA_CHAY.md) vẫn áp dụng.
@@ -88,10 +88,10 @@ docker compose up -d --wait database
 ```
 
 Nếu chỉ muốn backend không seed, dùng profiles `local`; vẫn phải có JWT key.
-Maven/Flyway áp dụng migrations chưa chạy theo thứ tự (nhánh B2: V1–V5), không xóa volume.
+Maven/Flyway áp dụng migrations theo ledger V1–V6, không xóa volume.
 Dừng Compose backend trước nếu tranh cổng. Host JDBC URL `DB_URL` phải chứa đúng
 host port `DB_PORT`; Spring không tự ghép DB_PORT vào URL. Backend host dùng
-`SERVER_PORT`, mặc định8080; `APP_PORT` chỉ là cổng publish của Compose.
+`SERVER_PORT`, mặc định8080; `APP_PORT` chỉ là cổng publish backend của Compose.
 
 Terminal thứ hai:
 
@@ -115,7 +115,7 @@ Authority mở S05 bằng link Thảm họa trên nav; Citizen không có link n
 Khi B3/C2 export routes thật, auto redirect theo role và navigation tự đăng ký.
 Không tạo placeholder cho các màn hình còn thiếu. Router tự deny role sai; backend vẫn là security gate.
 
-Swagger: `http://localhost:8080/swagger-ui/index.html` (đổi port theo cấu hình), công bố E01–E11;
+Swagger: `http://localhost:8080/swagger-ui/index.html` (đổi port theo cấu hình), công bố E01–E15;
 health: `/actuator/health`. Các API tương lai vẫn deny. Không bật DEBUG/TRACE cho
 request body, JWT hoặc Hibernate binds; app đặt mức INFO cho web/security, OFF binds.
 
@@ -127,9 +127,23 @@ Trong `.env` đặt `SPRING_PROFILES_ACTIVE=demo` và đủ key/demo credentials
 docker compose up --build -d --wait
 ```
 
-Chạy Vite như trên, proxy tới host `APP_PORT`. Chưa có frontend container/static
-production proxy trong P01; A2 triển khai riêng. Không cần đổi sang hostname `backend`
+Chạy Vite như trên, proxy tới host `APP_PORT`. Không cần đổi sang hostname `backend`
 trong browser. Không chạy `down -v` để reset tài khoản/database cá nhân.
+
+## Frontend production qua Compose
+
+Để kiểm tra đúng container multi-stage và proxy cùng mạng Docker:
+
+```powershell
+.\scripts\dev.ps1 init
+.\scripts\dev.ps1 up
+.\scripts\dev.ps1 smoke
+```
+
+Frontend mở tại `http://127.0.0.1:<FRONTEND_PORT>/login`. `/login` và các deep route
+được Nginx trả về `index.html`; `/api/*` được proxy tới service `backend:8080` và
+response lỗi vẫn là JSON từ backend. `FRONTEND_PORT` chỉ là host port; trong mạng
+Compose frontend gọi backend bằng service name, còn browser chỉ gọi `/api`.
 
 ## Checks
 

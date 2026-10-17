@@ -10,6 +10,11 @@
       "get": {
         "operationId": "E12",
         "summary": "E12 GET /api/rescue-teams",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "tags": [
           "D1"
         ],
@@ -248,6 +253,11 @@
       "post": {
         "operationId": "E13",
         "summary": "E13 POST /api/rescue-missions",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "tags": [
           "D1"
         ],
@@ -527,6 +537,11 @@
       "get": {
         "operationId": "E14",
         "summary": "E14 GET /api/rescue-missions",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "tags": [
           "D1"
         ],
@@ -813,6 +828,11 @@
       "patch": {
         "operationId": "E15",
         "summary": "E15 PATCH /api/rescue-missions/{id}/status",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "tags": [
           "D1"
         ],

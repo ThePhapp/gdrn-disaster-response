@@ -256,6 +256,17 @@ class GdrnApplicationIT {
         assertThat(response.getBody().at("/paths/~1api~1reports/get/parameters").toString()).contains("radiusMeters").doesNotContain("ownerId");
         assertThat(response.getBody().at("/components/securitySchemes/bearerAuth/scheme").asText()).isEqualTo("bearer");
         assertThat(response.getBody().at("/paths/~1api~1auth~1me/get/security/0/bearerAuth").isArray()).isTrue();
+        for (String operation : List.of(
+                "/paths/~1api~1disasters/get/security/0/bearerAuth",
+                "/paths/~1api~1disasters/post/security/0/bearerAuth",
+                "/paths/~1api~1disasters~1{id}/get/security/0/bearerAuth",
+                "/paths/~1api~1disasters~1{id}/patch/security/0/bearerAuth",
+                "/paths/~1api~1rescue-teams/get/security/0/bearerAuth",
+                "/paths/~1api~1rescue-missions/post/security/0/bearerAuth",
+                "/paths/~1api~1rescue-missions/get/security/0/bearerAuth",
+                "/paths/~1api~1rescue-missions~1{id}~1status/patch/security/0/bearerAuth")) {
+            assertThat(response.getBody().at(operation).isArray()).as(operation).isTrue();
+        }
         var swagger = http.getForEntity("/swagger-ui/index.html", String.class);
         assertThat(swagger.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(swagger.getBody()).contains("Swagger UI");
@@ -280,6 +291,9 @@ class GdrnApplicationIT {
         for (String path : List.of("/api/auth/register", "/api/auth/refresh", "/api/auth/logout")) {
             assertError(call(HttpMethod.GET, path, null, token), 403, "FORBIDDEN");
             assertError(call(HttpMethod.POST, path, "{}", token), 403, "FORBIDDEN");
+        }
+        for (String path : List.of("/api/disasters/unknown/nested", "/api/reports/unknown/nested")) {
+            assertError(call(HttpMethod.GET, path, null, token), 403, "FORBIDDEN");
         }
     }
 
