@@ -8,13 +8,13 @@ const createLazyMap = () => lazy(async () => {
   return { default: module.MapLibreMap }
 })
 
-class MapBoundary extends Component<{ children: ReactNode; onError: () => void }, { failed: boolean }> {
+class MapBoundary extends Component<{ children: ReactNode; onError: () => void; fallback: string }, { failed: boolean }> {
   state = { failed: false }
   static getDerivedStateFromError() { return { failed: true } }
   componentDidCatch() { this.props.onError() }
   render() {
     return this.state.failed
-      ? <div className="location-map__unavailable" role="status">Không thể mở bản đồ. Bạn vẫn có thể nhập tọa độ.</div>
+      ? <div className="location-map__unavailable" role="status">{this.props.fallback}</div>
       : this.props.children
   }
 }
@@ -42,7 +42,9 @@ export function LocationMap({ value, onChange, disabled = false, readOnly = fals
     <div className="location-map__frame" aria-disabled={disabled || undefined}>
       {mapTileConfig.error
         ? <div className="location-map__unavailable" role="status">Không thể mở bản đồ vì cấu hình chưa hợp lệ.</div>
-        : <MapBoundary key={retryKey} onError={mapError}><Suspense fallback={<div className="location-map__unavailable" role="status">Đang tải bản đồ…</div>}>
+        : <MapBoundary key={retryKey} onError={mapError} fallback={readOnly
+          ? 'Không thể mở bản đồ. Tọa độ vẫn hiển thị trong chi tiết.'
+          : 'Không thể mở bản đồ. Bạn vẫn có thể nhập tọa độ.'}><Suspense fallback={<div className="location-map__unavailable" role="status">Đang tải bản đồ…</div>}>
           <LazyMapLibreMap key={retryKey} value={selected} onChange={onChange} disabled={disabled} readOnly={readOnly}
             radiusMeters={radiusMeters} styleUrl={mapTileConfig.styleUrl} attribution={mapTileConfig.attribution}
             retryKey={retryKey} label={label} onMapLoading={mapLoading} onMapReady={mapReady} onMapError={mapError} />
@@ -54,7 +56,9 @@ export function LocationMap({ value, onChange, disabled = false, readOnly = fals
       </span>
       {tileState === 'loading' && !mapTileConfig.error && <span role="status">Đang tải lớp bản đồ…</span>}
       {tileState === 'error' && <span className="location-map__tile-error" role="status">
-        {mapTileConfig.error ?? 'Không tải được lớp bản đồ. Nhập tọa độ vẫn hoạt động.'}
+        {mapTileConfig.error ?? (readOnly
+          ? 'Không tải được lớp bản đồ. Tọa độ vẫn hiển thị trong chi tiết.'
+          : 'Không tải được lớp bản đồ. Nhập tọa độ vẫn hoạt động.')}
         {!mapTileConfig.error && <button type="button" className="secondary" onClick={retry} disabled={disabled}>Thử tải lại</button>}
       </span>}
     </div>

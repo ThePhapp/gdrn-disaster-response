@@ -1,5 +1,17 @@
 # Tiến độ Pha 1
 
+**UI01-B audit — 17/10/2026, nền main `1b47b6f`: FAIL/BLOCKED nghiệm thu.**
+D2 vị trí đã merge PR #20; S01–S06, UI01-C1 và vị trí B3/C2/shared đều có trên main,
+đủ gate bắt đầu audit. Đã chụp/đo 6 màn hình × 360/768/1280; lỗi contrast S03/S05/S06,
+text resize S05 và padding S06 được bàn giao patch cho Người 2/3/4, chưa áp dụng/merge.
+Chỉ sửa shared thông báo lỗi preview chỉ đọc. Typecheck/build PASS, 81 frontend tests,
+backend verify 113 tests PASS. Browser full run 17 PASS/2 FAIL (audit visual và assertion
+B3 dùng thông báo cũ); assertion B3 đã cập nhật và retest 1/1 PASS, audit vẫn FAIL.
+18 regression nghiệp vụ có evidence PASS qua full run + retest; không gọi toàn suite xanh.
+[Handoff UI01-B](handoffs/UI01-B.md) ghi ma trận, 18 screenshots, commands, blockers và
+NOT RUN; retest sau owner merge chưa chạy. X1/X2/A3 chưa mở gate.
+Các đoạn theo ngày bên dưới giữ nguyên evidence lịch sử.
+
 **Tích hợp main vào nhánh D2 — 17/10/2026:** giải quyết conflict progress khi merge
 `main` tại `ed75849` vào `feat/D2-preview-ui-map` (`9cdc336`). Giữ evidence D2 và
 cập nhật A1/A2 từ main. Frontend typecheck/build PASS, 80 tests PASS; backend
@@ -71,10 +83,10 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | D1 | 4 | B2, C1 | DONE, đã merge | [Handoff](handoffs/D1.md): E12–E15/V6; PR #11 `e380d68`, fix `888996a`; 113 backend tests pass (62 unit/architecture +51 integration) sau review |
 | B3 | 2 | B1, UI01-A; B2/D1 để hoàn tất | DONE, bổ sung vị trí đã merge | Baseline PR #14 `242583c`; bổ sung vị trí PR #18 `a7471f0`; [handoff](handoffs/B3.md) giữ evidence owner; D2 retest chuỗi UI đến B3 progress PASS |
 | C2 | 3 | B2, C1, UI01-A | DONE, bổ sung vị trí đã merge | Baseline PR #9 `120dec8`; S04 map tâm/radius + detail preview merge PR #17 tại `d72ecb1`; Citizen UI thuộc B3 |
-| D2 | 4 | D1, UI01-A | DONE baseline; bổ sung vị trí chờ review/merge | [Handoff](handoffs/D2.md): S06 workbench + E12–E15 client; review đã sửa stale async state, 409 recovery và double-submit; 41 frontend tests, 1 E2E browser test, full backend verify 113 tests |
+| D2 | 4 | D1, UI01-A | DONE baseline + vị trí merge PR #20; có patch UI01-B chờ owner | [Handoff](handoffs/D2.md); [audit UI01-B](handoffs/UI01-B.md): lỗi contrast/padding và CSS scope |
 | A1 | 1 | UI01-A; audit lại khi B2/D1 merge | DONE, đã merge main PR #19 | [Handoff](handoffs/A1.md): security allowlist/OpenAPI và shared route behavior đã audit |
 | A2 | 1 | UI01-A; hoàn tất UI runtime và X2/CI | IN_PROGRESS; runtime đã merge main PR #19 | [Handoff](handoffs/A2.md): frontend Compose/runtime và CI checks đã có; chờ X2 cho browser CI |
-| UI01-B | 1 + owners | B3, C2, D2, UI01-C1 | TODO | Audit đồng nhất/accessibility đủ 6 màn hình; gate trước X1 |
+| UI01-B | 1 + owners | B3, C2, D2, UI01-C1 | FAIL/BLOCKED nghiệm thu | [Handoff](handoffs/UI01-B.md): đã audit 6 màn hình, shared fix + patch owners; chờ merge/retest, chưa mở X1 |
 | X1 | 1 + owners | UI01-B, A1, A2 runtime | TODO | Tích hợp thật/feature freeze |
 | X2 | 2 + 1 ghép CI | X1 | TODO | Browser E2E/hồi quy |
 | D3 | 4 | X1 cho số đo; smoke D10 | TODO | Benchmark/Kaggle evidence |
@@ -82,10 +94,10 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | A3 | 1 + nhóm | X2, C3, D3, UI01-B và mọi task trước | TODO | Audit cuối; không tuyên bố Pha 1 DONE khi thiếu evidence |
 
 P00/P01/B1/B2/C1/UI01-A/UI01-C1/C2/D1/D2 và phần nghiệp vụ B3 đã tích hợp trên nền
-hiện tại. D2 bổ sung vị trí đang chờ review/merge; UI01-B không được suy ra hoàn tất
-từ implementation trên nhánh. A1 đã audit E01–E15 và merge PR #19 (`ed75849`);
+hiện tại. D2 bổ sung vị trí đã merge PR #20; UI01-B đang FAIL/BLOCKED theo audit,
+không được suy ra hoàn tất từ implementation. A1 đã audit E01–E15 và merge PR #19 (`ed75849`);
 A2 tiếp tục runtime/CI theo catalog; local Compose + Vite đang chạy không đồng nghĩa A2 hoàn tất.
-UI01-B/X1/X2/A3 vẫn chưa đủ dependency; UI01-B phải bao phủ cả phần UI vị trí bổ sung.
+UI01-B đủ dependency bắt đầu nhưng chưa đạt acceptance; X1/X2/A3 vẫn giữ gate riêng.
 Chỉ thực hiện prompt được giao; bảng này không tự giao hoặc khởi chạy task tiếp theo.
 
 **Cập nhật A1 trên nhánh `feat/a1-security-audit`:** audit sau B2/D1 đã hoàn tất.

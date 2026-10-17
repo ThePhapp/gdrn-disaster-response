@@ -164,6 +164,7 @@
 }
 
 .report-list__item {
+  color: var(--gdrn-ink);
   display: flex;
   width: 100%;
   align-items: flex-start;

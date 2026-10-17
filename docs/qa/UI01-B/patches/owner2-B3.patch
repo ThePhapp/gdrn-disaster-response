@@ -1,0 +1,10 @@
+--- a/frontend/src/features/reporting-citizen/reporting-citizen.css
++++ b/frontend/src/features/reporting-citizen/reporting-citizen.css
+@@ -164,6 +164,7 @@
+ }
+ 
+ .report-list__item {
++  color: var(--gdrn-ink);
+   display: flex;
+   width: 100%;
+   align-items: flex-start;
