@@ -1,3 +1,4 @@
+import { LocationMap } from '../../shared/location'
 import { EmptyState, ErrorMessage, Loading } from '../../shared/components'
 import type { Mission, Report, RescueTeam, TransitionStatus } from './rescue-api'
 import { MissionStatusBadge, reportTypeLabels } from './RescueBadges'
@@ -36,6 +37,7 @@ export function MissionPanel({ mission, report, reportLoading, reportError, team
       {reportError && <div className="rescue-panel__error"><ErrorMessage>{reportError}</ErrorMessage><button type="button" className="secondary" onClick={onRetryReport}>Tải lại báo cáo</button></div>}
       {report && <><p className="mission-detail__type">{reportTypeLabels[report.type] ?? report.type}</p><p className="mission-detail__description">{report.description}</p></>}
     </section>
+    {report && !reportLoading && !reportError && <LocationMap value={{ latitude: report.latitude, longitude: report.longitude }} readOnly label={`Vị trí báo cáo ${report.id}`} />}
     <dl className="rescue-facts">
       <div><dt>Đội cứu hộ</dt><dd>{team?.name ?? `Mã đội ${compactId(mission.teamId)}`}</dd></div>
       <div><dt>Tọa độ báo cáo</dt><dd>{report ? `${report.latitude}, ${report.longitude}` : 'Chưa tải được'}</dd></div>
