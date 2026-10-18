@@ -24,10 +24,10 @@ A1 integration update (2026-10-15): after B2 and D1 were merged, the shared secu
 policy was audited against all E01–E15 operations. The API allowlist is exact for
 the published paths, unknown API paths remain default-denied, and every protected
 runtime OpenAPI operation publishes the `bearerAuth` requirement. The frontend
-continues to use the UI01-A primitives, role-filtered feature routes, a memory-only
-session and generation checks that prevent late responses from crossing logout or
-user changes. Logout and expiry clear the session; an issued JWT is not revoked and
-expires after its fixed 900-second TTL. CSRF remains ignored only for `/api/**`
+continues to use the UI01-A primitives, role-filtered feature routes, a tab-scoped
+`sessionStorage` session and generation checks that prevent late responses from
+crossing logout or user changes. Logout and expiry clear the session; an issued JWT is
+not revoked and expires after its fixed 900-second TTL. CSRF remains ignored only for `/api/**`
 because the browser sends Bearer tokens explicitly and no cookie authentication is
 enabled. See the [A1 handoff](../handoffs/A1.md) for the endpoint audit and evidence.
 
@@ -80,9 +80,10 @@ form login, Basic, request cache, HTTP session or CORS wildcard is enabled.
   expiry, hosts need correct clocks. At `now >= exp` reject 401. No header-supplied
   key URL, `none` algorithm or algorithm fallback. User id/role come from verified claims.
 - No refresh token, revocation list or logout endpoint. Browser keeps JWT and user
-  data **in memory only**. Reload/new tab requires login again. Logout clears token,
-  user and per-user caches; issued JWT remains valid to expiration. A stolen token
-  remains usable up to 15 minutes. No token in localStorage/sessionStorage/URL/logs.
+  data in tab-scoped `sessionStorage`; reload in the same tab restores the session,
+  while a new tab requires login again. Logout clears token, user and per-user caches;
+  issued JWT remains valid to expiration. A stolen token remains usable up to 15 minutes.
+  No token in `localStorage`, URL or logs.
 - Password hashing uses Spring PasswordEncoder/BCrypt, cost 10 baseline. API password
   max 72 UTF-8 bytes avoids truncation; no trim. Two citizen + one authority supplied
   through controlled `demo` profile using environment credentials; never reset an
@@ -117,7 +118,7 @@ typecheck/test/build scripts. Feature owners supply route exports; Person 1 inte
 router/client/shared dependencies. `npm ci` thereafter; no independent lockfile edits.
 
 S01 public; S02/S03 citizen; S04/S05/S06 authority. E02 after login validates current
-session; 401 clears memory and returns to S01. 403 displays denial, 409 refetches and
+session; 401 clears the tab session and returns to S01. 403 displays denial, 409 refetches and
 asks user to review without auto retry. Report progress uses E09 + E14, not a reverse
 Reporting dependency. Production demo serves SPA and `/api` proxy from one origin;
 this is a static server configuration, not a new API gateway architecture.
@@ -125,9 +126,9 @@ this is a static server configuration, not a new API gateway architecture.
 ## Alternatives and consequences
 
 Cookie sessions could avoid manual Bearer handling but need a different CSRF/session
-contract. Refresh/long-lived browser storage would improve reload UX but add token
-lifecycle/storage risk. The selected memory-only short-lived JWT is intentionally
-simple and forces re-login on reload/expiry; logout cannot invalidate an issued token.
+contract. Refresh/long-lived storage would improve reload UX but add token lifecycle
+risk. The selected short-lived JWT in tab-scoped `sessionStorage` keeps reload UX while
+limiting the session to the current tab; logout cannot invalidate an issued token.
 
 A larger frontend or long-term modules would reduce time available for ownership,
 concurrency tests and real E2E. Six small screens cover every planned operation.

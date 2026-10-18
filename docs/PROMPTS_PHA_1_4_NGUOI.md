@@ -166,9 +166,9 @@ không tự viết mật mã/JWT parser. Secret/key lấy từ môi trường; v
 chữ ký, issuer/audience và expiration theo ADR. MVP chỉ cấp/sử dụng CITIZEN/AUTHORITY.
 Enum hiện có thêm RESPONDER/ADMIN: giữ tương thích code/test đã có, chưa seed, chưa
 thêm UI hoặc cấp quyền cho hai vai trò ngoài scope; không tự xóa code để khớp kế hoạch.
-Frontend giữ token trong memory, reload trang phải đăng nhập lại; đây là đánh đổi
-MVP có chủ ý. Logout chỉ xóa phiên local, token đã phát vẫn sống đến hết hạn.
-Không lưu token vào URL/log/localStorage. Không dùng cookie authentication song song.
+Frontend giữ token trong `sessionStorage` theo tab; reload cùng tab khôi phục phiên,
+tab mới cần đăng nhập lại. Logout chỉ xóa phiên local, token đã phát vẫn sống đến hết
+hạn. Không lưu token vào URL/log/localStorage. Không dùng cookie authentication song song.
 P01 quyết định cấu hình CSRF phù hợp với Bearer-only stateless và ghi rõ lý do.
 
 Tạo ít nhất hai CITIZEN và một AUTHORITY qua cơ chế bootstrap profile `demo` có
@@ -473,7 +473,8 @@ không cycle. Chỉ mô tả signature, chưa tạo placeholder Java classes.
 Lập sổ migration: owner, thứ tự merge Identity → Disaster → Reporting → Rescue,
 version chưa được tự cấp độc lập, quy tắc không sửa migration đã áp dụng.
 Viết ADR mới về scope MVP và lựa chọn auth/frontend dự kiến, dùng số kế tiếp chưa dùng.
-JWT in-memory, no refresh, hai role hoạt động; ghi rõ reload cần login lại.
+JWT trong `sessionStorage` theo tab, no refresh, hai role hoạt động; ghi rõ reload cùng
+tab khôi phục và tab mới cần login lại.
 
 Thêm bảng P00/P01/B1.../A3 trạng thái TODO vào docs/phase1-progress.md; P00 DONE khi
 contracts không mâu thuẫn. Đồng bộ README/context/architecture bằng liên kết và scope
@@ -511,8 +512,9 @@ Giữ health/Swagger và bổ sung OpenAPI security scheme. Chỉ mở route c�
 Nếu chưa có frontend, tạo frontend/ với React + TypeScript + Vite + routing và fetch
 wrapper; xác minh version tương thích, pin Node cho local/CI, commit npm lockfile.
 Thiết lập scripts dev/typecheck/test/build, tests cho auth/API client; chưa fake các page.
-Token chỉ trong memory; /me xác thực phiên sau login; reload cần login lại; logout
-xóa state/cache; 401 chuyển login, 403 báo lỗi phù hợp. Không localStorage/URL token.
+Token trong `sessionStorage` theo tab; /me xác thực phiên sau login; reload cùng tab
+khôi phục, tab mới cần login lại; logout xóa state/cache; 401 chuyển login, 403 báo lỗi
+phù hợp. Không localStorage/URL token.
 Tạo layout/nav theo role, component form/loading/error/empty dùng chung và convention
 feature route exports để người 2–4 không sửa global router. Vite proxy /api dùng cấu
 hình local; không đưa backend/container hostname vào bundle trình duyệt.
@@ -743,7 +745,8 @@ JSON 401/403 nhất quán, không stacktrace/token/password trong response hoặ
 Giữ health/Swagger hoạt động; OpenAPI khai báo Bearer. Không authentication giả,
 generated user, registration hoặc refresh/logout endpoint ngoài scope.
 
-Hoàn thiện shared frontend behavior: nav theo role, guard, handling 401/403, memory token,
+Hoàn thiện shared frontend behavior: nav theo role, guard, handling 401/403, tab-scoped
+session token,
 clear user-specific state khi logout; không biến frontend role guard thành security
 duy nhất. Ghép feature route exports đã sẵn sàng, thống nhất error/loading/empty/form
 behavior trên primitives UI01-A, không copy module screens hoặc viết lại design/CSS

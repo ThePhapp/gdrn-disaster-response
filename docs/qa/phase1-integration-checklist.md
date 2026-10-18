@@ -55,7 +55,7 @@ fixture thật và database backend thật. Không intercept hoặc mock busines
 | Report đã có mission bị phân công lại | Browser D2 `REPORT_ALREADY_ASSIGNED` HTTP 409 PASS |
 | Citizen truy cập route authority | Browser UI01 login/role guard PASS; giữ session citizen |
 | Bearer hết hạn/không hợp lệ | API smoke `/api/auth/me` HTTP 401; full JWT natural expiry không chờ trong lượt này |
-| Login sai, logout, reload và không lưu token vào storage | Browser login suite PASS; storage vẫn rỗng |
+| Login sai, logout, reload và giới hạn token theo tab | Browser login suite PASS; reload cùng tab giữ phiên, logout xóa `sessionStorage`, không dùng `localStorage` |
 
 ## Frontend và browser
 

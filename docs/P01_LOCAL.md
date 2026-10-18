@@ -106,8 +106,9 @@ npm run dev
 Mở `http://127.0.0.1:5173/login`, nhập một trong ba tài khoản đã cấu hình. Vite proxy
 `/api` tới backend; sửa API_PROXY_TARGET nếu backend đổi cổng. Đây là env chỉ dùng
 trong Vite server, không `VITE_*`, không bake hostname backend/container vào bundle.
-Frontend chỉ gọi relative `/api/...`, không gửi cookie, token chỉ nằm trong memory.
-Token TTL 900 giây; reload/new tab phải login lại. Logout clear user/token/cache,
+Frontend chỉ gọi relative `/api/...`, không gửi cookie, token chỉ nằm trong
+`sessionStorage` của tab hiện tại. Token TTL 900 giây; reload cùng tab giữ phiên, tab
+mới phải login lại. Logout clear user/token/cache,
 không revoke token cũ. Phiên xác nhận từ `/me`, không tin riêng response login.
 
 Hiện sau login S01 hiển thị tài khoản thật và nút logout; chưa có report pages.

@@ -24,7 +24,7 @@ UI01-A trong progress. Khi review cần phân biệt phần tài liệu có sẵ
 | Thành phần hiện có | Tái sử dụng / vấn đề audit / xử lý |
 | --- | --- |
 | `App`, `RoleGuard`, `featureRoutes`, `landingPath` | Giữ phân quyền/route; thêm class shell theo role, nav active có `aria-current`, skip link tới main có thể nhận focus |
-| `LoginPage`, `login`, `session`, `api` | Giữ E01 → E02, JWT memory-only; Login cũ chỉ có card đơn, nay chia nhận diện/form desktop và xếp dọc mobile |
+| `LoginPage`, `login`, `session`, `api` | Giữ E01 → E02, JWT trong `sessionStorage` theo tab; Login cũ chỉ có card đơn, nay chia nhận diện/form desktop và xếp dọc mobile |
 | `Field` | Giữ signature cũ; thêm hint và ghép `aria-describedby` bên ngoài + hint + error, không đánh mất mô tả |
 | `ErrorMessage`, `Loading`, `EmptyState` | Giữ tên export/children cho C1; thêm tokens, error accent, loading indicator giảm chuyển động, empty container |
 | Global stylesheet | Màu xanh cũ hardcode, chưa có thang spacing/typography; selector header/nav/footer quá rộng. Thay bằng tokens và selector shell `.app-*` |
@@ -94,8 +94,9 @@ không dùng role hoặc trạng thái kết nối giả làm severity.
 Auth/route integration giữ P01: feature export `routes` từ
 `frontend/src/features/<feature>/routes.tsx`; không sửa global router. Shell chỉ
 hiện các route role được phép. Chưa có S02/S04 nên landing vẫn là card tài khoản
-tại `/login`; Authority dùng link Thảm họa trên nav. JWT memory-only, reload login
-lại; logout/401/expiry clear session + generation. Cache ngoài component phải đăng ký
+tại `/login`; Authority dùng link Thảm họa trên nav. JWT trong `sessionStorage` theo tab,
+reload cùng tab khôi phục; logout/401/expiry clear session + generation. Cache ngoài
+component phải đăng ký
 `session.onClear`. 403 giữ phiên và hiện lỗi, không coi UI guard là security backend.
 
 ## Kiểm chứng thực tế
