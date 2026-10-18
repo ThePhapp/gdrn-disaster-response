@@ -6,7 +6,7 @@ const user = { id: 'one', email: 'one@example.test', role: 'CITIZEN' as const }
 function establish(token = 'opaque') {
   session.establish(token, user, new Date(Date.now() + 60_000).toISOString(), session.snapshot().generation)
 }
-describe('API client and memory session', () => {
+describe('API client and browser session', () => {
   it('sends Bearer without cookies and clears user state on 401', async () => {
     establish()
     const cleared = vi.fn()
@@ -42,7 +42,7 @@ describe('API client and memory session', () => {
     await expect(request).rejects.toMatchObject({ status: 401 })
     expect(session.token()).toBe('new')
   })
-  it('expires in memory and rejects old successful responses after logout', async () => {
+  it('expires the tab session and rejects old successful responses after logout', async () => {
     vi.useFakeTimers()
     establish()
     vi.advanceTimersByTime(60_001)

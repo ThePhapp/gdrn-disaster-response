@@ -18,7 +18,7 @@ export function LoginPage() {
     if (destination !== '/login') return <Navigate to={destination} replace />
     return <section className="card account-card"><PageHeader eyebrow="GDRN / TÀI KHOẢN" title="Đã đăng nhập" />
       <dl className="account-facts"><div><dt>Email</dt><dd>{user.email}</dd></div><div><dt>Vai trò</dt><dd>{user.role === 'CITIZEN' ? 'Người dân' : 'Điều phối viên'}</dd></div></dl>
-      <p className="muted">Phiên đăng nhập đã được xác nhận. Tải lại trang sẽ yêu cầu đăng nhập lại.</p></section>
+      <p className="muted">Phiên đăng nhập đã được xác nhận. Tải lại trang trong cùng tab vẫn giữ phiên cho đến khi hết hạn.</p></section>
   }
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -60,7 +60,7 @@ export function LoginPage() {
       {error && <ErrorMessage>{error}</ErrorMessage>}
       <button className="login-submit" type="submit" disabled={busy}>{busy ? 'Đang đăng nhập…' : 'Đăng nhập'}<span aria-hidden="true">{busy ? '…' : '→'}</span></button>
       <span className="sr-only" role="status">{busy ? 'Đang xác thực phiên đăng nhập.' : ''}</span>
-    </form><p className="session-note">Phiên có thời hạn 15 phút.<br />Tải lại trang cần đăng nhập lại.</p>
+    </form><p className="session-note">Phiên có thời hạn 15 phút.<br />Tải lại trang trong cùng tab vẫn giữ phiên.</p>
     </section>
   </div>
 }
