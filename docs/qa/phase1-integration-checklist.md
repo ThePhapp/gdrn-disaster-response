@@ -74,7 +74,7 @@ UI01-B audit riêng tiếp tục PASS trên cùng stack. Không ghi token/passwo
 
 | Command | Kết quả |
 | --- | --- |
-| `\.\mvnw.cmd --no-transfer-progress clean verify` | PASS — BUILD SUCCESS, 113 tests (62 unit/architecture + 51 integration), 0 failure/error/skip |
+| `.\mvnw.cmd --no-transfer-progress clean verify` | PASS — BUILD SUCCESS, 113 tests (62 unit/architecture + 51 integration), 0 failure/error/skip |
 | Flyway/PostGIS trong integration tests | PASS — migrations V1–V6 và các module Identity/Reporting/Rescue chạy với Testcontainers thật |
 
 ## Feature freeze
