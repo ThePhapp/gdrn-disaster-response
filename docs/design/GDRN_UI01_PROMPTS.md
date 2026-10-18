@@ -40,11 +40,11 @@ phạm vi task. Chỉ sở hữu shared frontend theme/layout/primitives và S01
    Không dựng thư viện UI thừa hoặc sửa feature-owned CSS hàng loạt.
 4. Cải tạo S01 /login: nhận diện GDRN rõ ràng, hero desktop và bố cục mobile,
    form dễ đọc, trạng thái loading/error, keyboard/label/focus, đăng nhập API thật.
-   Giữ JWT in-memory, /me, logout và hành vi reload như P01.
+   Giữ JWT theo tab trong `sessionStorage`, /me, logout và hành vi reload như P01.
 5. Giữ nguyên feature Disaster S05 thuộc người 3. Tạo checklist/đề xuất patch
    cho người 3 thay vì tự sửa C1-owned files.
-6. Kiểm tra nav theo role, 401/403, clear state khi logout; không lưu token
-   localStorage/sessionStorage, không sinh dữ liệu demo giả hoặc route mới.
+6. Kiểm tra nav theo role, 401/403, clear state khi logout; không lưu token vào
+   `localStorage`, URL hoặc cookie, không sinh dữ liệu demo giả hoặc route mới.
 7. Chạy frontend typecheck, test chế độ không watch và build; backend verify
    theo AGENTS.md. Thử browser thật nếu có công cụ; nếu không ghi NOT RUN kèm
    checklist thao tác, tuyệt đối không báo PASS khi chưa kiểm tra.
