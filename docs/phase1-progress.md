@@ -1,5 +1,16 @@
 # Tiến độ Pha 1
 
+**DS1 mở rộng Dashboard — 18/10/2026:** theo yêu cầu trực tiếp của user, đã tạo
+`feat/dashboard-statistics` từ `origin/main` tại `f91fc5d`. Đã triển khai và kiểm
+chứng trên nhánh DS1, chờ review/merge: E16/S07 dành cho AUTHORITY,
+global status aggregates, lọc ngày UTC+7 và availability đội hiện tại. Backend
+clean verify PASS 122 tests (66 unit/architecture + 56 integration), 0 skip;
+frontend PASS 90 tests/typecheck/build; browser DS1 với Compose/PostGIS thật PASS
+2/2, responsive 360/768/1280 và Anh/Việt. [Handoff DS1](handoffs/DS1.md),
+[contract bổ sung](api/dashboard-contract.md), [ADR 009](adr/009-dashboard-statistics.md).
+Đây là ngoại lệ scope được ghi trong catalog, không đổi evidence baseline hoặc
+trạng thái X2/A2/D3/C3/A3. Các mục E01–E15/S01–S06 dưới đây giữ mốc lịch sử.
+
 **X1 tích hợp luồng thật — 18/10/2026, nền `a12d8e1`: DONE trên nhánh `feat/X1-integration-freeze`, chờ review/merge.**
 Compose thật, API smoke ba demo account, browser 19/19, OpenAPI E01–E15 và feature
 freeze đã được kiểm tra; evidence tại [checklist X1](qa/phase1-integration-checklist.md)

@@ -46,6 +46,14 @@ Compose production và smoke/verify; dùng `local.ps1` khi muốn chạy Vite ho
 
 ## Runtime hiện có
 
+**Bổ sung DS1 (18/10/2026):** AUTHORITY có [Dashboard thống kê](docs/api/dashboard-contract.md)
+tại `/operations/dashboard` (mục Tổng quan/Dashboard trên thanh điều hướng).
+E16 `GET /api/dashboard` tổng hợp reports theo trạng thái, missions đang xử lý và
+đội rảnh hiện tại; lọc từ ngày–đến ngày theo giờ Việt Nam. Reports lọc theo ngày gửi,
+missions theo ngày phân công; availability đội luôn phản ánh hiện tại.
+Runtime của nhánh DS1 có **16 operations / 7 màn hình**, vẫn V1–V6 và cùng Modular
+Monolith. Các mô tả E01–E15/S01–S06 bên dưới là phạm vi baseline trước DS1.
+
 Nền hiện tại đã tích hợp E01–E15, S01–S06, UI01-A/UI01-C1 và A1 security audit.
 Trạng thái merge và evidence tiếp tục được cập nhật tại [progress](docs/phase1-progress.md).
 

@@ -45,7 +45,7 @@ class ArchitectureTests {
     @ArchTest
     static void modules_do_not_access_other_modules_infrastructure(JavaClasses classes) {
         for (String module : new String[]{"identity", "disaster", "reporting", "rescue",
-                "resource", "alert", "geo", "shared"}) {
+                "resource", "alert", "geo", "dashboard", "shared"}) {
             // Configuration is wired by Spring; consumers must use inner-layer abstractions.
             noClasses().that().resideOutsideOfPackage("com.gdrn." + module + "..")
                     .should().dependOnClassesThat()

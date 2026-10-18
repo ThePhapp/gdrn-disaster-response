@@ -10,6 +10,13 @@
 > hay OpenAPI. Khi có xung đột về nghiệp vụ, API, quyền hoặc route, kế hoạch, hợp đồng
 > và code đã merge có ưu tiên cao hơn. Không đổi chức năng chỉ để khớp bản thiết kế.
 
+**Ngoại lệ DS1 do user yêu cầu 18/10/2026:** cho phép S07 dashboard số liệu thật và
+E16 theo [contract](../api/dashboard-contract.md). Giữ navy AUTHORITY header, shared
+tokens/controls, ba metric có ý nghĩa nghiệp vụ và hai bảng trạng thái kèm thanh
+tỷ lệ. Không thêm thư viện chart, chỉ số tăng trưởng giả hay sidebar mới. Mobile
+xếp một cột; input ngày có label, bộ lọc draft/applied tách biệt; bản Anh/Việt đầy đủ.
+Các câu dashboard ngoài scope phía dưới mô tả baseline trước ngoại lệ này.
+
 ## 1. Định hướng sản phẩm và bản sắc
 
 **Tên phong cách:** GDRN Crisis Command — hệ thống quản lý sự cố và điều phối cứu hộ đáng tin cậy, rõ ràng, điềm tĩnh khi xử lý tình huống khẩn cấp.

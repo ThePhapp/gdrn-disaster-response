@@ -5,6 +5,7 @@ describe('feature route registry', () => {
   it('publishes only implemented screens with the intended role boundary', () => {
     expect(featureRoutes.map(route => [route.path, [...route.roles]]).sort((a, b) => String(a[0]).localeCompare(String(b[0])))).toEqual([
       ['/my-reports', ['CITIZEN']],
+      ['/operations/dashboard', ['AUTHORITY']],
       ['/operations/disasters', ['AUTHORITY']],
       ['/operations/reports', ['AUTHORITY']],
       ['/operations/rescue', ['AUTHORITY']],

@@ -30,6 +30,23 @@ Trạng thái và commit đã tích hợp được cập nhật tập trung tạ
 
 ## Cách giữ tài liệu thống nhất
 
+### Bổ sung được người dùng giao — 18/10/2026: Dashboard thống kê
+
+Task `DS1`, nhánh `feat/dashboard-statistics` từ `origin/main` (`f91fc5d`): thêm
+dashboard AUTHORITY tại `/operations/dashboard` và E16 `GET /api/dashboard`.
+Phạm vi: đếm reports theo trạng thái hiện tại, missions theo trạng thái hiện tại,
+đội rảnh/bận hiện tại; bộ lọc ngày inclusive theo Asia/Ho_Chi_Minh áp vào
+`report.created_at` / `mission.assigned_at`, không áp vào availability đội.
+Không dựng số tổng từ dữ liệu phân trang. Provider Reporting/Rescue sở hữu query
+aggregate, Dashboard orchestration qua published contracts; không join xuyên module.
+Không đổi lifecycle, schema, thêm broker/cache hoặc chuyển kiến trúc Pha 2.
+User request là ngoại lệ scope cho phần mở rộng này; MVP E01–E15/S01–S06 và evidence
+cũ giữ nguyên lịch sử. DS1 không tự đánh dấu X2/A2/D3/C3/A3 hoàn tất.
+Acceptance: hợp đồng [dashboard](api/dashboard-contract.md), unit orchestration,
+PostGIS integration cho quyền/filter/biên ngày/withdraw/availability/global counts,
+frontend loading/error/empty/race/filter/i18n, browser thật, full Maven verify và
+frontend typecheck/test/build; handoff ghi PASS/FAIL/NOT RUN. Không tự push/deploy.
+
 | Câu hỏi | Nguồn sở hữu | Khi cần cập nhật |
 | --- | --- | --- |
 | Làm gì, ai làm, đợi task nào? | Catalog/dependency trong file này | Thay scope, ownership hoặc điều kiện bắt đầu/hoàn tất |

@@ -1,5 +1,11 @@
 # Hợp đồng HTTP/UI Pha 1 — P00
 
+**Mở rộng DS1, 18/10/2026:** user đã yêu cầu Dashboard thống kê. Hợp đồng bổ sung
+[E16/S07](dashboard-contract.md) áp dụng trên nhánh `feat/dashboard-statistics`;
+runtime gồm 16 operations/7 màn hình. P00 YAML và nội dung bên dưới giữ baseline
+15 operations/6 màn hình để bảo toàn lịch sử; câu dashboard ngoài scope chỉ áp dụng
+baseline, được ngoại lệ DS1 trong catalog thay thế cho đúng tính năng này.
+
 Runtime đối chiếu `888996a` ngày 14/10/2026: E01–E15 và S01/S04/S05 đã có;
 C2 merge `120dec8`, D1 merge `e380d68` + fix `888996a`. E08 hỗ trợ đủ
 lat/lon/radiusMeters cùng các filter trước. YAML giữ baseline đích 15 operations;

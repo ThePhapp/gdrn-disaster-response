@@ -15,7 +15,8 @@ export function RoleGuard({ roles, children }: { roles: readonly Role[]; childre
 export function App() {
   const { user, generation } = useSession()
   const { t } = useI18n()
-  const routeLabel = (path: string) => path === '/operations/disasters' ? t('nav.disasters')
+  const routeLabel = (path: string) => path === '/operations/dashboard' ? t('nav.dashboard')
+    : path === '/operations/disasters' ? t('nav.disasters')
     : path === '/operations/reports' ? t('nav.reports')
       : path === '/reports/new' ? t('nav.createReport')
         : path === '/my-reports' ? t('nav.myReports') : t('nav.rescue')
