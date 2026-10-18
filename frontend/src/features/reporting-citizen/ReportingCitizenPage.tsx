@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../shared/api'
 import { EmptyState, ErrorMessage, Field, Loading, PageHeader } from '../../shared/components'
+import { useI18n, type TranslationKey } from '../../shared/i18n'
 import { LocationMap, type LocationValue } from '../../shared/location'
 import {
   createReport,
@@ -42,14 +43,18 @@ const missionStatusLabels: Record<Mission['status'], string> = {
   COMPLETED: 'Đã hoàn thành',
 }
 
-function getErrorMessage(error: unknown) {
+function typeLabel(t: (key: TranslationKey) => string, type: ReportType) { return t(`reporting.type.${type}` as TranslationKey) }
+function statusLabel(t: (key: TranslationKey) => string, status: ReportStatusValue) { return t(`reporting.status.${status}` as TranslationKey) }
+function missionLabel(t: (key: TranslationKey) => string, status: Mission['status']) { return t(`rescue.status.${status}` as TranslationKey) }
+
+function getErrorMessage(error: unknown, t: (key: TranslationKey) => string) {
   if (error instanceof ApiError) {
-    if (error.status === 404) return 'Không tìm thấy dữ liệu báo cáo.'
-    if (error.status === 409) return 'Dữ liệu đã thay đổi. Vui lòng tải lại và thử lại.'
+    if (error.status === 404) return t('citizen.errorNotFound')
+    if (error.status === 409) return t('citizen.errorConflict')
     return error.message
   }
   if (error instanceof DOMException && error.name === 'AbortError') return ''
-  return 'Không thể kết nối máy chủ. Vui lòng thử lại.'
+  return t('citizen.errorConnection')
 }
 
 function formatDate(value: string) {
@@ -58,10 +63,12 @@ function formatDate(value: string) {
 }
 
 function ReportStatus({ status }: { status: ReportStatusValue }) {
-  return <span className={`report-status report-status--${status.toLowerCase()}`}>{reportStatusLabels[status]}</span>
+  const { t, language } = useI18n()
+  return <span className={`report-status report-status--${status.toLowerCase()}`}>{language === 'vi' ? reportStatusLabels[status] : statusLabel(t, status)}</span>
 }
 
 function CreateReportForm({ onCreated }: { onCreated: (report: Report) => void }) {
+  const { t } = useI18n()
   const [type, setType] = useState<ReportType>('FLOOD')
   const [description, setDescription] = useState('')
   const [latitude, setLatitude] = useState('')
@@ -97,13 +104,13 @@ function CreateReportForm({ onCreated }: { onCreated: (report: Report) => void }
 
     const nextErrors: Record<string, string> = {}
     const normalizedDescription = description.trim()
-    if (!normalizedDescription) nextErrors.description = 'Vui lòng mô tả tình huống.'
-    else if ([...normalizedDescription].length > 2000) nextErrors.description = 'Mô tả không được vượt quá 2000 ký tự.'
+    if (!normalizedDescription) nextErrors.description = t('citizen.errorDescriptionRequired')
+    else if ([...normalizedDescription].length > 2000) nextErrors.description = t('citizen.errorDescriptionLength')
 
     const lat = Number(latitude)
     const lon = Number(longitude)
-    if (!latitude.trim() || !Number.isFinite(lat) || lat < -90 || lat > 90) nextErrors.latitude = 'Vĩ độ phải là số từ -90 đến 90.'
-    if (!longitude.trim() || !Number.isFinite(lon) || lon < -180 || lon > 180) nextErrors.longitude = 'Kinh độ phải là số từ -180 đến 180.'
+    if (!latitude.trim() || !Number.isFinite(lat) || lat < -90 || lat > 90) nextErrors.latitude = t('citizen.errorLatitude')
+    if (!longitude.trim() || !Number.isFinite(lon) || lon < -180 || lon > 180) nextErrors.longitude = t('citizen.errorLongitude')
 
     setErrors(nextErrors)
     setRequestError('')
@@ -114,7 +121,7 @@ function CreateReportForm({ onCreated }: { onCreated: (report: Report) => void }
     try {
       onCreated(await createReport(request))
     } catch (error) {
-      setRequestError(getErrorMessage(error))
+      setRequestError(getErrorMessage(error, t))
     } finally {
       setBusy(false)
     }
@@ -123,14 +130,14 @@ function CreateReportForm({ onCreated }: { onCreated: (report: Report) => void }
   return (
     <form className="report-form" onSubmit={submit} noValidate>
       <div className="report-form__field">
-        <label htmlFor="report-type">Loại sự cố</label>
+        <label htmlFor="report-type">{t('citizen.type')}</label>
         <select id="report-type" value={type} onChange={event => setType(event.target.value as ReportType)}>
-          {reportTypes.map(value => <option key={value} value={value}>{reportTypeLabels[value]}</option>)}
+          {reportTypes.map(value => <option key={value} value={value}>{typeLabel(t, value)}</option>)}
         </select>
       </div>
 
       <div className="report-form__field">
-        <label htmlFor="report-description">Mô tả tình huống</label>
+        <label htmlFor="report-description">{t('citizen.description')}</label>
         <textarea
           id="report-description"
           value={description}
@@ -142,21 +149,21 @@ function CreateReportForm({ onCreated }: { onCreated: (report: Report) => void }
         />
         {errors.description
           ? <p id="report-description-error" className="report-field-error">{errors.description}</p>
-          : <p id="report-description-hint" className="report-field-hint">Tối đa 2000 ký tự. Không nhập thông tin nhạy cảm.</p>}
+          : <p id="report-description-hint" className="report-field-hint">{t('citizen.descriptionHint')}</p>}
       </div>
 
       <div className="report-form__coordinates">
-        <Field id="report-latitude" label="Vĩ độ (latitude)" inputMode="decimal" value={latitude}
-          onChange={event => setCoordinate('latitude', event.target.value)} placeholder="Ví dụ: 21.0285" error={errors.latitude} />
-        <Field id="report-longitude" label="Kinh độ (longitude)" inputMode="decimal" value={longitude}
-          onChange={event => setCoordinate('longitude', event.target.value)} placeholder="Ví dụ: 105.8542" error={errors.longitude} />
+        <Field id="report-latitude" label={`${t('citizen.latitude')} (latitude)`} inputMode="decimal" value={latitude}
+          onChange={event => setCoordinate('latitude', event.target.value)} placeholder={t('citizen.latitudePlaceholder')} error={errors.latitude} />
+        <Field id="report-longitude" label={`${t('citizen.longitude')} (longitude)`} inputMode="decimal" value={longitude}
+          onChange={event => setCoordinate('longitude', event.target.value)} placeholder={t('citizen.longitudePlaceholder')} error={errors.longitude} />
       </div>
 
       <LocationMap value={selectedLocation} onChange={setLocation} disabled={busy}
-        label="Chọn vị trí báo cáo" className="report-form__map" />
+        label={t('citizen.chooseLocation')} className="report-form__map" />
 
       {requestError && <ErrorMessage>{requestError}</ErrorMessage>}
-      <button type="submit" disabled={busy}>{busy ? 'Đang gửi báo cáo…' : 'Gửi báo cáo'}</button>
+      <button type="submit" disabled={busy}>{busy ? t('citizen.sending') : t('citizen.send')}</button>
     </form>
   )
 }
@@ -167,6 +174,7 @@ function WithdrawDialog({ report, busy, onCancel, onConfirm }: {
   onCancel: () => void
   onConfirm: () => void
 }) {
+  const { t } = useI18n()
   const dialogRef = useRef<HTMLDivElement>(null)
   const cancelRef = useRef<HTMLButtonElement>(null)
 
@@ -198,11 +206,11 @@ function WithdrawDialog({ report, busy, onCancel, onConfirm }: {
   return (
     <div className="report-dialog-backdrop">
       <div ref={dialogRef} className="report-withdraw-confirm" role="alertdialog" aria-modal="true" aria-labelledby="withdraw-title" aria-describedby="withdraw-description">
-        <h3 id="withdraw-title">Xác nhận rút báo cáo</h3>
-        <p id="withdraw-description">Bạn có chắc muốn rút báo cáo {report.id} không? Thao tác này không thể hoàn tác.</p>
+        <h3 id="withdraw-title">{t('citizen.withdrawTitle')}</h3>
+        <p id="withdraw-description">{t('citizen.withdrawDescription', { id: report.id })}</p>
         <div className="report-withdraw-confirm__actions">
-          <button ref={cancelRef} type="button" className="secondary" disabled={busy} onClick={onCancel}>Hủy</button>
-          <button type="button" disabled={busy} onClick={onConfirm}>{busy ? 'Đang rút…' : 'Xác nhận rút'}</button>
+          <button ref={cancelRef} type="button" className="secondary" disabled={busy} onClick={onCancel}>{t('disaster.form.cancel')}</button>
+          <button type="button" disabled={busy} onClick={onConfirm}>{busy ? t('citizen.withdrawing') : t('citizen.confirmWithdraw')}</button>
         </div>
       </div>
     </div>
@@ -214,6 +222,7 @@ function ReportList({ selectedId, onSelect, onWithdrawn }: {
   onSelect: (reportId: string) => void
   onWithdrawn: (reportId: string) => void
 }) {
+  const { t, language } = useI18n()
   const [result, setResult] = useState<ReportPage>()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -238,7 +247,7 @@ function ReportList({ selectedId, onSelect, onWithdrawn }: {
       setResult(next)
       if (next.items.length === 0 && page > 0 && next.totalPages <= page) setPage(Math.max(next.totalPages - 1, 0))
     } catch (cause) {
-      if (requestId === loadSequenceRef.current) setError(getErrorMessage(cause))
+      if (requestId === loadSequenceRef.current) setError(getErrorMessage(cause, t))
     } finally {
       if (requestId === loadSequenceRef.current) setLoading(false)
     }
@@ -267,7 +276,7 @@ function ReportList({ selectedId, onSelect, onWithdrawn }: {
       else setRefreshKey(value => value + 1)
       listTitleRef.current?.focus()
     } catch (cause) {
-      setActionError(getErrorMessage(cause))
+      setActionError(getErrorMessage(cause, t))
       if (cause instanceof ApiError && (cause.status === 404 || cause.status === 409)) {
         closeDialog()
         setRefreshKey(value => value + 1)
@@ -280,28 +289,28 @@ function ReportList({ selectedId, onSelect, onWithdrawn }: {
   return (
     <section className="report-list" aria-labelledby="report-list-title">
       <div className="report-list__heading">
-        <h2 ref={listTitleRef} id="report-list-title" tabIndex={-1}>Báo cáo của tôi</h2>
-        <button type="button" className="secondary" onClick={() => setRefreshKey(value => value + 1)} disabled={loading || Boolean(withdrawingId)}>Làm mới</button>
+        <h2 ref={listTitleRef} id="report-list-title" tabIndex={-1}>{t('citizen.myReports')}</h2>
+        <button type="button" className="secondary" onClick={() => setRefreshKey(value => value + 1)} disabled={loading || Boolean(withdrawingId)}>{t('citizen.refresh')}</button>
       </div>
 
-      <div className="report-list__filters" aria-label="Lọc báo cáo">
-        <label htmlFor="report-status-filter">Trạng thái</label>
+      <div className="report-list__filters" aria-label={t('citizen.filterLabel')}>
+        <label htmlFor="report-status-filter">{t('reporting.status')}</label>
         <select id="report-status-filter" value={status} onChange={event => { setStatus(event.target.value as ReportStatusValue | ''); setPage(0) }}>
-          <option value="">Tất cả</option>
-          {reportStatuses.map(value => <option key={value} value={value}>{reportStatusLabels[value]}</option>)}
+          <option value="">{t('citizen.all')}</option>
+          {reportStatuses.map(value => <option key={value} value={value}>{language === 'vi' ? reportStatusLabels[value] : statusLabel(t, value)}</option>)}
         </select>
-        <label htmlFor="report-type-filter">Loại sự cố</label>
+        <label htmlFor="report-type-filter">{t('citizen.type')}</label>
         <select id="report-type-filter" value={type} onChange={event => { setType(event.target.value as ReportType | ''); setPage(0) }}>
-          <option value="">Tất cả</option>
-          {reportTypes.map(value => <option key={value} value={value}>{reportTypeLabels[value]}</option>)}
+          <option value="">{t('citizen.all')}</option>
+          {reportTypes.map(value => <option key={value} value={value}>{typeLabel(t, value)}</option>)}
         </select>
       </div>
 
       {actionError && <ErrorMessage>{actionError}</ErrorMessage>}
-      {loading && <Loading>Đang tải danh sách báo cáo…</Loading>}
+      {loading && <Loading>{t('reporting.loading')}</Loading>}
       {error && <ErrorMessage>{error}</ErrorMessage>}
       {!loading && !error && result?.items.length === 0 && (
-        <EmptyState>{status || type ? 'Không có báo cáo phù hợp với bộ lọc.' : 'Bạn chưa có báo cáo nào.'}</EmptyState>
+        <EmptyState>{status || type ? t('citizen.noFilteredReports') : t('citizen.noReports')}</EmptyState>
       )}
 
       {!loading && !error && result && result.items.length > 0 && (
@@ -312,7 +321,7 @@ function ReportList({ selectedId, onSelect, onWithdrawn }: {
                 <div className="report-list__item-row">
                   <button type="button" className="report-list__item" aria-pressed={selectedId === report.id} onClick={() => onSelect(report.id)}>
                     <span className="report-list__item-main">
-                      <strong>{reportTypeLabels[report.type]}</strong>
+                      <strong>{typeLabel(t, report.type)}</strong>
                       <span>{report.description}</span>
                       <small>{formatDate(report.createdAt)}</small>
                     </span>
@@ -328,7 +337,7 @@ function ReportList({ selectedId, onSelect, onWithdrawn }: {
                         setActionError('')
                         setConfirmingReport(report)
                       }}
-                    >Rút báo cáo</button>
+                    >{t('citizen.withdraw')}</button>
                   )}
                 </div>
               </li>
@@ -336,9 +345,9 @@ function ReportList({ selectedId, onSelect, onWithdrawn }: {
           </ul>
 
           <div className="report-list__pagination">
-            <button type="button" className="secondary" disabled={page === 0 || loading || Boolean(withdrawingId)} onClick={() => setPage(value => value - 1)}>Trang trước</button>
+            <button type="button" className="secondary" disabled={page === 0 || loading || Boolean(withdrawingId)} onClick={() => setPage(value => value - 1)}>{t('shared.previous')}</button>
             <span>Trang {result.page + 1} / {Math.max(result.totalPages, 1)}</span>
-            <button type="button" className="secondary" disabled={page + 1 >= result.totalPages || loading || Boolean(withdrawingId)} onClick={() => setPage(value => value + 1)}>Trang sau</button>
+            <button type="button" className="secondary" disabled={page + 1 >= result.totalPages || loading || Boolean(withdrawingId)} onClick={() => setPage(value => value + 1)}>{t('shared.next')}</button>
           </div>
         </>
       )}
@@ -349,6 +358,7 @@ function ReportList({ selectedId, onSelect, onWithdrawn }: {
 }
 
 function MissionProgress({ report }: { report: Report }) {
+  const { t, language } = useI18n()
   const [mission, setMission] = useState<Mission>()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -363,7 +373,7 @@ function MissionProgress({ report }: { report: Report }) {
     setLoading(true)
     void listReportMissions(report.id)
       .then(result => { if (active) setMission(result.items[0]) })
-      .catch(cause => { if (active) setError(getErrorMessage(cause)) })
+      .catch(cause => { if (active) setError(getErrorMessage(cause, t)) })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [report.id, report.status, refreshKey])
@@ -371,29 +381,29 @@ function MissionProgress({ report }: { report: Report }) {
   return (
     <section className="mission-progress" aria-labelledby="mission-progress-title">
       <div className="mission-progress__heading">
-        <h3 id="mission-progress-title">Tiến độ cứu hộ</h3>
+        <h3 id="mission-progress-title">{t('citizen.rescueProgress')}</h3>
         {report.status === 'VERIFIED' && (
-          <button type="button" className="secondary" disabled={loading} onClick={() => setRefreshKey(value => value + 1)}>Làm mới tiến độ</button>
+          <button type="button" className="secondary" disabled={loading} onClick={() => setRefreshKey(value => value + 1)}>{t('citizen.refreshProgress')}</button>
         )}
       </div>
       {report.status !== 'VERIFIED' && (
-        <EmptyState>Báo cáo cần được xác minh trước khi có thể phân công cứu hộ.</EmptyState>
+        <EmptyState>{t('citizen.verifyBeforeRescue')}</EmptyState>
       )}
-      {report.status === 'VERIFIED' && loading && <Loading>Đang tải tiến độ cứu hộ…</Loading>}
+      {report.status === 'VERIFIED' && loading && <Loading>{t('citizen.loadingProgress')}</Loading>}
       {report.status === 'VERIFIED' && error && (
         <ErrorMessage>{error}</ErrorMessage>
       )}
       {report.status === 'VERIFIED' && !loading && !error && !mission && (
-        <EmptyState>Chưa có nhiệm vụ cứu hộ cho báo cáo này.</EmptyState>
+        <EmptyState>{t('citizen.noMission')}</EmptyState>
       )}
       {report.status === 'VERIFIED' && !loading && !error && mission && (
         <dl className="mission-progress__facts">
-          <div><dt>Trạng thái</dt><dd><span className={`mission-status mission-status--${mission.status.toLowerCase()}`}>{missionStatusLabels[mission.status]}</span></dd></div>
-          <div><dt>Mã nhiệm vụ</dt><dd>{mission.id}</dd></div>
-          <div><dt>Thời gian phân công</dt><dd>{formatDate(mission.assignedAt)}</dd></div>
-          {mission.startedAt && <div><dt>Bắt đầu cứu hộ</dt><dd>{formatDate(mission.startedAt)}</dd></div>}
-          {mission.completedAt && <div><dt>Hoàn thành</dt><dd>{formatDate(mission.completedAt)}</dd></div>}
-          <div><dt>Cập nhật gần nhất</dt><dd>{formatDate(mission.updatedAt)}</dd></div>
+          <div><dt>{t('reporting.status')}</dt><dd><span className={`mission-status mission-status--${mission.status.toLowerCase()}`}>{language === 'vi' ? missionStatusLabels[mission.status] : missionLabel(t, mission.status)}</span></dd></div>
+          <div><dt>{t('citizen.missionId')}</dt><dd>{mission.id}</dd></div>
+          <div><dt>{t('citizen.assignedAt')}</dt><dd>{formatDate(mission.assignedAt)}</dd></div>
+          {mission.startedAt && <div><dt>{t('citizen.startedAt')}</dt><dd>{formatDate(mission.startedAt)}</dd></div>}
+          {mission.completedAt && <div><dt>{t('citizen.completedAt')}</dt><dd>{formatDate(mission.completedAt)}</dd></div>}
+          <div><dt>{t('citizen.lastUpdated')}</dt><dd>{formatDate(mission.updatedAt)}</dd></div>
         </dl>
       )}
     </section>
@@ -401,6 +411,7 @@ function MissionProgress({ report }: { report: Report }) {
 }
 
 function ReportDetail({ reportId }: { reportId?: string }) {
+  const { t } = useI18n()
   const [report, setReport] = useState<Report>()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -414,42 +425,43 @@ function ReportDetail({ reportId }: { reportId?: string }) {
     setLoading(true)
     void getReport(reportId)
       .then(value => { if (active) setReport(value) })
-      .catch(cause => { if (active) setError(getErrorMessage(cause)) })
+      .catch(cause => { if (active) setError(getErrorMessage(cause, t)) })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [reportId, refreshKey])
 
-  if (!reportId) return <EmptyState>Chọn một báo cáo để xem chi tiết.</EmptyState>
-  if (loading) return <Loading>Đang tải chi tiết báo cáo…</Loading>
+  if (!reportId) return <EmptyState>{t('citizen.selectReport')}</EmptyState>
+  if (loading) return <Loading>{t('reporting.loadingDetail')}</Loading>
   if (error) return <ErrorMessage>{error}</ErrorMessage>
   if (!report) return null
 
   return (
     <div className="reporting-citizen-detail" aria-live="polite">
       <div className="reporting-citizen-detail__heading">
-        <h2>Chi tiết báo cáo</h2>
+        <h2>{t('citizen.reportDetail')}</h2>
         <button type="button" className="secondary" onClick={() => setRefreshKey(value => value + 1)}>
-          Làm mới chi tiết
+          {t('citizen.refreshDetail')}
         </button>
       </div>
       <dl className="report-detail-list">
-        <div><dt>Mã báo cáo</dt><dd>{report.id}</dd></div>
-        <div><dt>Loại</dt><dd>{reportTypeLabels[report.type]}</dd></div>
-        <div><dt>Trạng thái</dt><dd><ReportStatus status={report.status} /></dd></div>
-        <div><dt>Mô tả</dt><dd>{report.description}</dd></div>
-        <div><dt>Tọa độ</dt><dd>{report.latitude}, {report.longitude}</dd></div>
-        <div><dt>Thời gian gửi</dt><dd>{formatDate(report.createdAt)}</dd></div>
-        <div><dt>Cập nhật</dt><dd>{formatDate(report.updatedAt)}</dd></div>
-        {report.rejectionReason && <div><dt>Lý do từ chối</dt><dd>{report.rejectionReason}</dd></div>}
+        <div><dt>{t('reporting.id')}</dt><dd>{report.id}</dd></div>
+        <div><dt>{t('citizen.typeLabel')}</dt><dd>{typeLabel(t, report.type)}</dd></div>
+        <div><dt>{t('reporting.status')}</dt><dd><ReportStatus status={report.status} /></dd></div>
+        <div><dt>{t('citizen.descriptionLabel')}</dt><dd>{report.description}</dd></div>
+        <div><dt>{t('reporting.coordinates')}</dt><dd>{report.latitude}, {report.longitude}</dd></div>
+        <div><dt>{t('citizen.submittedAt')}</dt><dd>{formatDate(report.createdAt)}</dd></div>
+        <div><dt>{t('citizen.updatedAt')}</dt><dd>{formatDate(report.updatedAt)}</dd></div>
+        {report.rejectionReason && <div><dt>{t('reporting.rejectionReason')}</dt><dd>{report.rejectionReason}</dd></div>}
       </dl>
       <LocationMap value={{ latitude: report.latitude, longitude: report.longitude }} readOnly
-        label={`Vị trí báo cáo ${report.id}`} className="reporting-citizen-detail__map" />
+        label={`${t('citizen.location')} ${report.id}`} className="reporting-citizen-detail__map" />
       <MissionProgress report={report} />
     </div>
   )
 }
 
 export function ReportingCitizenPage() {
+  const { t } = useI18n()
   const navigate = useNavigate()
   const location = useLocation()
   const isCreatePage = location.pathname === '/reports/new'
@@ -464,14 +476,14 @@ export function ReportingCitizenPage() {
   return (
     <div className="reporting-citizen-page">
       <PageHeader
-        eyebrow="GDRN · NGƯỜI DÂN"
-        title={isCreatePage ? 'Tạo báo cáo mới' : 'Báo cáo sự cố'}
-        description={isCreatePage ? 'Cung cấp mô tả và tọa độ để đội xử lý xác định vị trí.' : 'Theo dõi trạng thái và quản lý các báo cáo sự cố của bạn.'}
+        eyebrow={t('citizen.eyebrow')}
+        title={isCreatePage ? t('citizen.createTitle') : t('citizen.trackingTitle')}
+        description={isCreatePage ? t('citizen.createDescription') : t('citizen.trackingDescription')}
       />
 
       {isCreatePage ? (
         <section className="reporting-citizen-card" aria-labelledby="create-report-title">
-          <h2 id="create-report-title">Tạo báo cáo mới</h2>
+          <h2 id="create-report-title">{t('citizen.createHeading')}</h2>
           <CreateReportForm onCreated={handleCreated} />
         </section>
       ) : (
@@ -479,9 +491,9 @@ export function ReportingCitizenPage() {
           <section className="reporting-citizen-card">
             <ReportList selectedId={selectedId} onSelect={setSelectedId} onWithdrawn={reportId => setSelectedId(current => current === reportId ? undefined : current)} />
           </section>
-          <section className="reporting-citizen-card" aria-label="Chi tiết báo cáo">
+          <section className="reporting-citizen-card" aria-label={t('citizen.reportDetail')}>
             <ReportDetail reportId={selectedId} />
-            <button type="button" className="secondary" onClick={() => navigate('/reports/new')}>Tạo báo cáo mới</button>
+            <button type="button" className="secondary" onClick={() => navigate('/reports/new')}>{t('citizen.newReport')}</button>
           </section>
         </div>
       )}

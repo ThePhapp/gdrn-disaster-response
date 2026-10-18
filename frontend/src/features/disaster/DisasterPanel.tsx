@@ -1,9 +1,10 @@
 import { useRef } from 'react'
 import { EmptyState, ErrorMessage, Loading } from '../../shared/components'
+import { useI18n } from '../../shared/i18n'
 import { LocationMap } from '../../shared/location'
 import type { Disaster } from './disaster-api'
 import { ResolveDisasterDialog } from './ResolveDisasterDialog'
-import { SeverityBadge, StatusBadge, typeLabels } from './DisasterBadges'
+import { disasterLabel, SeverityBadge, StatusBadge } from './DisasterBadges'
 
 const dateTime = new Intl.DateTimeFormat('vi-VN', { dateStyle: 'medium', timeStyle: 'short' })
 
@@ -19,37 +20,38 @@ export function DisasterDetail({ disaster, loading, error, busy, confirming, onE
   onCancelResolve: () => void
   onRetry: () => void
 }) {
+  const { t } = useI18n()
   const resolveTrigger = useRef<HTMLButtonElement>(null)
-  if (loading) return <Loading>Đang tải chi tiết…</Loading>
+  if (loading) return <Loading>{t('disaster.loadingDetail')}</Loading>
   if (error) return <div className="disaster-panel__error"><ErrorMessage>{error}</ErrorMessage>
-    <button type="button" className="secondary" onClick={onRetry}>Tải lại chi tiết</button></div>
+    <button type="button" className="secondary" onClick={onRetry}>{t('disaster.reloadDetail')}</button></div>
   if (!disaster) return <div className="disaster-panel__welcome"><EmptyState>
-    <strong>Chọn một thảm họa</strong><span>Thông tin và thao tác sẽ hiển thị tại đây.</span>
+    <strong>{t('disaster.select')}</strong><span>{t('disaster.selectHint')}</span>
   </EmptyState></div>
   return <div className="disaster-detail">
-    <div className="disaster-detail__heading"><div><p className="eyebrow">{typeLabels[disaster.type]}</p><h2>{disaster.name}</h2></div>
+    <div className="disaster-detail__heading"><div><p className="eyebrow">{disasterLabel(t, disaster.type)}</p><h2>{disaster.name}</h2></div>
       <StatusBadge status={disaster.status} /></div>
     <section className="disaster-detail__section" aria-labelledby="disaster-description-title">
-      <h3 id="disaster-description-title">Mô tả tình hình</h3>
+      <h3 id="disaster-description-title">{t('disaster.situation')}</h3>
       <p className="disaster-detail__description">{disaster.description}</p>
     </section>
     <dl className="disaster-facts">
-      <div><dt>Mức độ</dt><dd><SeverityBadge severity={disaster.severity} /></dd></div>
-      <div><dt>Tọa độ</dt><dd>{disaster.latitude}, {disaster.longitude}</dd></div>
-      <div><dt>Tạo lúc</dt><dd><time dateTime={disaster.createdAt}>{dateTime.format(new Date(disaster.createdAt))}</time></dd></div>
-      <div><dt>Cập nhật</dt><dd>{dateTime.format(new Date(disaster.updatedAt))}</dd></div>
-      <div><dt>Mã thảm họa</dt><dd className="disaster-facts__id">{disaster.id}</dd></div>
-      <div><dt>Phiên bản</dt><dd>{disaster.version}</dd></div>
+      <div><dt>{t('disaster.severity')}</dt><dd><SeverityBadge severity={disaster.severity} /></dd></div>
+      <div><dt>{t('disaster.coordinates')}</dt><dd>{disaster.latitude}, {disaster.longitude}</dd></div>
+      <div><dt>{t('disaster.created')}</dt><dd><time dateTime={disaster.createdAt}>{dateTime.format(new Date(disaster.createdAt))}</time></dd></div>
+      <div><dt>{t('disaster.updated')}</dt><dd>{dateTime.format(new Date(disaster.updatedAt))}</dd></div>
+      <div><dt>{t('disaster.id')}</dt><dd className="disaster-facts__id">{disaster.id}</dd></div>
+      <div><dt>{t('disaster.version')}</dt><dd>{disaster.version}</dd></div>
     </dl>
     <LocationMap
       value={{ latitude: disaster.latitude, longitude: disaster.longitude }}
       readOnly
-      label={`Vị trí thảm họa ${disaster.name}`}
+      label={`${t('disaster.location')} ${disaster.name}`}
       className="disaster-detail__map"
     />
     {disaster.status === 'ACTIVE' && <div className="disaster-actions">
-      <button type="button" onClick={onEdit} disabled={busy}>Chỉnh sửa</button>
-      <button ref={resolveTrigger} type="button" className="danger-secondary" onClick={onConfirm} disabled={busy}>Kết thúc thảm họa</button>
+      <button type="button" onClick={onEdit} disabled={busy}>{t('disaster.editAction')}</button>
+      <button ref={resolveTrigger} type="button" className="danger-secondary" onClick={onConfirm} disabled={busy}>{t('disaster.resolve')}</button>
     </div>}
     {confirming && <ResolveDisasterDialog disasterName={disaster.name} busy={busy} returnFocus={resolveTrigger.current}
       onResolve={onResolve} onCancel={onCancelResolve} />}

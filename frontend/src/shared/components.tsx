@@ -1,4 +1,5 @@
 import type { InputHTMLAttributes, ReactNode } from 'react'
+import { useI18n } from './i18n'
 
 export function PageHeader({ eyebrow, title, description, action }: { eyebrow?: string; title: string; description?: ReactNode; action?: ReactNode }) {
   return <div className="page-header"><div>
@@ -18,8 +19,9 @@ export function Field({ label, error, hint, id, 'aria-describedby': describedBy,
 export function ErrorMessage({ children }: { children: ReactNode }) {
   return <div className="notice error" role="alert">{children}</div>
 }
-export function Loading({ children = 'Đang tải…' }: { children?: ReactNode }) {
-  return <p className="loading-state" role="status" aria-live="polite"><span className="loading-indicator" aria-hidden="true" />{children}</p>
+export function Loading({ children }: { children?: ReactNode }) {
+  const { t } = useI18n()
+  return <p className="loading-state" role="status" aria-live="polite"><span className="loading-indicator" aria-hidden="true" />{children ?? t('shared.loading')}</p>
 }
 export function EmptyState({ children }: { children: ReactNode }) {
   return <p className="notice empty-state">{children}</p>

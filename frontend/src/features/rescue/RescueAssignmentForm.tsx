@@ -1,7 +1,8 @@
 import { LocationMap } from '../../shared/location'
 import { EmptyState, ErrorMessage, Loading } from '../../shared/components'
+import { useI18n } from '../../shared/i18n'
 import type { Page, Report, RescueTeam } from './rescue-api'
-import { AvailabilityBadge, reportTypeLabels } from './RescueBadges'
+import { AvailabilityBadge, rescueReportTypeLabel } from './RescueBadges'
 import { RescuePagination } from './RescuePagination'
 
 const dateTime = new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -31,59 +32,60 @@ export function RescueAssignmentForm({ reports, reportsLoading, reportsError, se
   onSubmit: () => void
   onCancel: () => void
 }) {
+  const { t } = useI18n()
   const reportEligible = selectedReport?.status === 'VERIFIED' && !reportDetailLoading && !reportDetailError
   const canSubmit = Boolean(reportEligible && selectedTeamId) && !busy && !teamsLoading && !teamsError
   return <div className="rescue-assignment-form">
     <section className="rescue-picker" aria-labelledby="rescue-report-picker-title">
-      <div className="rescue-picker__header"><div><p className="eyebrow">BƯỚC 1</p><h3 id="rescue-report-picker-title">Chọn báo cáo đã xác minh</h3></div>
-        <span className="rescue-picker__hint">Chỉ VERIFIED</span></div>
+      <div className="rescue-picker__header"><div><p className="eyebrow">{t('rescue.stepOne')}</p><h3 id="rescue-report-picker-title">{t('rescue.chooseReport')}</h3></div>
+        <span className="rescue-picker__hint">{t('rescue.onlyVerified')}</span></div>
       {reportsError && <ErrorMessage>{reportsError}</ErrorMessage>}
-      {reportsLoading && !reports && <Loading>Đang tải báo cáo đủ điều kiện…</Loading>}
-      {!reportsLoading && !reportsError && !reports?.items.length && <EmptyState>Chưa có báo cáo VERIFIED để phân công.</EmptyState>}
-      {reports?.items.length ? <div className="rescue-choice-list" role="list" aria-label="Báo cáo đã xác minh">
+      {reportsLoading && !reports && <Loading>{t('rescue.loading')}</Loading>}
+      {!reportsLoading && !reportsError && !reports?.items.length && <EmptyState>{t('rescue.noVerified')}</EmptyState>}
+      {reports?.items.length ? <div className="rescue-choice-list" role="list" aria-label={t('rescue.reports')}>
         {reports.items.map(report => <div role="listitem" key={report.id}>
           <button type="button" className={`rescue-choice${selectedReport?.id === report.id ? ' is-selected' : ''}`}
             disabled={busy || reportsLoading || Boolean(reportsError)} aria-pressed={selectedReport?.id === report.id} onClick={() => onSelectReport(report)}>
-            <span><strong>{reportTypeLabels[report.type] ?? report.type}</strong>
-              <small>Báo cáo {compactId(report.id)} · {dateTime.format(new Date(report.createdAt))}</small></span>
-            <span className="rescue-choice__mark" aria-hidden="true">{selectedReport?.id === report.id ? 'Đã chọn' : 'Chọn'}</span>
+            <span><strong>{rescueReportTypeLabel(t, report.type) ?? report.type}</strong>
+              <small>{t('rescue.report')} {compactId(report.id)} · {dateTime.format(new Date(report.createdAt))}</small></span>
+            <span className="rescue-choice__mark" aria-hidden="true">{selectedReport?.id === report.id ? t('rescue.selected') : t('rescue.choose')}</span>
           </button>
         </div>)}
       </div> : null}
-      {reports && <RescuePagination result={reports} label="báo cáo" disabled={reportsLoading} onPageChange={onReportPageChange} />}
-      {reportDetailLoading && <Loading>Đang tải chi tiết báo cáo…</Loading>}
+      {reports && <RescuePagination result={reports} label={t('rescue.reportShort')} disabled={reportsLoading} onPageChange={onReportPageChange} />}
+      {reportDetailLoading && <Loading>{t('reporting.loadingDetail')}</Loading>}
       {reportDetailError && <ErrorMessage>{reportDetailError}</ErrorMessage>}
       {selectedReport && <div className="rescue-selected-report">
-        <div><span className="rescue-fact-label">Nội dung báo cáo</span>
-          {reportDetailLoading ? <Loading>Đang tải chi tiết báo cáo…</Loading> : <p>{selectedReport.description}</p>}</div>
-        {selectedReport.status !== 'VERIFIED' && <ErrorMessage>Báo cáo không còn ở trạng thái đã xác minh. Hãy chọn báo cáo khác.</ErrorMessage>}
-        <dl><div><dt>Tọa độ</dt><dd>{selectedReport.latitude}, {selectedReport.longitude}</dd></div>
-          <div><dt>Mã báo cáo</dt><dd className="rescue-breakable">{selectedReport.id}</dd></div></dl>
-        <LocationMap value={{ latitude: selectedReport.latitude, longitude: selectedReport.longitude }} readOnly label={`Vị trí báo cáo ${selectedReport.id}`} />
+        <div><span className="rescue-fact-label">{t('rescue.reportContent')}</span>
+          {reportDetailLoading ? <Loading>{t('reporting.loadingDetail')}</Loading> : <p>{selectedReport.description}</p>}</div>
+        {selectedReport.status !== 'VERIFIED' && <ErrorMessage>{t('rescue.reportNotVerified')}</ErrorMessage>}
+        <dl><div><dt>{t('rescue.coordinates')}</dt><dd>{selectedReport.latitude}, {selectedReport.longitude}</dd></div>
+          <div><dt>{t('rescue.reportId')}</dt><dd className="rescue-breakable">{selectedReport.id}</dd></div></dl>
+        <LocationMap value={{ latitude: selectedReport.latitude, longitude: selectedReport.longitude }} readOnly label={`${t('citizen.location')} ${selectedReport.id}`} />
       </div>}
     </section>
 
     <section className="rescue-picker" aria-labelledby="rescue-team-picker-title">
-      <div className="rescue-picker__header"><div><p className="eyebrow">BƯỚC 2</p><h3 id="rescue-team-picker-title">Chọn đội cứu hộ</h3></div>
-        <span className="rescue-picker__hint">Chỉ đội sẵn sàng</span></div>
+      <div className="rescue-picker__header"><div><p className="eyebrow">{t('rescue.stepTwo')}</p><h3 id="rescue-team-picker-title">{t('rescue.chooseTeam')}</h3></div>
+        <span className="rescue-picker__hint">{t('rescue.onlyAvailable')}</span></div>
       {teamsError && <ErrorMessage>{teamsError}</ErrorMessage>}
-      {teamsLoading && !teams && <Loading>Đang tải đội cứu hộ…</Loading>}
-      {!teamsLoading && !teamsError && !teams?.items.length && <EmptyState>Hiện không có đội sẵn sàng.</EmptyState>}
-      {teams?.items.length ? <div className="rescue-choice-list" role="list" aria-label="Đội cứu hộ sẵn sàng">
+      {teamsLoading && !teams && <Loading>{t('rescue.loading')}</Loading>}
+      {!teamsLoading && !teamsError && !teams?.items.length && <EmptyState>{t('rescue.noTeams')}</EmptyState>}
+      {teams?.items.length ? <div className="rescue-choice-list" role="list" aria-label={t('rescue.availableTeams')}>
         {teams.items.map(team => <div role="listitem" key={team.id}>
           <button type="button" className={`rescue-choice${selectedTeamId === team.id ? ' is-selected' : ''}`}
             disabled={busy || teamsLoading || Boolean(teamsError)} aria-pressed={selectedTeamId === team.id} onClick={() => onSelectTeam(team)}>
-            <span><strong>{team.name}</strong><small>Mã đội {compactId(team.id)}</small></span>
+            <span><strong>{team.name}</strong><small>{t('rescue.teamId')} {compactId(team.id)}</small></span>
             <AvailabilityBadge availability={team.availability} />
           </button>
         </div>)}
       </div> : null}
-      {teams && <RescuePagination result={teams} label="đội cứu hộ" disabled={teamsLoading} onPageChange={onTeamPageChange} />}
+      {teams && <RescuePagination result={teams} label={t('rescue.teamShort')} disabled={teamsLoading} onPageChange={onTeamPageChange} />}
     </section>
 
     <div className="rescue-form-actions">
-      <button type="button" className="secondary" onClick={onCancel} disabled={busy}>Quay lại</button>
-      <button type="button" onClick={onSubmit} disabled={!canSubmit}>{busy ? 'Đang phân công…' : 'Tạo phân công'}</button>
+      <button type="button" className="secondary" onClick={onCancel} disabled={busy}>{t('rescue.goBack')}</button>
+      <button type="button" onClick={onSubmit} disabled={!canSubmit}>{busy ? t('rescue.creating') : t('rescue.createAssignment')}</button>
     </div>
   </div>
 }
