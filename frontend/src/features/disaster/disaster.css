@@ -79,15 +79,19 @@
 .disaster-workspace {
   display: grid;
   grid-template-columns: minmax(20rem, .9fr) minmax(24rem, 1.1fr);
+  width: 100%;
   min-width: 0;
-  min-height: 34rem;
-  overflow: hidden;
+  min-height: min(34rem, calc(100dvh - 16rem));
   background: var(--gdrn-surface);
   border: 1px solid var(--gdrn-border);
   border-radius: var(--gdrn-radius-panel);
 }
 .disaster-master {
   min-width: 0;
+  min-height: 0;
+  max-height: calc(100dvh - 14rem);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
   background: var(--gdrn-canvas);
   border-right: 1px solid var(--gdrn-border);
 }
@@ -114,8 +118,8 @@
   gap: var(--gdrn-space-4);
   align-items: center;
   width: 100%;
-  min-height: 88px;
-  padding: var(--gdrn-space-3) var(--gdrn-space-4);
+  min-height: 72px;
+  padding: var(--gdrn-space-2) var(--gdrn-space-4);
   text-align: left;
   color: var(--gdrn-ink);
   background: transparent;
@@ -155,7 +159,7 @@
   display: grid;
   justify-items: end;
   gap: var(--gdrn-space-2);
-  min-width: 7.5rem;
+  min-width: 6.5rem;
 }
 
 .disaster-badge {
@@ -230,7 +234,8 @@
 
 .disaster-panel {
   min-width: 0;
-  padding: clamp(var(--gdrn-space-6), 3vw, var(--gdrn-space-8));
+  min-height: 0;
+  padding: clamp(var(--gdrn-space-4), 2.5vw, var(--gdrn-space-6));
   outline: none;
 }
 .disaster-panel h2 {
@@ -276,7 +281,7 @@
   flex: 0 0 auto;
 }
 .disaster-detail__section {
-  margin-top: var(--gdrn-space-6);
+  margin-top: var(--gdrn-space-3);
 }
 .disaster-detail__description {
   margin: 0;
@@ -285,9 +290,9 @@
 }
 .disaster-facts {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1px;
-  margin: var(--gdrn-space-6) 0;
+  margin: var(--gdrn-space-3) 0 var(--gdrn-space-4);
   padding: 1px;
   overflow: hidden;
   background: var(--gdrn-border);
@@ -295,7 +300,7 @@
 }
 .disaster-facts div {
   min-width: 0;
-  padding: var(--gdrn-space-3);
+  padding: var(--gdrn-space-2) var(--gdrn-space-3);
   background: var(--gdrn-canvas);
 }
 .disaster-facts dt {
@@ -312,7 +317,13 @@
   font-size: var(--gdrn-text-sm);
 }
 .disaster-detail__map {
-  margin-bottom: var(--gdrn-space-6);
+  margin-bottom: var(--gdrn-space-4);
+}
+.disaster-detail__map .location-map__frame,
+.disaster-detail__map .location-map__canvas,
+.disaster-detail__map .location-map__unavailable {
+  min-height: 13.5rem;
+  height: 13.5rem;
 }
 
 .disaster-form .field {
@@ -390,11 +401,19 @@
 @media (max-width: 63.99rem) {
   .disaster-workspace {
     grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    max-height: none;
+    min-height: 0;
     overflow: visible;
   }
   .disaster-master {
+    max-height: none;
+    overflow: visible;
     border-right: 0;
     border-bottom: 1px solid var(--gdrn-border);
+  }
+  .disaster-panel {
+    overflow: visible;
   }
   .disaster-panel__welcome {
     margin: var(--gdrn-space-6) auto;

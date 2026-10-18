@@ -20,7 +20,7 @@ export function LoginPage() {
     if (destination !== '/login') return <Navigate to={destination} replace />
     return <section className="card account-card"><PageHeader eyebrow={t('login.signedIn')} title={t('login.signedInTitle')} />
       <dl className="account-facts"><div><dt>{t('login.email')}</dt><dd>{user.email}</dd></div><div><dt>{t('login.role')}</dt><dd>{user.role === 'CITIZEN' ? t('app.citizen') : t('app.authority')}</dd></div></dl>
-      <p className="muted">{t('login.reloadRequiresLoginConfirmed')}</p></section>
+      <p className="muted">{t('login.sessionConfirmed')}</p></section>
   }
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -62,7 +62,7 @@ export function LoginPage() {
       {error && <ErrorMessage>{error}</ErrorMessage>}
       <button className="login-submit" type="submit" disabled={busy}>{busy ? t('login.signingIn') : t('login.signIn')}<span aria-hidden="true">{busy ? '…' : '→'}</span></button>
       <span className="sr-only" role="status">{busy ? t('login.authenticating') : ''}</span>
-    </form><p className="session-note">{t('login.reloadRequiresLoginNote').split('\n').map((line, index) => <span key={line}>{index > 0 && <br />}{line}</span>)}</p>
+    </form><p className="session-note">{t('login.sessionNote').split('\n').map((line, index) => <span key={line}>{index > 0 && <br />}{line}</span>)}</p>
     </section>
   </div>
 }

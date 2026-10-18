@@ -381,7 +381,8 @@ E01–E11, kiểm tra branch/commit và build lại backend hiện tại. Xem [a
 
 ### Route `/operations/disasters` chuyển về login hoặc báo không có quyền
 
-JWT chỉ ở memory nên mở tab mới/reload cần login lại. Đăng nhập tài khoản AUTHORITY
+JWT nằm trong `sessionStorage` của tab hiện tại nên reload cùng tab giữ phiên; mở tab mới
+cần login lại. Đăng nhập tài khoản AUTHORITY
 và bấm Thảm họa trên nav trong cùng tab. Citizen bị chặn đúng role; không sửa guard
 hoặc permitAll để mở trang. Nếu login thành công nhưng không thấy dữ liệu, kiểm tra
 Vite proxy trỏ đúng backend port và response E03; không tạo dữ liệu giả thay API.
