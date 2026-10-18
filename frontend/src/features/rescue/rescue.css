@@ -76,10 +76,8 @@
   display: grid;
   grid-template-columns: minmax(20rem, .9fr) minmax(24rem, 1.1fr);
   width: 100%;
-  height: min(42rem, 72dvh);
   min-width: 0;
-  min-height: min(30rem, calc(100dvh - 16rem));
-  overflow: hidden;
+  min-height: min(34rem, calc(100dvh - 16rem));
   background: var(--gdrn-surface);
   border: 1px solid var(--gdrn-border);
   border-radius: var(--gdrn-radius-panel);
@@ -88,6 +86,7 @@
 .rescue-master {
   min-width: 0;
   min-height: 0;
+  max-height: calc(100dvh - 14rem);
   overflow-y: auto;
   scrollbar-gutter: stable;
   background: var(--gdrn-canvas);
@@ -224,9 +223,7 @@
 .rescue-panel {
   min-width: 0;
   min-height: 0;
-  overflow-y: auto;
-  padding: clamp(var(--gdrn-space-6), 3vw, var(--gdrn-space-8));
-  scrollbar-gutter: stable;
+  padding: clamp(var(--gdrn-space-4), 2.5vw, var(--gdrn-space-6));
   outline: none;
 }
 
@@ -240,6 +237,17 @@
 .rescue-panel h3 {
   margin: 0;
   font-size: var(--gdrn-text-base);
+}
+
+.rescue-panel .location-map {
+  margin-bottom: var(--gdrn-space-4);
+}
+
+.rescue-panel .location-map__frame,
+.rescue-panel .location-map__canvas,
+.rescue-panel .location-map__unavailable {
+  min-height: 13.5rem;
+  height: 13.5rem;
 }
 
 .rescue-panel__welcome {
@@ -512,6 +520,7 @@
   }
 
   .rescue-master {
+    max-height: none;
     overflow: visible;
     border-right: 0;
     border-bottom: 1px solid var(--gdrn-border);

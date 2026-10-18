@@ -15,15 +15,9 @@ business behavior are unchanged.
 - S03 `/my-reports`: the desktop list card has a viewport-aware height and its own
   vertical scroll area. Report descriptions are limited to two lines and status
   badges wrap long Vietnamese labels safely.
-- S04 `/operations/reports`: desktop list and detail panels share a bounded
-  workbench with independent scrolling. Report cards use tighter spacing and two
-  description lines.
-- S05 `/operations/disasters`: the desktop workbench and master list are bounded
-  and scroll independently; list rows and badge columns are more compact. The
-  detail panel also scrolls when its form or detail content is longer than the
-  workbench.
-- S06 `/operations/rescue`: the same bounded list/detail treatment is applied to
-  the rescue workbench, with shorter mission rows and a scrollable detail panel.
+- S04 `/operations/reports`: master list remains bounded and scrollable (`max-height: calc(100dvh - 14rem)`); the detail frame expands naturally to fit full content without an inner scrollbar. Facts use 3 columns, spacing is tightened, and read-only map is sized to 13.5rem so all report details, map, and actions display completely without scrolling down.
+- S05 `/operations/disasters`: master list remains bounded and scrollable; the disaster detail panel expands naturally without an inner scrollbar with 3-column facts and a 13.5rem preview map so disaster details and action buttons display completely.
+- S06 `/operations/rescue`: master list remains bounded; the mission detail panel expands naturally without an inner scrollbar with a 13.5rem preview map so all mission information displays completely.
 - At tablet/mobile breakpoints the workbenches return to natural stacked flow and
   disable nested scrolling, preserving readable one-column layouts.
 
