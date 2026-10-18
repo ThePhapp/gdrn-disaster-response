@@ -75,8 +75,10 @@
 .rescue-workspace {
   display: grid;
   grid-template-columns: minmax(20rem, .9fr) minmax(24rem, 1.1fr);
+  width: 100%;
+  height: min(42rem, 72dvh);
   min-width: 0;
-  min-height: 34rem;
+  min-height: min(30rem, calc(100dvh - 16rem));
   overflow: hidden;
   background: var(--gdrn-surface);
   border: 1px solid var(--gdrn-border);
@@ -85,6 +87,9 @@
 
 .rescue-master {
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
   background: var(--gdrn-canvas);
   border-right: 1px solid var(--gdrn-border);
 }
@@ -115,8 +120,8 @@
   gap: var(--gdrn-space-4);
   align-items: center;
   width: 100%;
-  min-height: 96px;
-  padding: var(--gdrn-space-3) var(--gdrn-space-4);
+  min-height: 76px;
+  padding: var(--gdrn-space-2) var(--gdrn-space-4);
   border: 0;
   border-bottom: 1px solid var(--gdrn-border);
   border-left: 4px solid transparent;
@@ -218,7 +223,10 @@
 
 .rescue-panel {
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
   padding: clamp(var(--gdrn-space-6), 3vw, var(--gdrn-space-8));
+  scrollbar-gutter: stable;
   outline: none;
 }
 
@@ -498,11 +506,19 @@
 @media (max-width: 1024px) {
   .rescue-workspace {
     grid-template-columns: 1fr;
+    height: auto;
+    max-height: none;
+    min-height: 0;
   }
 
   .rescue-master {
+    overflow: visible;
     border-right: 0;
     border-bottom: 1px solid var(--gdrn-border);
+  }
+
+  .rescue-panel {
+    overflow: visible;
   }
 }
 
