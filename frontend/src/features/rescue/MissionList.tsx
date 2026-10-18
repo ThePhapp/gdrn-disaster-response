@@ -1,4 +1,5 @@
 import { EmptyState, Loading } from '../../shared/components'
+import { useI18n } from '../../shared/i18n'
 import type { Mission, Page } from './rescue-api'
 import { MissionStatusBadge } from './RescueBadges'
 
@@ -14,16 +15,17 @@ export function MissionList({ result, loading, selectedId, onSelect }: {
   selectedId?: string
   onSelect: (mission: Mission) => void
 }) {
-  if (loading && !result) return <Loading>Đang tải danh sách nhiệm vụ…</Loading>
-  if (!result?.items.length) return <EmptyState>Không có nhiệm vụ phù hợp bộ lọc.</EmptyState>
-  return <div className="rescue-list" aria-busy={loading} aria-label="Danh sách nhiệm vụ cứu hộ">
+  const { t } = useI18n()
+  if (loading && !result) return <Loading>{t('rescue.loading')}</Loading>
+  if (!result?.items.length) return <EmptyState>{t('rescue.empty')}</EmptyState>
+  return <div className="rescue-list" aria-busy={loading} aria-label={t('rescue.missions')}>
     {result.items.map(mission => <button type="button" key={mission.id}
       className={`rescue-list__item${selectedId === mission.id ? ' is-selected' : ''}`}
       aria-pressed={selectedId === mission.id} onClick={() => onSelect(mission)}>
       <span className="rescue-list__identity">
-        <strong>Nhiệm vụ {compactId(mission.id)}</strong>
-        <small>Đội {compactId(mission.teamId)} · {dateTime.format(new Date(mission.assignedAt))}</small>
-        <small>Báo cáo {compactId(mission.reportId)}</small>
+        <strong>{t('rescue.missions')} {compactId(mission.id)}</strong>
+        <small>{t('rescue.teamId')} {compactId(mission.teamId)} · {dateTime.format(new Date(mission.assignedAt))}</small>
+        <small>{t('rescue.report')} {compactId(mission.reportId)}</small>
       </span>
       <MissionStatusBadge status={mission.status} />
     </button>)}

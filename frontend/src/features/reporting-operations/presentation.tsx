@@ -1,11 +1,14 @@
 import { ApiError } from '../../shared/api'
+import { useI18n, type TranslationKey } from '../../shared/i18n'
 import type { ReportStatus } from './reporting-api'
 
 export const reportStatuses: ReportStatus[] = ['PENDING', 'VERIFIED', 'REJECTED']
 export const statusLabels: Record<ReportStatus, string> = { PENDING: 'Chờ xử lý', VERIFIED: 'Đã xác minh', REJECTED: 'Đã từ chối' }
 export const dates = new Intl.DateTimeFormat('vi-VN', { dateStyle: 'medium', timeStyle: 'short' })
+export function reportStatusLabel(t: (key: TranslationKey) => string, status: ReportStatus) { return t(`reporting.status.${status}` as TranslationKey) }
 export function ReportBadge({ status }: { status: ReportStatus }) {
-  return <span className={`report-status report-status--${status.toLowerCase()}`}>{statusLabels[status]} · {status}</span>
+  const { t, language } = useI18n()
+  return <span className={`report-status report-status--${status.toLowerCase()}`}>{language === 'vi' ? statusLabels[status] : reportStatusLabel(t, status)} · {status}</span>
 }
 export function errorText(error: unknown) {
   if (error instanceof ApiError) {
@@ -21,10 +24,11 @@ export function errorText(error: unknown) {
 export function Pagination({ page, totalPages, disabled, label, onPage }: {
   page: number; totalPages: number; disabled: boolean; label: string; onPage: (page: number) => void
 }) {
+  const { t } = useI18n()
   if (totalPages <= 1 && page === 0) return null
   return <nav className="report-pagination" aria-label={label}>
-    <button type="button" className="secondary" disabled={disabled || page === 0} onClick={() => onPage(page - 1)}>Trang trước</button>
+    <button type="button" className="secondary" disabled={disabled || page === 0} onClick={() => onPage(page - 1)}>{t('shared.previous')}</button>
     <span aria-current="page">{page + 1} / {Math.max(totalPages, 1)}</span>
-    <button type="button" className="secondary" disabled={disabled || page + 1 >= totalPages || page >= 1000000} onClick={() => onPage(page + 1)}>Trang sau</button>
+    <button type="button" className="secondary" disabled={disabled || page + 1 >= totalPages || page >= 1000000} onClick={() => onPage(page + 1)}>{t('shared.next')}</button>
   </nav>
 }

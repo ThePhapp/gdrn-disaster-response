@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError } from '../../shared/api'
 import { ErrorMessage, PageHeader } from '../../shared/components'
+import { useI18n } from '../../shared/i18n'
 import { DisasterFilters } from './DisasterFilters'
 import { DisasterForm } from './DisasterForm'
 import { DisasterList } from './DisasterList'
@@ -15,13 +16,14 @@ import './disaster.css'
 const pageSize = 20
 type Mode = 'detail' | 'create' | 'edit'
 
-function message(error: unknown) {
+function message(error: unknown, fallback: string) {
   if (error instanceof ApiError) return error.message
   if (error instanceof DOMException && error.name === 'AbortError') return ''
-  return 'Không thể kết nối máy chủ. Vui lòng thử lại.'
+  return fallback
 }
 
 export function DisasterPage() {
+  const { t } = useI18n()
   const [filters, setFilters] = useState<Filters>({ page: 0, size: pageSize, sort: 'createdAt,desc' })
   const [result, setResult] = useState<Page>()
   const [listLoading, setListLoading] = useState(true)
@@ -38,7 +40,7 @@ export function DisasterPage() {
   const loadList = useCallback(async () => {
     setListLoading(true); setListError('')
     try { setResult(await listDisasters(filters)) }
-    catch (error) { setListError(message(error)) }
+    catch (error) { setListError(message(error, t('disaster.error.connection'))) }
     finally { setListLoading(false) }
   }, [filters])
 
@@ -47,7 +49,7 @@ export function DisasterPage() {
   async function select(disaster: Disaster) {
     setSelected(disaster); setMode('detail'); setConfirming(false); setMutationError(''); setDetailError(''); setDetailLoading(true)
     try { setSelected(await getDisaster(disaster.id)) }
-    catch (error) { setDetailError(message(error)) }
+    catch (error) { setDetailError(message(error, t('disaster.error.connection'))) }
     finally { setDetailLoading(false) }
   }
 
@@ -67,7 +69,7 @@ export function DisasterPage() {
     setBusy(true); setMutationError('')
     try { await afterMutation(await action()) }
     catch (error) {
-      setMutationError(message(error))
+      setMutationError(message(error, t('disaster.error.connection')))
       if (error instanceof ApiError && error.status === 409 && selected) {
         try { setSelected(await getDisaster(selected.id)); await loadList(); setMode('detail'); setConfirming(false) }
         catch { /* Keep the conflict visible if refresh also fails. */ }
@@ -81,27 +83,27 @@ export function DisasterPage() {
   const resolve = () => selected ? mutate(() => updateDisaster(selected.id, { expectedVersion: selected.version, status: 'RESOLVED' })) : Promise.resolve()
 
   return <section className="disaster-page">
-    <PageHeader eyebrow="ĐIỀU PHỐI / THẢM HỌA" title="Quản lý thảm họa"
-      description="Theo dõi sự kiện, cập nhật thông tin và kết thúc khi tình hình đã được xử lý."
-      action={<button type="button" onClick={startCreate}>Tạo thảm họa</button>} />
+    <PageHeader eyebrow={t('disaster.eyebrow')} title={t('disaster.title')}
+      description={t('disaster.description')}
+      action={<button type="button" onClick={startCreate}>{t('disaster.create')}</button>} />
 
     <DisasterFilters filters={filters} onChange={changeFilter} />
 
-    {listError && <div className="disaster-list-error"><ErrorMessage>{listError}</ErrorMessage><button type="button" className="secondary" onClick={() => void loadList()}>Thử lại</button></div>}
+    {listError && <div className="disaster-list-error"><ErrorMessage>{listError}</ErrorMessage><button type="button" className="secondary" onClick={() => void loadList()}>{t('shared.retry')}</button></div>}
     <div className="disaster-workspace">
       <div className="disaster-master">
-        <div className="disaster-master__summary"><strong>{result?.totalElements ?? 0} thảm họa</strong>
-          {listLoading && result && <span role="status">Đang cập nhật…</span>}</div>
+        <div className="disaster-master__summary"><strong>{t('disaster.count', { count: result?.totalElements ?? 0 })}</strong>
+          {listLoading && result && <span role="status">{t('disaster.updating')}</span>}</div>
         <DisasterList result={result} loading={listLoading} selectedId={selected?.id} onSelect={disaster => void select(disaster)} />
         {result && <DisasterPagination result={result} disabled={listLoading}
           onPageChange={page => changeFilter({ page })} />}
       </div>
       <aside ref={panel} tabIndex={-1} className="disaster-panel"
-        aria-label={mode === 'create' ? 'Tạo thảm họa' : mode === 'edit' ? 'Chỉnh sửa thảm họa' : 'Chi tiết thảm họa'}>
+        aria-label={mode === 'create' ? t('disaster.create') : mode === 'edit' ? t('disaster.edit') : t('disaster.detail')}>
         {mutationError && <ErrorMessage>{mutationError}</ErrorMessage>}
-        {mode === 'create' && <><p className="eyebrow">THẢM HỌA MỚI</p><h2>Tạo thảm họa</h2>
+        {mode === 'create' && <><p className="eyebrow">{t('disaster.new')}</p><h2>{t('disaster.create')}</h2>
           <DisasterForm busy={busy} onCancel={() => setMode('detail')} onCreate={create} onEdit={edit} /></>}
-        {mode === 'edit' && selected && <><p className="eyebrow">CẬP NHẬT</p><h2>Chỉnh sửa thảm họa</h2>
+        {mode === 'edit' && selected && <><p className="eyebrow">{t('disaster.update')}</p><h2>{t('disaster.edit')}</h2>
           <DisasterForm key={`${selected.id}-${selected.version}`} disaster={selected} busy={busy} onCancel={() => setMode('detail')} onCreate={create} onEdit={edit} /></>}
         {mode === 'detail' && <DisasterDetail disaster={selected} loading={detailLoading} error={detailError} busy={busy}
           confirming={confirming} onEdit={() => { setMode('edit'); setMutationError('') }} onConfirm={() => setConfirming(true)}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ApiError } from '../../shared/api'
 import { ErrorMessage, PageHeader } from '../../shared/components'
+import { useI18n } from '../../shared/i18n'
 import { MissionList } from './MissionList'
 import { MissionPanel } from './MissionPanel'
 import { RescueAssignmentForm } from './RescueAssignmentForm'
@@ -31,6 +32,7 @@ function message(error: unknown) {
 }
 
 export function RescuePage() {
+  const { t } = useI18n()
   const [searchParams] = useSearchParams()
   const reportIdFromQuery = searchParams.get('reportId') ?? ''
   const [filters, setFilters] = useState<MissionFilters>({ page: 0, size: pageSize, sort: 'createdAt,desc' })
@@ -257,26 +259,26 @@ export function RescuePage() {
   }
 
   return <section className="rescue-page">
-    <PageHeader eyebrow="ĐIỀU PHỐI / CỨU HỘ" title="Điều phối cứu hộ"
-      description="Phân công đội cho báo cáo đã xác minh và theo dõi tiến độ nhiệm vụ."
-      action={<button type="button" onClick={startCreate} disabled={busy}>Tạo phân công</button>} />
+    <PageHeader eyebrow={t('rescue.eyebrow')} title={t('rescue.title')}
+      description={t('rescue.description')}
+      action={<button type="button" onClick={startCreate} disabled={busy}>{t('rescue.createAssignment')}</button>} />
 
-    <p className="muted">Dữ liệu là ảnh chụp tại lần tải gần nhất. Tải lại để xem tiến độ mới; tải lại trang cần đăng nhập lại.</p>
-    <button type="button" className="secondary" disabled={busy || listLoading} onClick={() => { reportDetailRequest.current++; setSelectedMission(undefined); setSelectedReport(undefined); setSelectedReportId(undefined); setReportLoading(false); void loadMissions() }}>Tải lại nhiệm vụ</button>
+    <p className="muted">{t('rescue.description')}</p>
+    <button type="button" className="secondary" disabled={busy || listLoading} onClick={() => { reportDetailRequest.current++; setSelectedMission(undefined); setSelectedReport(undefined); setSelectedReportId(undefined); setReportLoading(false); void loadMissions() }}>{t('shared.reload')}</button>
     <RescueFilters filters={filters} onChange={changeFilter} />
-    {listError && <div className="rescue-list-error"><ErrorMessage>{listError}</ErrorMessage><button type="button" className="secondary" onClick={() => void loadMissions()}>Thử lại</button></div>}
+    {listError && <div className="rescue-list-error"><ErrorMessage>{listError}</ErrorMessage><button type="button" className="secondary" onClick={() => void loadMissions()}>{t('shared.retry')}</button></div>}
     <div className="rescue-workspace">
       <div className="rescue-master">
-        <div className="rescue-master__summary"><strong>{missions?.totalElements ?? 0} nhiệm vụ</strong>
-          {listLoading && missions && <span role="status">Đang cập nhật…</span>}</div>
+        <div className="rescue-master__summary"><strong>{missions?.totalElements ?? 0} {t('rescue.missions')}</strong>
+          {listLoading && missions && <span role="status">{t('disaster.updating')}</span>}</div>
         <MissionList result={missions} loading={listLoading} selectedId={selectedMission?.id} onSelect={mission => void selectMission(mission)} />
-        {missions && <RescuePagination result={missions} label="nhiệm vụ" disabled={listLoading} onPageChange={page => changeFilter({ page })} />}
+        {missions && <RescuePagination result={missions} label={t('rescue.missions')} disabled={listLoading} onPageChange={page => changeFilter({ page })} />}
       </div>
       <aside ref={panel} tabIndex={-1} className="rescue-panel"
-        aria-label={mode === 'create' ? 'Tạo phân công cứu hộ' : 'Chi tiết nhiệm vụ cứu hộ'}>
+        aria-label={mode === 'create' ? t('rescue.assign') : t('rescue.missions')}>
         {mutationError && <ErrorMessage>{mutationError}</ErrorMessage>}
-        {mode === 'create' && <><p className="eyebrow">PHÂN CÔNG MỚI</p><h2>Tạo phân công cứu hộ</h2>
-          <button type="button" className="secondary" disabled={busy || reportsLoading || teamsLoading || reportLoading} onClick={() => { setSelectedTeam(undefined); void loadReports(); void loadTeams(); if (selectedReportId) void loadReport(selectedReportId) }}>Tải lại lựa chọn</button>
+        {mode === 'create' && <><p className="eyebrow">{t('rescue.assign')}</p><h2>{t('rescue.assignmentTitle')}</h2>
+          <button type="button" className="secondary" disabled={busy || reportsLoading || teamsLoading || reportLoading} onClick={() => { setSelectedTeam(undefined); void loadReports(); void loadTeams(); if (selectedReportId) void loadReport(selectedReportId) }}>{t('rescue.reloadSelection')}</button>
           <RescueAssignmentForm reports={reports} reportsLoading={reportsLoading} reportsError={reportsError}
             selectedReport={selectedReport} reportDetailLoading={reportLoading} reportDetailError={reportError}
             onSelectReport={report => void selectReport(report)} onReportPageChange={changeReportPage}

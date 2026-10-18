@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react'
+import { useI18n } from '../../shared/i18n'
 
 export function DecisionDialog({ title, description, busy, returnFocus, onCancel, onConfirm }: {
   title: string; description: string; busy: boolean; returnFocus: HTMLElement | null; onCancel: () => void; onConfirm: () => void
 }) {
+  const { t } = useI18n()
   const dialog = useRef<HTMLDialogElement>(null)
   const cancel = useRef<HTMLButtonElement>(null)
   useEffect(() => {
@@ -22,9 +24,9 @@ export function DecisionDialog({ title, description, busy, returnFocus, onCancel
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
     }}>
-    <p className="eyebrow">QUYẾT ĐỊNH KHÔNG THỂ HOÀN TÁC</p><h2 id="report-confirm-title">{title}</h2>
+    <p className="eyebrow">{t('reporting.decisionNoUndo')}</p><h2 id="report-confirm-title">{title}</h2>
     <p id="report-confirm-description">{description}</p>
-    <div className="report-actions"><button ref={cancel} type="button" className="secondary" aria-disabled={busy} onClick={() => { if (!busy) onCancel() }}>Quay lại</button>
-      <button type="button" aria-disabled={busy} aria-busy={busy} onClick={() => { if (!busy) onConfirm() }}>{busy ? 'Đang xử lý…' : 'Xác nhận quyết định'}</button></div>
+    <div className="report-actions"><button ref={cancel} type="button" className="secondary" aria-disabled={busy} onClick={() => { if (!busy) onCancel() }}>{t('disaster.back')}</button>
+      <button type="button" aria-disabled={busy} aria-busy={busy} onClick={() => { if (!busy) onConfirm() }}>{busy ? t('reporting.processing') : t('reporting.confirmDecision')}</button></div>
   </dialog>
 }

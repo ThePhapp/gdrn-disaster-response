@@ -1,4 +1,5 @@
 import { useEffect, useRef, type KeyboardEvent } from 'react'
+import { useI18n } from '../../shared/i18n'
 
 export function ResolveDisasterDialog({ disasterName, busy, returnFocus, onResolve, onCancel }: {
   disasterName: string
@@ -7,6 +8,7 @@ export function ResolveDisasterDialog({ disasterName, busy, returnFocus, onResol
   onResolve: () => void
   onCancel: () => void
 }) {
+  const { t } = useI18n()
   const dialog = useRef<HTMLDivElement>(null)
   const cancel = useRef<HTMLButtonElement>(null)
 
@@ -48,15 +50,15 @@ export function ResolveDisasterDialog({ disasterName, busy, returnFocus, onResol
   return <div className="resolve-dialog-layer">
     <div ref={dialog} className="resolve-dialog" role="alertdialog" aria-modal="true"
       aria-labelledby="resolve-title" aria-describedby="resolve-description" onKeyDown={handleKeyDown}>
-      <p className="eyebrow">THAO TÁC KHÔNG THỂ HOÀN TÁC</p>
-      <h2 id="resolve-title">Kết thúc thảm họa?</h2>
-      <p id="resolve-description">“{disasterName}” sẽ chuyển sang Đã kết thúc và không thể mở lại hoặc chỉnh sửa.</p>
+      <p className="eyebrow">{t('disaster.confirmEyebrow')}</p>
+      <h2 id="resolve-title">{t('disaster.confirmTitle')}</h2>
+      <p id="resolve-description">{t('disaster.confirmDescription', { name: disasterName })}</p>
       <div className="resolve-dialog__actions">
         <button ref={cancel} type="button" className="secondary" onClick={close}
-          aria-disabled={busy}>Quay lại</button>
+          aria-disabled={busy}>{t('disaster.back')}</button>
         <button type="button" className="danger" onClick={() => { if (!busy) onResolve() }}
           aria-busy={busy} aria-disabled={busy}>
-          {busy ? 'Đang kết thúc…' : 'Xác nhận kết thúc'}
+          {busy ? t('disaster.resolving') : t('disaster.confirmResolve')}
         </button>
       </div>
     </div>
