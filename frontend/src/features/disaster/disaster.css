@@ -176,7 +176,7 @@
   background: var(--gdrn-canvas);
 }
 .severity--moderate {
-  color: var(--gdrn-warning);
+  color: var(--gdrn-ink);
   background: color-mix(in srgb, var(--gdrn-warning) 10%, var(--gdrn-surface));
 }
 .severity--high {
@@ -430,7 +430,8 @@
     grid-template-columns: minmax(0, 1fr);
   }
   .disaster-list__badges {
-    grid-template-columns: auto auto;
+    display: flex;
+    flex-wrap: wrap;
     justify-content: start;
     justify-items: start;
     min-width: 0;
@@ -448,6 +449,9 @@
     display: none;
   }
   .disaster-pagination nav {
+    flex-wrap: wrap;
+    min-width: 0;
+    white-space: normal;
     gap: var(--gdrn-space-1);
   }
   .disaster-pagination button {
