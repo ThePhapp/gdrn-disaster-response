@@ -133,8 +133,9 @@ Mọi màn hình có loading/error/empty, labels, keyboard, responsive và form 
 401: xóa token/user/cache, về login; 403: thông báo không đủ quyền; 404: không có dữ
 liệu/không còn truy cập, không suy đoán chủ sở hữu; 409: thông báo, refetch phần liên
 quan rồi để người dùng quyết định. Disable double-submit; không tự retry write.
-Không nút giả, không mock runtime. Reload phải login lại. Logout xóa memory/session
-UI và state của user trước; không revoke JWT đã cấp.
+Không nút giả, không mock runtime. Reload cùng tab giữ phiên trong `sessionStorage`;
+mở tab mới cần login lại. Logout xóa `sessionStorage`, UI và state của user trước;
+không revoke JWT đã cấp.
 
 ## Trạng thái và cạnh tranh
 

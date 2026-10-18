@@ -10,6 +10,13 @@
   align-items: start;
 }
 
+.reporting-citizen-layout > .reporting-citizen-card:first-child {
+  height: min(42rem, 72dvh);
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
 .reporting-citizen-card {
   min-width: 0;
   padding: var(--gdrn-space-6);
@@ -173,6 +180,7 @@
   text-align: left;
   background: var(--gdrn-surface);
   border: 1px solid var(--gdrn-border);
+  padding: var(--gdrn-space-3) var(--gdrn-space-4);
 }
 
 .report-list__item[aria-pressed="true"] {
@@ -187,8 +195,12 @@
 }
 
 .report-list__item-main span {
+  display: -webkit-box;
+  overflow: hidden;
   overflow-wrap: anywhere;
   font-weight: 400;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .report-list__item-main small {
@@ -198,11 +210,16 @@
 
 .report-status {
   display: inline-block;
+  max-width: 10rem;
   flex-shrink: 0;
   padding: 4px 8px;
   border-radius: 999px;
   font-size: 0.8rem;
   font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .report-status--pending {
@@ -357,6 +374,11 @@
 
   .reporting-citizen-card {
     padding: var(--gdrn-space-4);
+  }
+
+  .reporting-citizen-layout > .reporting-citizen-card:first-child {
+    height: auto;
+    overflow: visible;
   }
 }
 

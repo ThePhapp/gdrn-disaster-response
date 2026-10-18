@@ -1,13 +1,18 @@
 # Tiến độ Pha 1
 
-**UI01-B audit — 17/10/2026, nền main `1b47b6f`: DONE trên nhánh `feat/UI01-B-audit`, chờ review/merge.**
+**X1 tích hợp luồng thật — 18/10/2026, nền `a12d8e1`: DONE trên nhánh `feat/X1-integration-freeze`, chờ review/merge.**
+Compose thật, API smoke ba demo account, browser 19/19, OpenAPI E01–E15 và feature
+freeze đã được kiểm tra; evidence tại [checklist X1](qa/phase1-integration-checklist.md)
+và [handoff X1](handoffs/X1.md). Không phát hiện mismatch production cần sửa.
+
+**UI01-B audit — 17/10/2026, nền main `1b47b6f`: DONE, đã merge main PR #21.**
 D2 vị trí đã merge PR #20; S01–S06, UI01-C1 và vị trí B3/C2/shared đều có trên main,
 đủ gate bắt đầu audit. Đã retest 6 màn hình × 360/768/1280 và root font 200%; các lỗi
 B-01…B-06 đã được xử lý trong source, ảnh evidence cập nhật. Typecheck/build PASS,
 81 frontend tests, backend verify 113 tests PASS. Browser regression PASS 14, skip 5
 do map-provider config rỗng; audit UI01-B PASS 1/1.
 18 ảnh retest và các giới hạn NOT RUN được ghi trong [handoff UI01-B](handoffs/UI01-B.md).
-Sau merge UI01-B, X1 có thể mở theo dependency; X2/A3 vẫn giữ gate riêng.
+X1 đã tiếp tục trên nền sau merge; X2/A3 vẫn giữ gate riêng.
 Các đoạn theo ngày bên dưới giữ nguyên evidence lịch sử.
 
 **Tích hợp main vào nhánh D2 — 17/10/2026:** giải quyết conflict progress khi merge
@@ -81,21 +86,22 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | D1 | 4 | B2, C1 | DONE, đã merge | [Handoff](handoffs/D1.md): E12–E15/V6; PR #11 `e380d68`, fix `888996a`; 113 backend tests pass (62 unit/architecture +51 integration) sau review |
 | B3 | 2 | B1, UI01-A; B2/D1 để hoàn tất | DONE, bổ sung vị trí đã merge | Baseline PR #14 `242583c`; bổ sung vị trí PR #18 `a7471f0`; [handoff](handoffs/B3.md) giữ evidence owner; D2 retest chuỗi UI đến B3 progress PASS |
 | C2 | 3 | B2, C1, UI01-A | DONE, bổ sung vị trí đã merge | Baseline PR #9 `120dec8`; S04 map tâm/radius + detail preview merge PR #17 tại `d72ecb1`; Citizen UI thuộc B3 |
-| D2 | 4 | D1, UI01-A | DONE baseline + vị trí merge PR #20; có patch UI01-B chờ owner | [Handoff](handoffs/D2.md); [audit UI01-B](handoffs/UI01-B.md): lỗi contrast/padding và CSS scope |
+| D2 | 4 | D1, UI01-A | DONE baseline + vị trí merge PR #20 | [Handoff](handoffs/D2.md); UI01-B đã xử lý CSS scope/contrast/padding trên nền main |
 | A1 | 1 | UI01-A; audit lại khi B2/D1 merge | DONE, đã merge main PR #19 | [Handoff](handoffs/A1.md): security allowlist/OpenAPI và shared route behavior đã audit |
 | A2 | 1 | UI01-A; hoàn tất UI runtime và X2/CI | IN_PROGRESS; runtime đã merge main PR #19 | [Handoff](handoffs/A2.md): frontend Compose/runtime và CI checks đã có; chờ X2 cho browser CI |
-| UI01-B | 1 + owners | B3, C2, D2, UI01-C1 | DONE trên nhánh, chờ review/merge | [Handoff](handoffs/UI01-B.md): retest 6 màn hình PASS, 18 ảnh evidence; sau merge mở dependency X1 |
-| X1 | 1 + owners | UI01-B, A1, A2 runtime | TODO | Tích hợp thật/feature freeze |
+| UI01-B | 1 + owners | B3, C2, D2, UI01-C1 | DONE, đã merge main PR #21 | [Handoff](handoffs/UI01-B.md): retest 6 màn hình PASS, 18 ảnh evidence |
+| X1 | 1 + owners | UI01-B, A1, A2 runtime | DONE trên nhánh, chờ review/merge | [Handoff](handoffs/X1.md); flow thật xuyên suốt, feature freeze; X2/C3/D3 có thể lấy baseline |
 | X2 | 2 + 1 ghép CI | X1 | TODO | Browser E2E/hồi quy |
 | D3 | 4 | X1 cho số đo; smoke D10 | TODO | Benchmark/Kaggle evidence |
 | C3 | 3 | X1; bổ sung X2/D3 | TODO | Tài liệu/rubric/demo |
 | A3 | 1 + nhóm | X2, C3, D3, UI01-B và mọi task trước | TODO | Audit cuối; không tuyên bố Pha 1 DONE khi thiếu evidence |
 
-P00/P01/B1/B2/C1/UI01-A/UI01-C1/C2/D1/D2 và phần nghiệp vụ B3 đã tích hợp trên nền
-hiện tại. D2 bổ sung vị trí đã merge PR #20; UI01-B đã PASS audit trên nhánh riêng,
-chờ review/merge và không được suy ra chứng nhận WCAG đầy đủ từ evidence này. A1 đã audit E01–E15 và merge PR #19 (`ed75849`);
+P00/P01/B1/B2/C1/UI01-A/UI01-C1/C2/D1/D2, UI01-B và phần nghiệp vụ B3 đã tích hợp trên nền
+hiện tại. D2 bổ sung vị trí đã merge PR #20; UI01-B đã merge PR #21 và X1 đã PASS
+luồng tích hợp trên nhánh riêng, không được suy ra chứng nhận WCAG đầy đủ từ evidence này. A1 đã audit E01–E15 và merge PR #19 (`ed75849`);
 A2 tiếp tục runtime/CI theo catalog; local Compose + Vite đang chạy không đồng nghĩa A2 hoàn tất.
-UI01-B đủ acceptance trong phạm vi audit đã ghi; X1 mở sau merge, X2/A3 vẫn giữ gate riêng.
+X1 đủ acceptance trong phạm vi checklist đã ghi; X2/A3 vẫn giữ gate riêng, A2 chờ X2
+để ghép CI browser và chuyển DONE.
 Chỉ thực hiện prompt được giao; bảng này không tự giao hoặc khởi chạy task tiếp theo.
 
 **Cập nhật A1 trên nhánh `feat/a1-security-audit`:** audit sau B2/D1 đã hoàn tất.

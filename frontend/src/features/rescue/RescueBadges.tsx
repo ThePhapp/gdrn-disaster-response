@@ -1,4 +1,5 @@
 import type { MissionStatus, TeamAvailability } from './rescue-api'
+import { useI18n, type TranslationKey } from '../../shared/i18n'
 
 export const missionStatusLabels: Record<MissionStatus, string> = {
   ASSIGNED: 'Đã phân công',
@@ -18,11 +19,16 @@ export const reportTypeLabels: Record<string, string> = {
   WILDFIRE: 'Cháy rừng',
   TSUNAMI: 'Sóng thần',
 }
+export function rescueStatusLabel(t: (key: TranslationKey) => string, status: MissionStatus) { return t(`rescue.status.${status}` as TranslationKey) }
+export function rescueAvailabilityLabel(t: (key: TranslationKey) => string, availability: TeamAvailability) { return t(`rescue.availability.${availability}` as TranslationKey) }
+export function rescueReportTypeLabel(t: (key: TranslationKey) => string, type: string) { return t(`rescue.type.${type}` as TranslationKey) }
 
 export function MissionStatusBadge({ status }: { status: MissionStatus }) {
-  return <span className={`rescue-badge mission-status--${status.toLowerCase()}`}>{missionStatusLabels[status]}</span>
+  const { t, language } = useI18n()
+  return <span className={`rescue-badge mission-status--${status.toLowerCase()}`}>{language === 'vi' ? missionStatusLabels[status] : rescueStatusLabel(t, status)}</span>
 }
 
 export function AvailabilityBadge({ availability }: { availability: TeamAvailability }) {
-  return <span className={`rescue-badge availability--${availability.toLowerCase()}`}>{availabilityLabels[availability]}</span>
+  const { t, language } = useI18n()
+  return <span className={`rescue-badge availability--${availability.toLowerCase()}`}>{language === 'vi' ? availabilityLabels[availability] : rescueAvailabilityLabel(t, availability)}</span>
 }

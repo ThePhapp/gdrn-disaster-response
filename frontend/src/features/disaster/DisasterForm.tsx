@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Field } from '../../shared/components'
+import { useI18n, type TranslationKey } from '../../shared/i18n'
 import { LocationMap, type LocationValue } from '../../shared/location'
-import { severityLabels, typeLabels } from './DisasterBadges'
+import { disasterLabel, severityLabel } from './DisasterBadges'
 import {
   disasterTypes,
   severities,
@@ -26,16 +27,16 @@ function valueOf(disaster?: Disaster): FormValue {
   } : { name: '', type: 'FLOOD', severity: 'MODERATE', description: '', latitude: '', longitude: '' }
 }
 
-function validate(value: FormValue): { errors: Errors; fields?: DisasterFields } {
+function validate(value: FormValue, t: (key: TranslationKey) => string): { errors: Errors; fields?: DisasterFields } {
   const errors: Errors = {}
   const name = value.name.trim()
   const description = value.description.trim()
   const latitude = Number(value.latitude)
   const longitude = Number(value.longitude)
-  if (!name || [...name].length > 120) errors.name = 'Nhập tên từ 1 đến 120 ký tự.'
-  if (!description || [...description].length > 2000) errors.description = 'Nhập mô tả từ 1 đến 2.000 ký tự.'
-  if (value.latitude.trim() === '' || !Number.isFinite(latitude) || latitude < -90 || latitude > 90) errors.latitude = 'Vĩ độ phải nằm trong khoảng -90 đến 90.'
-  if (value.longitude.trim() === '' || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) errors.longitude = 'Kinh độ phải nằm trong khoảng -180 đến 180.'
+  if (!name || [...name].length > 120) errors.name = t('disaster.form.nameError')
+  if (!description || [...description].length > 2000) errors.description = t('disaster.form.descriptionError')
+  if (value.latitude.trim() === '' || !Number.isFinite(latitude) || latitude < -90 || latitude > 90) errors.latitude = t('disaster.form.latitudeError')
+  if (value.longitude.trim() === '' || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) errors.longitude = t('disaster.form.longitudeError')
   return Object.keys(errors).length ? { errors } : {
     errors,
     fields: { name, description, latitude, longitude, type: value.type, severity: value.severity },
@@ -49,6 +50,7 @@ export function DisasterForm({ disaster, busy, onCancel, onCreate, onEdit }: {
   onCreate: (fields: DisasterFields) => Promise<void>
   onEdit: (patch: DisasterPatch) => Promise<void>
 }) {
+  const { t } = useI18n()
   const [value, setValue] = useState<FormValue>(() => valueOf(disaster))
   const [errors, setErrors] = useState<Errors>({})
   const form = useRef<HTMLFormElement>(null)
@@ -82,7 +84,7 @@ export function DisasterForm({ disaster, busy, onCancel, onCreate, onEdit }: {
   async function submit(event: FormEvent) {
     event.preventDefault()
     if (busy) return
-    const checked = validate(value)
+    const checked = validate(value, t)
     if (!checked.fields) {
       focusInvalid.current = true
       setErrors(checked.errors)
@@ -94,48 +96,48 @@ export function DisasterForm({ disaster, busy, onCancel, onCreate, onEdit }: {
       if (checked.fields[key] !== disaster[key]) patch[key] = checked.fields[key] as never
     }
     if (Object.keys(patch).length === 1) {
-      setErrors({ form: 'Chưa có thay đổi để lưu.' })
+      setErrors({ form: t('disaster.form.noChanges') })
       return
     }
     await onEdit(patch)
   }
 
   return <form ref={form} className="disaster-form" onSubmit={submit} noValidate aria-busy={busy}>
-    <Field id="disaster-name" label="Tên thảm họa" value={value.name} maxLength={120} autoFocus
-      hint="Tối đa 120 ký tự."
+    <Field id="disaster-name" label={t('disaster.form.name')} value={value.name} maxLength={120} autoFocus
+      hint={t('disaster.form.nameHint')}
       onChange={event => set('name', event.target.value)} error={errors.name} disabled={busy} required />
     <div className="disaster-form__pair">
-      <div className="field"><label htmlFor="disaster-type">Loại thảm họa</label>
+      <div className="field"><label htmlFor="disaster-type">{t('disaster.form.type')}</label>
         <select id="disaster-type" value={value.type} onChange={event => set('type', event.target.value as DisasterType)} disabled={busy}>
-          {disasterTypes.map(type => <option key={type} value={type}>{typeLabels[type]}</option>)}
+          {disasterTypes.map(type => <option key={type} value={type}>{disasterLabel(t, type)}</option>)}
         </select>
       </div>
-      <div className="field"><label htmlFor="disaster-severity">Mức độ</label>
+      <div className="field"><label htmlFor="disaster-severity">{t('disaster.severity')}</label>
         <select id="disaster-severity" value={value.severity} onChange={event => set('severity', event.target.value as Severity)} disabled={busy}>
-          {severities.map(severity => <option key={severity} value={severity}>{severityLabels[severity]}</option>)}
+          {severities.map(severity => <option key={severity} value={severity}>{severityLabel(t, severity)}</option>)}
         </select>
       </div>
     </div>
-    <div className="field"><label htmlFor="disaster-description">Mô tả</label>
+    <div className="field"><label htmlFor="disaster-description">{t('disaster.form.description')}</label>
       <textarea id="disaster-description" value={value.description} maxLength={2000} rows={5}
         onChange={event => set('description', event.target.value)} aria-invalid={Boolean(errors.description)}
         aria-describedby={`disaster-description-hint${errors.description ? ' disaster-description-error' : ''}`} disabled={busy} required />
-      <span id="disaster-description-hint" className="field-hint">Mô tả tình hình hiện tại, tối đa 2.000 ký tự.</span>
+      <span id="disaster-description-hint" className="field-hint">{t('disaster.form.descriptionHint')}</span>
       {errors.description && <span id="disaster-description-error" className="field-error">{errors.description}</span>}
     </div>
     <div className="disaster-form__pair">
-      <Field id="disaster-latitude" label="Vĩ độ" type="number" step="any" value={value.latitude}
-        hint="Từ -90 đến 90." onChange={event => set('latitude', event.target.value)}
+      <Field id="disaster-latitude" label={t('disaster.form.latitude')} type="number" step="any" value={value.latitude}
+        hint={t('disaster.form.latitudeHint')} onChange={event => set('latitude', event.target.value)}
         error={errors.latitude} disabled={busy} required />
-      <Field id="disaster-longitude" label="Kinh độ" type="number" step="any" value={value.longitude}
-        hint="Từ -180 đến 180." onChange={event => set('longitude', event.target.value)}
+      <Field id="disaster-longitude" label={t('disaster.form.longitude')} type="number" step="any" value={value.longitude}
+        hint={t('disaster.form.longitudeHint')} onChange={event => set('longitude', event.target.value)}
         error={errors.longitude} disabled={busy} required />
     </div>
     <LocationMap value={location} onChange={setLocation} disabled={busy} />
     {errors.form && <p className="field-error" role="alert">{errors.form}</p>}
     <div className="disaster-actions">
-      <button type="submit" disabled={busy}>{busy ? 'Đang lưu…' : editing ? 'Lưu thay đổi' : 'Tạo thảm họa'}</button>
-      <button type="button" className="secondary" onClick={onCancel} disabled={busy}>Hủy</button>
+      <button type="submit" disabled={busy}>{busy ? t('disaster.form.saving') : editing ? t('disaster.form.save') : t('disaster.create')}</button>
+      <button type="button" className="secondary" onClick={onCancel} disabled={busy}>{t('disaster.form.cancel')}</button>
     </div>
   </form>
 }

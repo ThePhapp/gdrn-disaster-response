@@ -46,8 +46,9 @@ RescueRequest, Geo risk, and the larger context API list remain product backlog.
 [module contracts and migration ledger](phase1-module-contracts.md) define the future
 Rescue → Reporting → Disaster dependency. DisasterQuery is implemented by C1;
 ReportingQuery is implemented in B2; see [B2 handoff](../handoffs/B2.md) for merge status.
-[ADR 005](../adr/005-phase1-mvp-auth-frontend.md) proposes JWT memory-only (reload needs
-login), no refresh and CITIZEN/AUTHORITY with React/TypeScript/Vite. ADR 004 remains a
+[ADR 005](../adr/005-phase1-mvp-auth-frontend.md) defines a short-lived JWT in tab-scoped
+`sessionStorage` (reload in the same tab restores it; a new tab needs login), no refresh
+and CITIZEN/AUTHORITY with React/TypeScript/Vite. ADR 004 remains a
 future event proposal, not an MVP event bus. See [progress](../phase1-progress.md)
 and [P00 handoff](../handoffs/P00.md) for review and implementation gates.
 
@@ -186,8 +187,9 @@ IdentityService uses account/password/token ports, JPA/BCrypt/Nimbus are outer
 adapters. Demo bootstrap is profile-gated and transactional; unique email plus
 ON CONFLICT DO NOTHING preserves existing account data on concurrent reruns.
 
-React/TypeScript/Vite S01 confirms login with E02. JWT is memory-only, reload requires
-login, logout/401/expiry clear session and per-user state. Feature route exports
+React/TypeScript/Vite S01 confirms login with E02. JWT is kept in tab-scoped
+`sessionStorage`, reload in the same tab restores it, and logout/401/expiry clear
+session and per-user state. Feature route exports
 register only implemented pages. S05 exports `/operations/disasters` for AUTHORITY
 with real E03–E06 list/detail/create/edit/resolve flows. See [P01 setup](../P01_LOCAL.md).
 UI01-A uses shared CSS tokens and local SVG without a UI framework or CDN. Feature
