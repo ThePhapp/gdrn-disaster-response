@@ -231,7 +231,7 @@ class GdrnApplicationIT {
         assertThat(response.getBody().path("info").path("title").asText())
                 .isEqualTo("Global Disaster Response Network API");
         assertThat(response.getBody().path("info").path("version").asText()).isEqualTo("Phase 1");
-        assertThat(response.getBody().path("paths").size()).isEqualTo(10);
+        assertThat(response.getBody().path("paths").size()).isEqualTo(11);
         assertThat(response.getBody().at("/paths/~1api~1auth~1login/post/operationId").asText()).isEqualTo("E01");
         assertThat(response.getBody().at("/paths/~1api~1auth~1me/get/operationId").asText()).isEqualTo("E02");
         assertThat(response.getBody().at("/paths/~1api~1disasters/get/operationId").asText()).isEqualTo("E03");
@@ -251,7 +251,9 @@ class GdrnApplicationIT {
         response.getBody().path("paths").forEach(path -> path.forEach(operation -> {
             if (operation.has("operationId")) operations.add(operation.path("operationId").asText());
         }));
-        assertThat(operations).containsExactlyInAnyOrder("E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09", "E10", "E11", "E12", "E13", "E14", "E15");
+        assertThat(operations).containsExactlyInAnyOrder("E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09", "E10", "E11", "E12", "E13", "E14", "E15", "E16");
+        assertThat(response.getBody().at("/paths/~1api~1dashboard/get/operationId").asText()).isEqualTo("E16");
+        assertThat(response.getBody().at("/paths/~1api~1dashboard/get/security/0/bearerAuth").isArray()).isTrue();
         assertThat(response.getBody().at("/paths/~1api~1reports/post/security/0/bearerAuth").isArray()).isTrue();
         assertThat(response.getBody().at("/paths/~1api~1reports/get/parameters").toString()).contains("radiusMeters").doesNotContain("ownerId");
         assertThat(response.getBody().at("/components/securitySchemes/bearerAuth/scheme").asText()).isEqualTo("bearer");

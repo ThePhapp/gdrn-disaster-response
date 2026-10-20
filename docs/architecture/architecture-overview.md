@@ -1,5 +1,22 @@
 # GDRN architecture foundation
 
+## DS1 runtime extension — 18/10/2026
+
+On `feat/dashboard-statistics` from main `f91fc5d`, the authorized Dashboard use
+case adds E16 `/api/dashboard` and S07 `/operations/dashboard` for AUTHORITY.
+The checkout already includes baseline E01–E15/S01–S06 and location maps; dated
+runtime notes below retain their historical scope. See [DS1 contract](../api/dashboard-contract.md).
+
+`com.gdrn.dashboard` is a small read-only orchestration module, with application
+ports and infrastructure adapters calling only Reporting/Rescue published aggregate
+contracts. No speculative domain aggregate, shared business model or persistence
+table is introduced. Provider SQL aggregates its own tables; Dashboard performs no
+SQL join across module boundaries. A read-only REPEATABLE READ transaction provides
+one datasource snapshot for the response. Team availability always uses current
+active missions regardless of date cohort; this is not event/history reconstruction.
+Dates are inclusive Vietnam calendar dates. Existing migrations V1–V6 are sufficient.
+See [ADR 009](../adr/009-dashboard-statistics.md) for the decision and alternatives.
+
 ## Objective and current scope
 
 Global Disaster Response Network is a university simulation of disaster response

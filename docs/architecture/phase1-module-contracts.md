@@ -1,5 +1,20 @@
 # Pha 1 — published contracts và migration ledger
 
+## DS1 bổ sung — 18/10/2026
+
+User yêu cầu dashboard AUTHORITY; [catalog DS1](../PROMPTS_PHA_1_4_NGUOI.md) và
+[contract E16/S07](../api/dashboard-contract.md) bổ sung scope baseline bên dưới.
+Dependency mới: `Dashboard → Reporting` và `Dashboard → Rescue`, chỉ qua
+`ReportStatisticsQuery` / `RescueStatisticsQuery` thuộc `application.contract` của
+provider. Dashboard application dùng port riêng; adapter chuyển immutable count
+records, không truyền domain/persistence objects. Không thêm chiều ngược.
+Provider aggregate SQL chỉ đọc bảng nội module; read-only REPEATABLE READ phía
+consumer dùng cùng datasource để giữ snapshot xuyên hai provider. Trusted internal
+contracts không tự cấp quyền HTTP; DashboardService kiểm tra AUTHORITY trước khi đọc.
+Không thêm migration hoặc slot ledger: sử dụng V1–V6 hiện có, không đổi checksum.
+Semantics null-window, date boundary, withdrawn, availability và failure được định
+nghĩa trong contract bổ sung; integration tests DS1 kiểm tra với PostGIS thật.
+
 **Contracts P00; tích hợp B1/C1 09/10/2026:** Identity V2, Disaster V3 và Reporting V4 đã có;
 DisasterQuery đã triển khai trong C1. ReportingQuery được triển khai trên nhánh B2
 từ ca3751d; xem [handoff B2](../handoffs/B2.md) và progress cho review/merge.
