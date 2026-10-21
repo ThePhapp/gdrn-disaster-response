@@ -40,7 +40,11 @@ async function inspect(page: Page, info: TestInfo, screen: string) {
     await info.attach(`${screen}-${width}-metrics`, { body: JSON.stringify(metrics, null, 2), contentType: 'application/json' })
     expect.soft(metrics.failures, `${screen}/${width}: text contrast (excludes map imagery and logos)`).toEqual([])
     await page.screenshot({ path: info.outputPath(`${screen}-${width}.png`), fullPage: true })
-    await page.evaluate(() => { document.documentElement.style.fontSize = '200%' })
+    await page.evaluate(async () => {
+      document.documentElement.style.fontSize = '200%'
+      await document.fonts.ready
+      await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+    })
     await info.attach(`${screen}-${width}-resize`, { body: JSON.stringify(await page.evaluate(() =>
       [...document.querySelectorAll<HTMLElement>('body *')].filter(el => el.checkVisibility() && el.getBoundingClientRect().right > innerWidth)
         .map(el => ({ tag: el.tagName, className: el.className, right: el.getBoundingClientRect().right }))), null, 2), contentType: 'application/json' })

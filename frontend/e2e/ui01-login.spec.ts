@@ -24,7 +24,11 @@ for (const width of [360, 768, 1280]) {
     await page.reload()
     await page.screenshot({ path: `test-results/ui01-login-${width}.png`, fullPage: true })
     // Text enlargement checks reflow; native browser zoom is a separate manual check.
-    await page.evaluate(() => { document.documentElement.style.fontSize = '200%' })
+    await page.evaluate(async () => {
+      document.documentElement.style.fontSize = '200%'
+      await document.fonts.ready
+      await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+    })
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     await expect(page.getByRole('button', { name: 'Đăng nhập', exact: true })).toBeVisible()
   })
