@@ -1,4 +1,4 @@
-import { expect, test, type Page, type APIRequestContext } from '@playwright/test'
+import { expect, test, type Page, type APIRequestContext } from './fixtures'
 
 const authority = { email: process.env.DEMO_AUTHORITY_EMAIL, password: process.env.DEMO_AUTHORITY_PASSWORD }
 const citizen = { email: process.env.DEMO_CITIZEN_ONE_EMAIL, password: process.env.DEMO_CITIZEN_ONE_PASSWORD }

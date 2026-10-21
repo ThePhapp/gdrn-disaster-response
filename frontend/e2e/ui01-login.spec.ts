@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 
 for (const width of [360, 768, 1280]) {
   test(`S01 layout and keyboard at ${width}px`, async ({ page }) => {
@@ -24,7 +24,11 @@ for (const width of [360, 768, 1280]) {
     await page.reload()
     await page.screenshot({ path: `test-results/ui01-login-${width}.png`, fullPage: true })
     // Text enlargement checks reflow; native browser zoom is a separate manual check.
-    await page.evaluate(() => { document.documentElement.style.fontSize = '200%' })
+    await page.evaluate(async () => {
+      document.documentElement.style.fontSize = '200%'
+      await document.fonts.ready
+      await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+    })
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     await expect(page.getByRole('button', { name: 'Đăng nhập', exact: true })).toBeVisible()
   })
@@ -49,5 +53,29 @@ test('real role navigation and forbidden route preserve citizen session; logout 
   await expect(page).toHaveURL(/\/login$/)
   await expect(page.getByLabel('Email', { exact: true })).toHaveValue('')
   await expect(page.getByRole('navigation')).toHaveCount(0)
-  expect(await page.evaluate(() => localStorage.length + sessionStorage.length)).toBe(0)
+  expect(await page.evaluate(() => localStorage.getItem('gdrn.language'))).toBe('vi')
+  expect(await page.evaluate(() => sessionStorage.length)).toBe(0)
+})
+
+test('real backend 401 expires the citizen session and returns to login', async ({ page }) => {
+  const email = process.env.DEMO_CITIZEN_ONE_EMAIL
+  const password = process.env.DEMO_CITIZEN_ONE_PASSWORD
+  if (!email || !password) throw new Error('Configure DEMO_CITIZEN_ONE credentials in environment')
+  await page.goto('/login')
+  await page.getByLabel('Email', { exact: true }).fill(email)
+  await page.getByLabel('Mật khẩu', { exact: true }).fill(password)
+  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click()
+  await expect(page).toHaveURL(/\/my-reports$/)
+  await page.evaluate(() => {
+    const key = 'gdrn.session'
+    const stored = sessionStorage.getItem(key)
+    if (!stored) throw new Error('Expected a persisted citizen session')
+    const session = JSON.parse(stored) as { accessToken: string }
+    session.accessToken = 'expired.invalid.token'
+    sessionStorage.setItem(key, JSON.stringify(session))
+  })
+  await page.goto('/my-reports')
+  await expect(page).toHaveURL(/\/login$/)
+  await expect(page.getByLabel('Email', { exact: true })).toBeVisible()
+  expect(await page.evaluate(() => sessionStorage.length)).toBe(0)
 })

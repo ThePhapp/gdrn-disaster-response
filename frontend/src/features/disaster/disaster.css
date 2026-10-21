@@ -78,7 +78,7 @@
 
 .disaster-workspace {
   display: grid;
-  grid-template-columns: minmax(20rem, .9fr) minmax(24rem, 1.1fr);
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
   width: 100%;
   min-width: 0;
   min-height: min(34rem, calc(100dvh - 16rem));

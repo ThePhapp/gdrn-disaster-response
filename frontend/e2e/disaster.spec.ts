@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 
 const mapProviderConfigured = Boolean(process.env.VITE_MAPTILER_KEY || process.env.VITE_MAP_STYLE_URL)
 

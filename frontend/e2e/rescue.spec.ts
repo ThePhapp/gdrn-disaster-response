@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext } from '@playwright/test'
+import { expect, test, type APIRequestContext } from './fixtures'
 
 // Match the configured provider, including custom HTTPS styles and attribution.
 const mapStyleUrl = process.env.VITE_MAP_STYLE_URL?.trim() || (process.env.VITE_MAPTILER_KEY
@@ -51,6 +51,8 @@ test('C2 verifies, S04 links to D2 read-only preview, mission completes after RE
     await page.getByLabel('Email', { exact: true }).fill(authorityEmail)
     await page.getByLabel('Mật khẩu', { exact: true }).fill(authorityPassword)
     await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click()
+    await expect(page).toHaveURL(/\/operations\/dashboard$/)
+    await page.getByRole('link', { name: 'Báo cáo', exact: true }).click()
     await expect(page).toHaveURL(/\/operations\/reports$/)
     await page.getByRole('button', { name: new RegExp(`${tag} verified report`) }).click()
     await page.getByRole('button', { name: 'Xác minh báo cáo', exact: true }).click()
@@ -79,7 +81,7 @@ test('C2 verifies, S04 links to D2 read-only preview, mission completes after RE
     await availableTeams.first().click()
 
     const createResponse = page.waitForResponse(response => response.url().includes('/api/rescue-missions') && response.request().method() === 'POST')
-    await page.getByRole('complementary', { name: 'Tạo phân công cứu hộ' })
+    await page.getByRole('complementary', { name: 'Phân công nhiệm vụ cứu hộ' })
       .getByRole('button', { name: 'Tạo phân công', exact: true }).click()
     const createdResponse = await createResponse
     expect(createdResponse.status()).toBe(201)
@@ -103,7 +105,7 @@ test('C2 verifies, S04 links to D2 read-only preview, mission completes after RE
     const startResponse = page.waitForResponse(response => response.url().includes('/status') && response.request().method() === 'PATCH')
     await page.getByRole('button', { name: 'Bắt đầu thực hiện' }).click()
     expect((await startResponse).status()).toBe(200)
-    await expect(page.getByRole('complementary', { name: 'Chi tiết nhiệm vụ cứu hộ' })
+    await expect(page.getByRole('complementary', { name: 'Nhiệm vụ' })
       .getByText('Đang thực hiện', { exact: true })).toBeVisible()
 
     await page.getByRole('button', { name: 'Hoàn tất nhiệm vụ' }).click()
@@ -113,7 +115,7 @@ test('C2 verifies, S04 links to D2 read-only preview, mission completes after RE
     const completeResponse = page.waitForResponse(response => response.url().includes('/status') && response.request().method() === 'PATCH')
     await page.getByRole('button', { name: 'Xác nhận đã hoàn tất' }).click()
     expect((await completeResponse).status()).toBe(200)
-    await expect(page.getByRole('complementary', { name: 'Chi tiết nhiệm vụ cứu hộ' })
+    await expect(page.getByRole('complementary', { name: 'Nhiệm vụ' })
       .getByText('Đã hoàn tất', { exact: true })).toBeVisible()
 
     await page.getByRole('button', { name: 'Đăng xuất' }).click()
@@ -160,6 +162,7 @@ test('authority assigns a verified report, progresses it and sees a real conflic
   let missionId: string | undefined
   const otherSession = await page.context().browser()!.newContext()
   const otherPage = await otherSession.newPage()
+  await otherPage.addInitScript(() => localStorage.setItem('gdrn.language', 'vi'))
 
   try {
     const disasterResponse = await authority.post('/api/disasters', {
@@ -183,6 +186,8 @@ test('authority assigns a verified report, progresses it and sees a real conflic
     await page.getByLabel('Email', { exact: true }).fill(authorityEmail)
     await page.getByLabel('Mật khẩu', { exact: true }).fill(authorityPassword)
     await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click()
+    await expect(page).toHaveURL(/\/operations\/dashboard$/)
+    await page.getByRole('link', { name: 'Báo cáo', exact: true }).click()
     await expect(page).toHaveURL(/\/operations\/reports$/)
     await page.getByRole('link', { name: 'Cứu hộ', exact: true }).click()
     await expect(page).toHaveURL(/\/operations\/rescue$/)
@@ -209,26 +214,28 @@ test('authority assigns a verified report, progresses it and sees a real conflic
     await otherPage.getByLabel('Email', { exact: true }).fill(authorityEmail)
     await otherPage.getByLabel('Mật khẩu', { exact: true }).fill(authorityPassword)
     await otherPage.getByRole('button', { name: 'Đăng nhập', exact: true }).click()
+    await expect(otherPage).toHaveURL(/\/operations\/dashboard$/)
+    await otherPage.getByRole('link', { name: 'Báo cáo', exact: true }).click()
     await expect(otherPage).toHaveURL(/\/operations\/reports$/)
     await otherPage.evaluate(id => { history.pushState({}, '', `/operations/rescue?reportId=${id}`); dispatchEvent(new PopStateEvent('popstate')) }, otherReport.id)
     const otherTeam = otherPage.getByRole('list', { name: 'Đội cứu hộ sẵn sàng' }).getByRole('button').first()
     await expect(otherTeam).toHaveText(await availableTeams.first().innerText(), { useInnerText: true })
     await otherTeam.click()
-    await expect(otherPage.getByRole('complementary', { name: 'Tạo phân công cứu hộ' }).getByRole('button', { name: 'Tạo phân công', exact: true })).toBeEnabled()
+    await expect(otherPage.getByRole('complementary', { name: 'Phân công nhiệm vụ cứu hộ' }).getByRole('button', { name: 'Tạo phân công', exact: true })).toBeEnabled()
 
     const createResponse = page.waitForResponse(response => response.url().includes('/api/rescue-missions') && response.request().method() === 'POST')
-    await page.getByRole('complementary', { name: 'Tạo phân công cứu hộ' })
+    await page.getByRole('complementary', { name: 'Phân công nhiệm vụ cứu hộ' })
       .getByRole('button', { name: 'Tạo phân công', exact: true }).click()
     const createdResponse = await createResponse
     expect(createdResponse.status()).toBe(201)
     missionId = (await createdResponse.json()).id
     const losingResponse = otherPage.waitForResponse(response => response.url().endsWith('/api/rescue-missions') && response.request().method() === 'POST')
-    await otherPage.getByRole('complementary', { name: 'Tạo phân công cứu hộ' }).getByRole('button', { name: 'Tạo phân công', exact: true }).click()
+    await otherPage.getByRole('complementary', { name: 'Phân công nhiệm vụ cứu hộ' }).getByRole('button', { name: 'Tạo phân công', exact: true }).click()
     const lost = await losingResponse
     expect(lost.status()).toBe(409)
     expect((await lost.json()).code).toBe('TEAM_BUSY')
     await expect(otherPage.getByRole('alert')).toContainText('Đội đã được phân công')
-    await expect(otherPage.getByRole('complementary', { name: 'Tạo phân công cứu hộ' }).getByRole('button', { name: 'Tạo phân công', exact: true })).toBeDisabled()
+    await expect(otherPage.getByRole('complementary', { name: 'Phân công nhiệm vụ cứu hộ' }).getByRole('button', { name: 'Tạo phân công', exact: true })).toBeDisabled()
 
     await expect(page.getByRole('heading', { name: /Nhiệm vụ/ })).toBeVisible()
 
@@ -241,7 +248,7 @@ test('authority assigns a verified report, progresses it and sees a real conflic
     const startResponse = page.waitForResponse(response => response.url().includes('/status') && response.request().method() === 'PATCH')
     await page.getByRole('button', { name: 'Bắt đầu thực hiện' }).click()
     expect((await startResponse).status()).toBe(200)
-    await expect(page.getByRole('complementary', { name: 'Chi tiết nhiệm vụ cứu hộ' })
+    await expect(page.getByRole('complementary', { name: 'Nhiệm vụ' })
       .getByText('Đang thực hiện', { exact: true })).toBeVisible()
 
     await page.getByRole('button', { name: 'Hoàn tất nhiệm vụ' }).click()
@@ -251,7 +258,7 @@ test('authority assigns a verified report, progresses it and sees a real conflic
     const completeResponse = page.waitForResponse(response => response.url().includes('/status') && response.request().method() === 'PATCH')
     await page.getByRole('button', { name: 'Xác nhận đã hoàn tất' }).click()
     expect((await completeResponse).status()).toBe(200)
-    await expect(page.getByRole('complementary', { name: 'Chi tiết nhiệm vụ cứu hộ' })
+    await expect(page.getByRole('complementary', { name: 'Nhiệm vụ' })
       .getByText('Đã hoàn tất', { exact: true })).toBeVisible()
 
     await page.getByRole('button', { name: 'Tạo phân công', exact: true }).first().click()
@@ -263,7 +270,7 @@ test('authority assigns a verified report, progresses it and sees a real conflic
     await expect(conflictTeams.first()).toBeVisible()
     await conflictTeams.first().click()
     const conflictResponse = page.waitForResponse(response => response.url().endsWith('/api/rescue-missions') && response.request().method() === 'POST')
-    await page.getByRole('complementary', { name: 'Tạo phân công cứu hộ' })
+    await page.getByRole('complementary', { name: 'Phân công nhiệm vụ cứu hộ' })
       .getByRole('button', { name: 'Tạo phân công', exact: true }).click()
     expect((await conflictResponse).status()).toBe(409)
     await expect(page.getByRole('alert')).toContainText('Báo cáo đã có nhiệm vụ')

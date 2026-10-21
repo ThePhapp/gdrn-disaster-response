@@ -16,6 +16,13 @@ Compose thật, API smoke ba demo account, browser 19/19, OpenAPI E01–E15 và 
 freeze đã được kiểm tra; evidence tại [checklist X1](qa/phase1-integration-checklist.md)
 và [handoff X1](handoffs/X1.md). Không phát hiện mismatch production cần sửa.
 
+**X2 + A2 browser/CI — 21/10/2026, nền `main` tại `761e6f5`: DONE trên nhánh
+`feat/x2-a2-browser-ci`, chờ review/merge.** Playwright regression với API/PostGIS thật
+PASS 23/23 khi có map provider; Compose CI-style không có map provider PASS 18 và skip
+5 scenario map tùy chọn. CI đã thêm job browser-e2e với secret runtime, health/smoke,
+Chromium, artifact diagnostics và cleanup; remote GitHub Actions chưa chạy vì chưa push.
+Xem [handoff X2](handoffs/X2.md) và [handoff A2](handoffs/A2.md).
+
 **UI01-B audit — 17/10/2026, nền main `1b47b6f`: DONE, đã merge main PR #21.**
 D2 vị trí đã merge PR #20; S01–S06, UI01-C1 và vị trí B3/C2/shared đều có trên main,
 đủ gate bắt đầu audit. Đã retest 6 màn hình × 360/768/1280 và root font 200%; các lỗi
@@ -99,10 +106,10 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | C2 | 3 | B2, C1, UI01-A | DONE, bổ sung vị trí đã merge | Baseline PR #9 `120dec8`; S04 map tâm/radius + detail preview merge PR #17 tại `d72ecb1`; Citizen UI thuộc B3 |
 | D2 | 4 | D1, UI01-A | DONE baseline + vị trí merge PR #20 | [Handoff](handoffs/D2.md); UI01-B đã xử lý CSS scope/contrast/padding trên nền main |
 | A1 | 1 | UI01-A; audit lại khi B2/D1 merge | DONE, đã merge main PR #19 | [Handoff](handoffs/A1.md): security allowlist/OpenAPI và shared route behavior đã audit |
-| A2 | 1 | UI01-A; hoàn tất UI runtime và X2/CI | IN_PROGRESS; runtime đã merge main PR #19 | [Handoff](handoffs/A2.md): frontend Compose/runtime và CI checks đã có; chờ X2 cho browser CI |
+| A2 | 1 | UI01-A; hoàn tất UI runtime và X2/CI | DONE trên nhánh, chờ review/merge | [Handoff](handoffs/A2.md): frontend Compose/runtime, CI browser job và local evidence |
 | UI01-B | 1 + owners | B3, C2, D2, UI01-C1 | DONE, đã merge main PR #21 | [Handoff](handoffs/UI01-B.md): retest 6 màn hình PASS, 18 ảnh evidence |
 | X1 | 1 + owners | UI01-B, A1, A2 runtime | DONE trên nhánh, chờ review/merge | [Handoff](handoffs/X1.md); flow thật xuyên suốt, feature freeze; X2/C3/D3 có thể lấy baseline |
-| X2 | 2 + 1 ghép CI | X1 | TODO | Browser E2E/hồi quy |
+| X2 | 2 + 1 ghép CI | X1 | DONE trên nhánh, chờ review/merge | [Handoff](handoffs/X2.md): 23/23 local; CI-style 18 pass/5 map skip |
 | D3 | 4 | X1 cho số đo; smoke D10 | TODO | Benchmark/Kaggle evidence |
 | C3 | 3 | X1; bổ sung X2/D3 | TODO | Tài liệu/rubric/demo |
 | A3 | 1 + nhóm | X2, C3, D3, UI01-B và mọi task trước | TODO | Audit cuối; không tuyên bố Pha 1 DONE khi thiếu evidence |
@@ -110,9 +117,9 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 P00/P01/B1/B2/C1/UI01-A/UI01-C1/C2/D1/D2, UI01-B và phần nghiệp vụ B3 đã tích hợp trên nền
 hiện tại. D2 bổ sung vị trí đã merge PR #20; UI01-B đã merge PR #21 và X1 đã PASS
 luồng tích hợp trên nhánh riêng, không được suy ra chứng nhận WCAG đầy đủ từ evidence này. A1 đã audit E01–E15 và merge PR #19 (`ed75849`);
-A2 tiếp tục runtime/CI theo catalog; local Compose + Vite đang chạy không đồng nghĩa A2 hoàn tất.
-X1 đủ acceptance trong phạm vi checklist đã ghi; X2/A3 vẫn giữ gate riêng, A2 chờ X2
-để ghép CI browser và chuyển DONE.
+A2 đã ghép browser CI trên nhánh X2; local Compose + Vite đang chạy không đồng nghĩa
+remote GitHub Actions đã được xác nhận. X1/X2 đủ acceptance trong phạm vi checklist
+đã ghi; A3 vẫn giữ gate riêng.
 Chỉ thực hiện prompt được giao; bảng này không tự giao hoặc khởi chạy task tiếp theo.
 
 **Cập nhật A1 trên nhánh `feat/a1-security-audit`:** audit sau B2/D1 đã hoàn tất.
@@ -122,8 +129,8 @@ X1, X2 và A3 vẫn là các cổng riêng theo catalog.
 
 **Cập nhật A2 runtime trên cùng nhánh:** frontend production multi-stage, Compose
 health/dependency, host port `FRONTEND_PORT`, Nginx SPA fallback và `/api` proxy đã
-được kiểm chứng bằng Docker thật. CI đã thêm bước build Compose images; browser E2E
-CI vẫn chờ X2 theo gate của catalog.
+được kiểm chứng bằng Docker thật. X2 đã thêm browser E2E CI với API/DB thật, secret
+runtime và cleanup; xem handoff A2/X2.
 
 ## Rà soát tài liệu 10/10/2026
 

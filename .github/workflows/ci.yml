@@ -62,3 +62,79 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+  browser-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Prepare temporary browser test environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          db_password="$(openssl rand -hex 24)"
+          jwt_secret="$(openssl rand -base64 32 | tr -d '\n')"
+          demo_password="$(openssl rand -hex 18)"
+          echo "::add-mask::$db_password"
+          echo "::add-mask::$jwt_secret"
+          echo "::add-mask::$demo_password"
+          cat > .env <<EOF
+          POSTGRES_DB=gdrn_ci
+          POSTGRES_USER=gdrn
+          POSTGRES_PASSWORD=${db_password}
+          DB_PORT=55432
+          APP_PORT=18080
+          FRONTEND_PORT=5174
+          DB_URL=jdbc:postgresql://localhost:55432/gdrn_ci
+          DB_USERNAME=gdrn
+          DB_PASSWORD=${db_password}
+          JWT_SECRET_BASE64=${jwt_secret}
+          SPRING_PROFILES_ACTIVE=demo
+          DEMO_CITIZEN_ONE_EMAIL=citizen.one@example.test
+          DEMO_CITIZEN_ONE_PASSWORD=${demo_password}
+          DEMO_CITIZEN_TWO_EMAIL=citizen.two@example.test
+          DEMO_CITIZEN_TWO_PASSWORD=${demo_password}
+          DEMO_AUTHORITY_EMAIL=authority@example.test
+          DEMO_AUTHORITY_PASSWORD=${demo_password}
+          VITE_MAPTILER_KEY=
+          VITE_MAP_STYLE_URL=
+          VITE_MAP_ATTRIBUTION=
+          EOF
+      - name: Validate Compose configuration
+        run: docker compose --env-file .env config --quiet
+      - name: Start real API, database and frontend
+        run: docker compose --env-file .env up --build -d --wait --wait-timeout 180
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Install Chromium for Playwright
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Smoke-test the Compose gateway
+        shell: pwsh
+        run: ./scripts/dev.ps1 smoke
+      - name: Run browser regression against real API and database
+        shell: pwsh
+        run: ./scripts/browser-e2e.ps1 -BaseUrl http://127.0.0.1:5174 -ApiUrl http://127.0.0.1:18080
+      - name: Upload browser diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-e2e-diagnostics
+          path: |
+            frontend/test-results
+            frontend/playwright-report
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Stop browser stack (retain database volume)
+        if: always()
+        shell: bash
+        run: docker compose --env-file .env down
+      - name: Remove temporary environment
+        if: always()
+        shell: bash
+        run: rm -f .env
