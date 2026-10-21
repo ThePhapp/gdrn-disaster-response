@@ -306,15 +306,15 @@ function ReportList({ selectedId, onSelect, onWithdrawn }: {
         </select>
       </div>
 
-      {actionError && <ErrorMessage>{actionError}</ErrorMessage>}
-      {loading && <Loading>{t('reporting.loading')}</Loading>}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
-      {!loading && !error && result?.items.length === 0 && (
-        <EmptyState>{status || type ? t('citizen.noFilteredReports') : t('citizen.noReports')}</EmptyState>
-      )}
+      <div className="report-list__content">
+        {actionError && <ErrorMessage>{actionError}</ErrorMessage>}
+        {loading && <Loading>{t('reporting.loading')}</Loading>}
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+        {!loading && !error && result?.items.length === 0 && (
+          <EmptyState>{status || type ? t('citizen.noFilteredReports') : t('citizen.noReports')}</EmptyState>
+        )}
 
-      {!loading && !error && result && result.items.length > 0 && (
-        <>
+        {!loading && !error && result && result.items.length > 0 && (
           <ul className="report-list__items">
             {result.items.map(report => (
               <li key={report.id}>
@@ -330,7 +330,7 @@ function ReportList({ selectedId, onSelect, onWithdrawn }: {
                   {report.status === 'PENDING' && (
                     <button
                       type="button"
-                      className="secondary"
+                      className="report-withdraw-btn"
                       disabled={Boolean(withdrawingId)}
                       onClick={event => {
                         withdrawTriggerRef.current = event.currentTarget
@@ -343,16 +343,18 @@ function ReportList({ selectedId, onSelect, onWithdrawn }: {
               </li>
             ))}
           </ul>
-
-          <div className="report-list__pagination">
-            <button type="button" className="secondary" disabled={page === 0 || loading || Boolean(withdrawingId)} onClick={() => setPage(value => value - 1)}>{t('shared.previous')}</button>
-            <span>Trang {result.page + 1} / {Math.max(result.totalPages, 1)}</span>
-            <button type="button" className="secondary" disabled={page + 1 >= result.totalPages || loading || Boolean(withdrawingId)} onClick={() => setPage(value => value + 1)}>{t('shared.next')}</button>
-          </div>
-        </>
-      )}
+        )}
+      </div>
 
       {confirmingReport && <WithdrawDialog report={confirmingReport} busy={Boolean(withdrawingId)} onCancel={() => closeDialog()} onConfirm={() => void handleWithdraw()} />}
+
+      {!loading && !error && result && result.items.length > 0 && (
+        <nav className="report-list__pagination" aria-label={t('reporting.pagination')}>
+          <button type="button" className="secondary" disabled={page === 0 || loading || Boolean(withdrawingId)} onClick={() => setPage(value => value - 1)}>{t('shared.previous')}</button>
+          <span aria-current="page">Trang {result.page + 1} / {Math.max(result.totalPages, 1)}</span>
+          <button type="button" className="secondary" disabled={page + 1 >= result.totalPages || loading || Boolean(withdrawingId)} onClick={() => setPage(value => value + 1)}>{t('shared.next')}</button>
+        </nav>
+      )}
     </section>
   )
 }
