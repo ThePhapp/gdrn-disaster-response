@@ -24,9 +24,9 @@ test.beforeEach(async ({ page }) => {
 
 test('DS1 real aggregate counts, date filter, refresh, language and responsive layout', async ({ page }) => {
   test.setTimeout(90_000)
-  await login(page, authority)
   const initialResponse = page.waitForResponse(response => response.url().endsWith('/api/dashboard') && response.request().method() === 'GET')
-  await page.getByRole('link', { name: 'Tổng quan', exact: true }).click()
+  await login(page, authority)
+  await expect(page).toHaveURL(/\/operations\/dashboard$/)
   const initial = await (await initialResponse).json()
   const total = initial.reports.pending + initial.reports.verified + initial.reports.rejected
   await expect(page.getByRole('article', { name: 'Tổng số báo cáo' })).toContainText(total.toLocaleString('vi-VN'))

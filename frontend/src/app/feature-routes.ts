@@ -12,6 +12,6 @@ for (const route of featureRoutes) {
   paths.add(route.path)
 }
 export function landingPath(role: Role) {
-  const preferred = role === 'CITIZEN' ? '/my-reports' : '/operations/reports'
+  const preferred = role === 'CITIZEN' ? '/my-reports' : '/operations/dashboard'
   return featureRoutes.some(route => route.path === preferred && route.roles.includes(role)) ? preferred : '/login'
 }

@@ -54,7 +54,8 @@ No write/domain aggregate/schema/migration is required for this read use case.
 
 ## UI
 
-AUTHORITY navigation adds Dashboard; existing landing routes remain unchanged.
+AUTHORITY navigation includes Dashboard. After login, AUTHORITY lands at
+`/operations/dashboard`; CITIZEN continues to land at `/my-reports`.
 S07 has report total, active missions, available teams, two date inputs, Apply,
 Clear, Refresh, report and mission breakdowns. Dates are drafts until Apply; Clear
 returns to all time. Applied range/timezone and team-current-state caveat stay

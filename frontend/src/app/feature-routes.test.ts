@@ -15,6 +15,6 @@ describe('feature route registry', () => {
 
   it('selects a real role landing screen after login', () => {
     expect(landingPath('CITIZEN')).toBe('/my-reports')
-    expect(landingPath('AUTHORITY')).toBe('/operations/reports')
+    expect(landingPath('AUTHORITY')).toBe('/operations/dashboard')
   })
 })

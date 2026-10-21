@@ -14,4 +14,5 @@ export async function login(email: string, password: string) {
     || !session.establish(result.accessToken, user, result.expiresAt, generation)) {
     throw new Error('Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.')
   }
+  return user
 }
