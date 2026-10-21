@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext } from '@playwright/test'
+import { expect, test, type APIRequestContext } from './fixtures'
 
 const mapProviderConfigured = Boolean(process.env.VITE_MAPTILER_KEY || process.env.VITE_MAP_STYLE_URL)
 
@@ -183,6 +183,8 @@ test('C2 keeps real radius filtering available when the map provider fails', asy
   await page.getByLabel('Email', { exact: true }).fill(email)
   await page.getByLabel('Mật khẩu', { exact: true }).fill(password)
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click()
+  await expect(page).toHaveURL(/\/operations\/dashboard$/)
+  await page.getByRole('link', { name: 'Báo cáo', exact: true }).click()
   await expect(page).toHaveURL(/\/operations\/reports$/)
   await expect(page.getByText('Không tải được lớp bản đồ. Nhập tọa độ vẫn hoạt động.')).toBeVisible()
 

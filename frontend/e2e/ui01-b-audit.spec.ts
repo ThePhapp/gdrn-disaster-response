@@ -1,4 +1,4 @@
-import { expect, test, type Page, type TestInfo } from '@playwright/test'
+import { expect, test, type Page, type TestInfo } from './fixtures'
 
 // Audit evidence, not a claim of complete WCAG conformance. Business APIs are real.
 async function inspect(page: Page, info: TestInfo, screen: string) {
@@ -82,6 +82,7 @@ test('UI01-B six-screen visual, contrast, reflow and keyboard audit', async ({ p
     await page.getByLabel('Mật khẩu', { exact: true }).fill(process.env[`DEMO_${role}_PASSWORD`]!)
     await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click()
     await expect(page.getByRole('button', { name: 'Đăng xuất' })).toBeVisible()
+    if (role === 'AUTHORITY') await page.getByRole('link', { name: 'Báo cáo', exact: true }).click()
   }
   const authority = await loginApi('AUTHORITY'), citizen = await loginApi('CITIZEN_ONE')
   const tag = `UI01-B ${Date.now()}`

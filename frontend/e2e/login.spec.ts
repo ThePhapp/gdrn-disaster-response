@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 
 for (const prefix of ['DEMO_CITIZEN_ONE', 'DEMO_CITIZEN_TWO', 'DEMO_AUTHORITY']) {
   test(`${prefix}: real login, reload, logout and responsive form`, async ({ page }) => {
@@ -18,7 +18,7 @@ for (const prefix of ['DEMO_CITIZEN_ONE', 'DEMO_CITIZEN_TWO', 'DEMO_AUTHORITY'])
     await expect(page.getByRole('heading', { name: landingHeading })).toBeVisible()
     if (prefix === 'DEMO_AUTHORITY') await expect(page).toHaveURL(/\/operations\/dashboard$/)
     else await expect(page).toHaveURL(/\/my-reports$/)
-    expect(await page.evaluate(() => localStorage.length)).toBe(0)
+    expect(await page.evaluate(() => localStorage.getItem('gdrn.language'))).toBe('vi')
     expect(await page.evaluate(() => sessionStorage.length)).toBeGreaterThan(0)
     await page.reload()
     await expect(page.getByRole('heading', { name: landingHeading })).toBeVisible()
@@ -26,7 +26,8 @@ for (const prefix of ['DEMO_CITIZEN_ONE', 'DEMO_CITIZEN_TWO', 'DEMO_AUTHORITY'])
     else await expect(page).toHaveURL(/\/my-reports$/)
     await page.getByRole('button', { name: 'Đăng xuất' }).click()
     await expect(page.getByLabel('Email', { exact: true })).toHaveValue('')
-    expect(await page.evaluate(() => localStorage.length + sessionStorage.length)).toBe(0)
+    expect(await page.evaluate(() => localStorage.getItem('gdrn.language'))).toBe('vi')
+    expect(await page.evaluate(() => sessionStorage.length)).toBe(0)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   })
 }

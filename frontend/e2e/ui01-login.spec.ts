@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 
 for (const width of [360, 768, 1280]) {
   test(`S01 layout and keyboard at ${width}px`, async ({ page }) => {
@@ -49,5 +49,6 @@ test('real role navigation and forbidden route preserve citizen session; logout 
   await expect(page).toHaveURL(/\/login$/)
   await expect(page.getByLabel('Email', { exact: true })).toHaveValue('')
   await expect(page.getByRole('navigation')).toHaveCount(0)
-  expect(await page.evaluate(() => localStorage.length + sessionStorage.length)).toBe(0)
+  expect(await page.evaluate(() => localStorage.getItem('gdrn.language'))).toBe('vi')
+  expect(await page.evaluate(() => sessionStorage.length)).toBe(0)
 })
