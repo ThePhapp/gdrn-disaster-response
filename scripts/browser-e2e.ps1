@@ -10,17 +10,25 @@
     .\scripts\browser-e2e.ps1
 .EXAMPLE
     .\scripts\browser-e2e.ps1 -BaseUrl http://127.0.0.1:5174 -ApiUrl http://127.0.0.1:18080
+.EXAMPLE
+    .\scripts\browser-e2e.ps1 -EnvironmentFile .env.ci-local
 #>
 [CmdletBinding()]
 param(
     [string] $BaseUrl,
-    [string] $ApiUrl
+    [string] $ApiUrl,
+    [string] $EnvironmentFile
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
-$environmentFile = Join-Path $repositoryRoot '.env'
+$environmentFile = if ($EnvironmentFile) {
+    $candidate = if ([IO.Path]::IsPathRooted($EnvironmentFile)) { $EnvironmentFile } else { Join-Path (Get-Location) $EnvironmentFile }
+    (Resolve-Path -LiteralPath $candidate).Path
+} else {
+    Join-Path $repositoryRoot '.env'
+}
 
 if (-not (Test-Path -LiteralPath $environmentFile)) {
     throw 'Missing .env. Run scripts/dev.ps1 init or provide the CI runtime environment first.'
