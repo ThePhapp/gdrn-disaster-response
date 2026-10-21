@@ -52,3 +52,26 @@ test('real role navigation and forbidden route preserve citizen session; logout 
   expect(await page.evaluate(() => localStorage.getItem('gdrn.language'))).toBe('vi')
   expect(await page.evaluate(() => sessionStorage.length)).toBe(0)
 })
+
+test('real backend 401 expires the citizen session and returns to login', async ({ page }) => {
+  const email = process.env.DEMO_CITIZEN_ONE_EMAIL
+  const password = process.env.DEMO_CITIZEN_ONE_PASSWORD
+  if (!email || !password) throw new Error('Configure DEMO_CITIZEN_ONE credentials in environment')
+  await page.goto('/login')
+  await page.getByLabel('Email', { exact: true }).fill(email)
+  await page.getByLabel('Mật khẩu', { exact: true }).fill(password)
+  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click()
+  await expect(page).toHaveURL(/\/my-reports$/)
+  await page.evaluate(() => {
+    const key = 'gdrn.session'
+    const stored = sessionStorage.getItem(key)
+    if (!stored) throw new Error('Expected a persisted citizen session')
+    const session = JSON.parse(stored) as { accessToken: string }
+    session.accessToken = 'expired.invalid.token'
+    sessionStorage.setItem(key, JSON.stringify(session))
+  })
+  await page.goto('/my-reports')
+  await expect(page).toHaveURL(/\/login$/)
+  await expect(page.getByLabel('Email', { exact: true })).toBeVisible()
+  expect(await page.evaluate(() => sessionStorage.length)).toBe(0)
+})
