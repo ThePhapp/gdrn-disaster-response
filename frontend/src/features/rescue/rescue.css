@@ -571,10 +571,12 @@
   .rescue-pagination nav {
     width: 100%;
     justify-content: space-between;
+    white-space: normal;
   }
 
   .rescue-pagination button {
     flex: 1;
+    white-space: normal;
   }
 }
 

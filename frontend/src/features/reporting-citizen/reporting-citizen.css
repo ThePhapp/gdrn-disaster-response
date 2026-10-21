@@ -210,8 +210,9 @@
 
 .report-status {
   display: inline-block;
-  max-width: 10rem;
-  flex-shrink: 0;
+  max-width: min(10rem, 100%);
+  min-width: 0;
+  flex-shrink: 1;
   padding: 4px 8px;
   border-radius: 999px;
   font-size: 0.8rem;
@@ -383,6 +384,15 @@
 }
 
 @media (max-width: 420px) {
+  .report-list__item {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .report-status {
+    align-self: flex-start;
+  }
+
   .report-form__coordinates {
     grid-template-columns: minmax(0, 1fr);
   }

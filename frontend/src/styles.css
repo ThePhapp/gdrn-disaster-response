@@ -132,6 +132,9 @@ input[aria-invalid=true] { border-color: var(--gdrn-error-text); }
   .app-main { padding: var(--gdrn-space-6) var(--gdrn-space-4); }
   .app-nav { width: 100%; gap: var(--gdrn-space-2); }
   .app-role { margin-right: auto; }
+  .language-switcher { width: 100%; max-width: 100%; min-width: 0; justify-content: stretch; }
+  .language-switcher__label { min-width: 0; flex: 1 1 auto; padding-inline: var(--gdrn-space-1); overflow-wrap: anywhere; }
+  .language-switcher button { min-width: 0; flex: 0 1 4rem; padding-inline: var(--gdrn-space-2); }
   .login-screen { grid-template-columns: minmax(0, 1fr); }
   .login-hero, .login-card { padding: var(--gdrn-space-6); }
   .login-hero { gap: 0; }
