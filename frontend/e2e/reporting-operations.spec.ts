@@ -57,6 +57,8 @@ test('C2 real citizen submit → authority verify → citizen reads VERIFIED, re
     await page.getByLabel('Email', { exact: true }).fill(process.env.DEMO_AUTHORITY_EMAIL!)
     await page.getByLabel('Mật khẩu', { exact: true }).fill(process.env.DEMO_AUTHORITY_PASSWORD!)
     await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click()
+    await expect(page).toHaveURL(/\/operations\/dashboard$/)
+    await page.getByRole('link', { name: 'Báo cáo', exact: true }).click()
     await expect(page).toHaveURL(/\/operations\/reports$/)
     const filterMap = page.locator('section.location-map[aria-label="Chọn tâm và xem bán kính lọc"]')
     await expect(filterMap).toBeVisible()

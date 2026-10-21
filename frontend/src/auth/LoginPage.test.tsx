@@ -26,12 +26,19 @@ describe('Login', () => {
     const user = { id: 'one', email: 'one@example.test', role }
     const fetcher = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: 'opaque', tokenType: 'Bearer', expiresIn: 900, expiresAt: new Date(Date.now() + 900_000).toISOString(), user })))
       .mockResolvedValueOnce(new Response(JSON.stringify(user)))
-      .mockResolvedValue(new Response(JSON.stringify({ items: [], page: 0, size: 20, totalElements: 0, totalPages: 0 })))
+      .mockImplementation(async () => new Response(JSON.stringify(role === 'AUTHORITY' ? {
+        from: null, to: null, timeZone: 'Asia/Ho_Chi_Minh', asOf: new Date().toISOString(),
+        reports: { pending: 0, verified: 0, rejected: 0 },
+        missions: { assigned: 0, inProgress: 0, completed: 0 }, teams: { available: 0, busy: 0 },
+      } : { items: [], page: 0, size: 20, totalElements: 0, totalPages: 0 })))
     vi.stubGlobal('fetch', fetcher)
     mount(); await fillAndSubmit()
-    expect(await screen.findByRole('heading', { name: role === 'AUTHORITY' ? 'Duyệt báo cáo sự cố' : 'Báo cáo sự cố' })).toBeVisible()
+    expect(await screen.findByRole('heading', { name: role === 'AUTHORITY' ? 'Tổng quan ứng phó' : 'Báo cáo sự cố' })).toBeVisible()
     expect(fetcher.mock.calls.slice(0, 2).map(call => call[0])).toEqual(['/api/auth/login', '/api/auth/me'])
-    if (role === 'AUTHORITY') await waitFor(() => expect(fetcher.mock.calls[2][0]).toContain('/api/reports?'))
+    if (role === 'AUTHORITY') {
+      await waitFor(() => expect(fetcher.mock.calls[2][0]).toBe('/api/dashboard'))
+      expect(await screen.findByRole('article', { name: 'Tổng số báo cáo' })).toBeVisible()
+    }
     expect(session.snapshot().user).toEqual(user)
     expect(Boolean(screen.queryByRole('link', { name: 'Thảm họa' }))).toBe(role === 'AUTHORITY')
     expect(localStorage.length).toBe(0)
