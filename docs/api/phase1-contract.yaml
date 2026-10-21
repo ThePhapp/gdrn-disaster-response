@@ -1881,7 +1881,7 @@ paths:
               example:
                 items:
                 - id: 00000000-0000-4000-8000-000000000006
-                  name: Demo team 1
+                  name: Đội Cứu hộ Hà Nội 01
                   availability: AVAILABLE
                 page: 0
                 size: 20
@@ -3069,7 +3069,7 @@ components:
       description: Availability is derived from active missions, not independently writable.
       example:
         id: 00000000-0000-4000-8000-000000000006
-        name: Demo team 1
+        name: Đội Cứu hộ Hà Nội 01
         availability: AVAILABLE
     CreateMissionRequest:
       type: object
@@ -3300,7 +3300,7 @@ components:
       example:
         items:
         - id: 00000000-0000-4000-8000-000000000006
-          name: Demo team 1
+          name: Đội Cứu hộ Hà Nội 01
           availability: AVAILABLE
         page: 0
         size: 20

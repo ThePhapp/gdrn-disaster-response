@@ -529,7 +529,7 @@ class RescueIT {
             for (int i = 0; i < names.size(); i++) {
                 jdbc.update("INSERT INTO rescue_teams (id, name) VALUES (?, ?)", ids.get(i), names.get(i));
             }
-            var expected = new ArrayList<>(List.of("Demo team 1", "Demo team 2", "Zebra", "apple", "Ánh"));
+            var expected = new ArrayList<>(List.of("Zebra", "apple", "Ánh", "Đội Cứu hộ Hà Nội 01", "Đội Ứng phó Miền Trung 02"));
             for (String direction : List.of("asc", "desc")) {
                 var actual = new ArrayList<String>();
                 for (int page = 0; page < expected.size(); page++) {
@@ -580,7 +580,11 @@ class RescueIT {
     }
 
     private UUID getDemoTeamId(int index) {
-        String name = "Demo team " + index;
+        String name = switch (index) {
+            case 1 -> "Đội Cứu hộ Hà Nội 01";
+            case 2 -> "Đội Ứng phó Miền Trung 02";
+            default -> throw new IllegalArgumentException("Unknown demo team index: " + index);
+        };
         return jdbc.queryForObject("SELECT id FROM rescue_teams WHERE name = ?", UUID.class, name);
     }
 

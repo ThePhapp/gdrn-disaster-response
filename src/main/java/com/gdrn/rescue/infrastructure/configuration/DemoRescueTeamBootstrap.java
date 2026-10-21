@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -28,14 +27,12 @@ public class DemoRescueTeamBootstrap implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         transaction.executeWithoutResult(status -> {
-            seedTeam(TEAM_1_ID, "Demo team 1");
-            seedTeam(TEAM_2_ID, "Demo team 2");
+            seedTeam(TEAM_1_ID, "Đội Cứu hộ Hà Nội 01");
+            seedTeam(TEAM_2_ID, "Đội Ứng phó Miền Trung 02");
         });
     }
 
     private void seedTeam(UUID id, String name) {
-        if (teams.findById(id).isEmpty() && teams.findByName(name).isEmpty()) {
-            teams.save(new RescueTeam(id, name));
-        }
+        teams.save(new RescueTeam(id, name));
     }
 }

@@ -216,7 +216,7 @@ Các UUID dưới đây chỉ là fixture tài liệu, không seed/migration P00
 `00000000-0000-4000-8000-000000000001` / `citizen.one@example.test` và
 `00000000-0000-4000-8000-000000000002` / `citizen.two@example.test`; authority:
 `00000000-0000-4000-8000-000000000003` / `authority@example.test`.
-Team thứ hai `00000000-0000-4000-8000-000000000008` / `Demo team 2`.
+Team thứ hai `00000000-0000-4000-8000-000000000008` / `Đội Ứng phó Miền Trung 02`.
 Không có mật khẩu mặc định: P01/demo profile lấy từ env, hash PasswordEncoder,
 idempotent, không reset credential/role đã có; D1/demo seed team cùng nguyên tắc.
 Không đưa fixture vào production, không endpoint seed.
@@ -370,7 +370,7 @@ bảng dưới; ví dụ rejection là nhánh khác của một report PENDING k
 ```json
 {
   "id": "00000000-0000-4000-8000-000000000006",
-  "name": "Demo team 1",
+  "name": "Đội Cứu hộ Hà Nội 01",
   "availability": "AVAILABLE"
 }
 ```
@@ -462,7 +462,7 @@ bảng dưới; ví dụ rejection là nhánh khác của một report PENDING k
   "items": [
     {
       "id": "00000000-0000-4000-8000-000000000006",
-      "name": "Demo team 1",
+      "name": "Đội Cứu hộ Hà Nội 01",
       "availability": "AVAILABLE"
     }
   ],
