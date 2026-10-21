@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { landingPath } from '../app/feature-routes'
 import { ApiError } from '../shared/api'
 import { ErrorMessage, Field, PageHeader } from '../shared/components'
@@ -9,6 +9,7 @@ import { useSession } from './session'
 
 export function LoginPage() {
   const { user } = useSession()
+  const navigate = useNavigate()
   const { t } = useI18n()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -37,8 +38,9 @@ export function LoginPage() {
     }
     setBusy(true)
     try {
-      await login(email, password)
+      const authenticatedUser = await login(email, password)
       setPassword('')
+      navigate(landingPath(authenticatedUser.role), { replace: true })
     } catch (failure) {
       setPassword('')
       setError(failure instanceof ApiError && failure.problem?.code === 'INVALID_CREDENTIALS'

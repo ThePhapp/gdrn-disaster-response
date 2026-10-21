@@ -1,11 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, useLocation } from 'react-router-dom'
 import { App, RoleGuard } from '../app/App'
 import { session, type Role } from './session'
 
-function mount() { render(<MemoryRouter initialEntries={['/login']}><App /></MemoryRouter>) }
+function LocationProbe() { return <span data-testid="location">{useLocation().pathname}</span> }
+function mount() { render(<MemoryRouter initialEntries={['/login']}><><LocationProbe /><App /></></MemoryRouter>) }
 async function fillAndSubmit() {
   const user = userEvent.setup()
   await user.type(screen.getByLabelText('Email'), 'one@example.test')
@@ -34,6 +35,7 @@ describe('Login', () => {
     vi.stubGlobal('fetch', fetcher)
     mount(); await fillAndSubmit()
     expect(await screen.findByRole('heading', { name: role === 'AUTHORITY' ? 'Tổng quan ứng phó' : 'Báo cáo sự cố' })).toBeVisible()
+    expect(screen.getByTestId('location')).toHaveTextContent(role === 'AUTHORITY' ? '/operations/dashboard' : '/my-reports')
     expect(fetcher.mock.calls.slice(0, 2).map(call => call[0])).toEqual(['/api/auth/login', '/api/auth/me'])
     if (role === 'AUTHORITY') {
       await waitFor(() => expect(fetcher.mock.calls[2][0]).toBe('/api/dashboard'))
