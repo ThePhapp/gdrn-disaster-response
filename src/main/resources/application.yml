@@ -1,6 +1,11 @@
 spring:
   application:
     name: gdrn
+  servlet:
+    multipart:
+      max-file-size: 6MB
+      max-request-size: 6MB
+      file-size-threshold: 0
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -37,3 +42,7 @@ logging:
     org.springframework.web: INFO
     org.springframework.security: INFO
     org.hibernate.orm.jdbc.bind: OFF
+gdrn:
+  reporting:
+    attachments:
+      root: ${REPORT_ATTACHMENT_STORAGE_ROOT:.data/report-attachments}

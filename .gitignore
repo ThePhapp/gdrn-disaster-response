@@ -12,6 +12,7 @@ target/
 !.env.example
 *.log
 logs/
+.data/
 .DS_Store
 Thumbs.db
 *.swp
