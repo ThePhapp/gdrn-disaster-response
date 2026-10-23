@@ -9,6 +9,10 @@ const mocks = vi.hoisted(() => ({
   list: vi.fn(),
   missions: vi.fn(),
   withdraw: vi.fn(),
+  attachments: vi.fn(),
+  attachmentContent: vi.fn(),
+  uploadAttachment: vi.fn(),
+  deleteAttachment: vi.fn(),
   navigate: vi.fn(),
 }))
 
@@ -32,6 +36,14 @@ vi.mock('./reporting-api', async importOriginal => ({
   listReports: mocks.list,
   listReportMissions: mocks.missions,
   withdrawReport: mocks.withdraw,
+}))
+
+vi.mock('../reporting-attachments/reporting-attachments-api', async importOriginal => ({
+  ...await importOriginal<typeof import('../reporting-attachments/reporting-attachments-api')>(),
+  listReportAttachments: mocks.attachments,
+  getReportAttachmentContent: mocks.attachmentContent,
+  uploadReportAttachment: mocks.uploadAttachment,
+  deleteReportAttachment: mocks.deleteAttachment,
 }))
 
 vi.mock('react-router-dom', async importOriginal => ({
@@ -86,6 +98,10 @@ describe('ReportingCitizenPage', () => {
     mocks.get.mockResolvedValue(report)
     mocks.missions.mockResolvedValue({ items: [], page: 0, size: 20, totalElements: 0, totalPages: 0 })
     mocks.withdraw.mockResolvedValue(undefined)
+    mocks.attachments.mockResolvedValue([])
+    mocks.attachmentContent.mockResolvedValue(new Blob())
+    mocks.uploadAttachment.mockResolvedValue(undefined)
+    mocks.deleteAttachment.mockResolvedValue(undefined)
   })
 
   it('loads the citizen report list and shows status', async () => {

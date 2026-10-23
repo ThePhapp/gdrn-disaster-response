@@ -13,14 +13,14 @@ export class ApiError extends Error {
   }
 }
 type Options = Omit<RequestInit, 'credentials'> & { anonymous?: boolean; bearer?: string }
-export async function api<T>(path: string, options: Options = {}): Promise<T> {
+async function request(path: string, options: Options, accept: string) {
   if (!path.startsWith('/api/') || path.includes('://')) throw new Error('API path must be relative to /api/')
   const { anonymous, bearer, ...init } = options
   const currentToken = anonymous ? null : bearer ?? session.token()
   const generation = session.snapshot().generation
   const headers = new Headers(init.headers)
-  headers.set('Accept', 'application/json')
-  if (init.body !== undefined) headers.set('Content-Type', 'application/json')
+  headers.set('Accept', accept)
+  if (typeof init.body === 'string') headers.set('Content-Type', 'application/json')
   if (currentToken) headers.set('Authorization', `Bearer ${currentToken}`)
   else headers.delete('Authorization')
   const response = await fetch(path, { ...init, headers, credentials: 'omit', cache: 'no-store' })
@@ -31,5 +31,12 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
   }
   // Do not deliver a previous user's late response into the next user's UI/cache.
   if (!anonymous && generation !== session.snapshot().generation) throw new DOMException('Session changed', 'AbortError')
+  return response
+}
+export async function api<T>(path: string, options: Options = {}): Promise<T> {
+  const response = await request(path, options, 'application/json')
   return response.status === 204 ? undefined as T : response.json() as Promise<T>
+}
+export async function apiBlob(path: string, options: Options = {}): Promise<Blob> {
+  return (await request(path, options, 'image/jpeg, image/png')).blob()
 }

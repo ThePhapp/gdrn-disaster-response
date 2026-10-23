@@ -4,6 +4,7 @@ import { ApiError } from '../../shared/api'
 import { EmptyState, ErrorMessage, Field, Loading, PageHeader } from '../../shared/components'
 import { useI18n, type TranslationKey } from '../../shared/i18n'
 import { LocationMap, type LocationValue } from '../../shared/location'
+import { ReportAttachments } from '../reporting-attachments/ReportAttachments'
 import {
   createReport,
   getReport,
@@ -457,6 +458,7 @@ function ReportDetail({ reportId }: { reportId?: string }) {
       </dl>
       <LocationMap value={{ latitude: report.latitude, longitude: report.longitude }} readOnly
         label={`${t('citizen.location')} ${report.id}`} className="reporting-citizen-detail__map" />
+      <ReportAttachments reportId={report.id} canManage={report.status === 'PENDING'} />
       <MissionProgress report={report} />
     </div>
   )
