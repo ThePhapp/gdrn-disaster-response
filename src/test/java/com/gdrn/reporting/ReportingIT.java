@@ -202,8 +202,7 @@ class ReportingIT {
         assertError(call(HttpMethod.DELETE, "/api/reports/" + report + "/attachments/" + attachment, token(AUTHORITY, "AUTHORITY"), null), 403, "FORBIDDEN");
         assertThat(call(HttpMethod.DELETE, "/api/reports/" + report + "/attachments/" + attachment, token(ONE, "CITIZEN"), null)
                 .getStatusCode().value()).isEqualTo(204);
-        assertError(call(HttpMethod.GET, "/api/reports/" + report + "/attachments/" + attachment + "/content",
-                token(ONE, "CITIZEN"), null), 404, "NOT_FOUND");
+        assertThat(download(report, attachment, ONE, "CITIZEN").getStatusCode().value()).isEqualTo(404);
     }
 
     @Test void paginationAndFiltersAreAppliedBeforeCountWithStableIdTieBreaks() {
