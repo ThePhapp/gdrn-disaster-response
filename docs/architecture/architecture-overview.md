@@ -166,7 +166,14 @@ replaces those lifecycle constraints, adds decision/withdrawal metadata and inte
 version, and creates a partial GiST index over visible report locations. V4 is immutable.
 Atomic conditional UPDATE checks version/PENDING/not-withdrawn; zero affected rows
 means a concurrent transition conflict. E08 retains its REPEATABLE READ snapshot.
-See [ADR 008](../adr/008-reporting-decisions-and-query-contract.md).
+V7 adds private report evidence metadata. The reporting attachment use case uses
+an application storage port and a filesystem adapter rooted at
+`REPORT_ATTACHMENT_STORAGE_ROOT` (default `.data/report-attachments`), outside
+the frontend static root. The API accepts at most five JPEG/PNG images per
+report, 5 MiB each; only the owner can mutate evidence while the report is
+PENDING, while AUTHORITY can read visible evidence. Content is streamed through
+an authorized endpoint with no public URL. See [ADR 008](../adr/008-reporting-decisions-and-query-contract.md)
+and [ADR 010](../adr/010-report-evidence-private-storage.md).
 Domain models contain no JPA annotations. PostGIS itself supplies extension
 objects and Flyway supplies its history table; neither is a business schema.
 The local PostGIS image may pre-enable the extension, so the migration is idempotent.

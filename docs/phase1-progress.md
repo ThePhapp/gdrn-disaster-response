@@ -11,6 +11,14 @@ frontend PASS 90 tests/typecheck/build; browser DS1 với Compose/PostGIS thật
 Đây là ngoại lệ scope được ghi trong catalog, không đổi evidence baseline hoặc
 trạng thái X2/A2/D3/C3/A3. Các mục E01–E15/S01–S06 dưới đây giữ mốc lịch sử.
 
+**Ảnh minh chứng mở rộng — 23/10/2026:** nhánh `feat/report-evidence-attachments`
+được tạo từ `main`. Đã triển khai V7 metadata, private filesystem storage, E17–E20
+upload/list/content/delete, ownership cho citizen và authority read-only, giới hạn
+JPEG/PNG 5 MiB và 5 ảnh/report, xóa ẩn metadata trước physical delete, UI citizen và
+authority. Unit/architecture tests 73 PASS; frontend 20 files/93 tests, typecheck
+và build PASS. `clean verify` đã chạy nhưng 4 integration suites chưa thể chạy vì
+Testcontainers không tìm thấy Docker daemon; xem [handoff attachments](handoffs/report-evidence-attachments.md).
+
 **X1 tích hợp luồng thật — 18/10/2026, nền `a12d8e1`: DONE trên nhánh `feat/X1-integration-freeze`, chờ review/merge.**
 Compose thật, API smoke ba demo account, browser 19/19, OpenAPI E01–E15 và feature
 freeze đã được kiểm tra; evidence tại [checklist X1](qa/phase1-integration-checklist.md)
