@@ -30,6 +30,7 @@ param(
     [string]$ComposeFile,
     [string]$BenchmarkEnvFile,
     [string]$ProjectName = 'gdrn-benchmark',
+    [string]$BenchmarkDatabase,
     [switch]$Reset,
     [switch]$SeedData,
     [switch]$CollectDockerStats,
@@ -123,7 +124,8 @@ try {
 
         if ($Reset) {
             & (Join-Path $repositoryRoot 'benchmark/reset-reporting.ps1') `
-                -ComposeFile $ComposeFile -EnvFile $BenchmarkEnvFile -ProjectName $ProjectName -ConfirmReset
+                -ComposeFile $ComposeFile -EnvFile $BenchmarkEnvFile -ProjectName $ProjectName `
+                -Database $BenchmarkDatabase -ConfirmReset
         }
         if ($SeedData) {
             & $python (Join-Path $repositoryRoot 'benchmark/generate_reports.py') `
