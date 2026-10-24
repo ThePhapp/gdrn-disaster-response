@@ -24,6 +24,7 @@ $env:VUS = '10'
 $env:DURATION = '30s'
 $env:WARMUP = '10s'
 $env:RAMP_DOWN = '10s'
+$env:HTTP_TIMEOUT = '5s'
 k6 run --out json=benchmark/results/raw.json --summary-export benchmark/results/summary.json benchmark/k6/reporting.js
 ```
 

@@ -17,6 +17,7 @@ param(
     [string]$Duration = '30s',
     [string]$Warmup = '10s',
     [string]$RampDown = '10s',
+    [string]$HttpTimeout = $env:HTTP_TIMEOUT,
     [int]$Repetitions = 1,
     [int]$DatasetSize = 1000,
     [int]$Seed = 20261024,
@@ -63,6 +64,7 @@ function Require-Value([string]$name, [string]$value) {
 Require-Value 'BASE_URL' $BaseUrl
 Require-Value 'BENCHMARK_EMAIL' $Email
 Require-Value 'BENCHMARK_PASSWORD' $Password
+if (-not $HttpTimeout) { $HttpTimeout = '5s' }
 if ($Repetitions -lt 1 -or $Vus -lt 1 -or $DatasetSize -lt 1) { throw 'Repetitions, Vus and DatasetSize must be positive.' }
 if (-not (Test-Path -LiteralPath $scriptPath)) { throw "Workload script not found: $scriptPath" }
 if ($Reset -and (-not $ComposeFile -or -not $BenchmarkEnvFile)) {
@@ -79,7 +81,7 @@ $durationSeconds = [math]::Ceiling((Convert-DurationToSeconds $Duration) + (Conv
 $runStarted = Get-Date
 $commit = (& git -C $repositoryRoot rev-parse HEAD).Trim()
 $oldEnvironment = @{}
-$environmentNames = @('BASE_URL', 'BENCHMARK_EMAIL', 'BENCHMARK_PASSWORD', 'WORKLOAD', 'VUS', 'DURATION', 'WARMUP', 'RAMP_DOWN', 'DATA_SEED', 'DATASET_SIZE')
+$environmentNames = @('BASE_URL', 'BENCHMARK_EMAIL', 'BENCHMARK_PASSWORD', 'WORKLOAD', 'VUS', 'DURATION', 'WARMUP', 'RAMP_DOWN', 'HTTP_TIMEOUT', 'DATA_SEED', 'DATASET_SIZE')
 foreach ($name in $environmentNames) { $oldEnvironment[$name] = [Environment]::GetEnvironmentVariable($name) }
 
 try {
@@ -91,6 +93,7 @@ try {
     $env:DURATION = $Duration
     $env:WARMUP = $Warmup
     $env:RAMP_DOWN = $RampDown
+    if ($HttpTimeout) { $env:HTTP_TIMEOUT = $HttpTimeout }
     $env:DATASET_SIZE = "$DatasetSize"
 
     for ($repetition = 1; $repetition -le $Repetitions; $repetition++) {
@@ -111,6 +114,7 @@ try {
             warmup = $Warmup
             duration = $Duration
             rampDown = $RampDown
+            httpTimeout = $HttpTimeout
             datasetSize = $DatasetSize
             dataSeed = $Seed
             repetition = $repetition
@@ -148,7 +152,7 @@ try {
             $relativeSummary = 'benchmark/results/' + $runId + '/summary.json'
             & docker run --rm --add-host host.docker.internal:host-gateway `
                 -e "BASE_URL=$dockerBaseUrl" -e BENCHMARK_EMAIL -e BENCHMARK_PASSWORD `
-                -e WORKLOAD -e VUS -e DURATION -e WARMUP -e RAMP_DOWN -e DATA_SEED `
+                -e WORKLOAD -e VUS -e DURATION -e WARMUP -e RAMP_DOWN -e HTTP_TIMEOUT -e DATA_SEED `
                 -v "${repositoryRoot}:/work" -w /work grafana/k6:latest run `
                 --out "json=/work/$relativeRaw" --summary-export "/work/$relativeSummary" /work/benchmark/k6/reporting.js
         }

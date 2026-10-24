@@ -8,6 +8,7 @@ const targetVus = numberEnv('VUS', 10);
 const duration = String(__ENV.DURATION || '30s');
 const warmup = String(__ENV.WARMUP || '10s');
 const rampDown = String(__ENV.RAMP_DOWN || '10s');
+const httpTimeout = String(__ENV.HTTP_TIMEOUT || '5s');
 const tokenLifetimeSeconds = numberEnv('JWT_LIFETIME_SECONDS', 900);
 const benchmarkSeed = numberEnv('DATA_SEED', 20261024);
 const pageSize = numberEnv('PAGE_SIZE', 20);
@@ -58,7 +59,7 @@ export function setup() {
   const response = http.post(
     `${baseUrl}/api/auth/login`,
     JSON.stringify({ email, password }),
-    { headers: { 'Content-Type': 'application/json' }, tags: { benchmark: 'setup' } },
+    { headers: { 'Content-Type': 'application/json' }, timeout: httpTimeout, tags: { benchmark: 'setup' } },
   );
   const loginOk = check(response, { 'login returns 200': (r) => r.status === 200 });
   if (!loginOk) {
@@ -107,6 +108,7 @@ function runWrite(headers, seed) {
   };
   const response = http.post(`${baseUrl}/api/reports`, JSON.stringify(payload), {
     headers,
+    timeout: httpTimeout,
     tags: { benchmark: 'reporting', endpoint: 'E07', workload: 'write' },
   });
   record(response, 'E07', 201);
@@ -117,6 +119,7 @@ function runReadPage(headers) {
   const path = `/api/reports?page=${page}&size=${pageSize}&sort=createdAt,desc`;
   const response = http.get(`${baseUrl}${path}`, {
     headers,
+    timeout: httpTimeout,
     tags: { benchmark: 'reporting', endpoint: 'E08-page', workload: 'read-page' },
   });
   record(response, 'E08-page', 200, (body) => Array.isArray(body.items));
@@ -127,6 +130,7 @@ function runReadRadius(headers) {
     + `&radiusMeters=${radiusMeters}&page=0&size=${pageSize}&sort=createdAt,desc`;
   const response = http.get(`${baseUrl}${path}`, {
     headers,
+    timeout: httpTimeout,
     tags: { benchmark: 'reporting', endpoint: 'E08-radius', workload: 'read-radius' },
   });
   record(response, 'E08-radius', 200, (body) => Array.isArray(body.items));
