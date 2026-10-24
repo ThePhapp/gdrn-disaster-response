@@ -24,3 +24,4 @@ frontend/test-results/
 frontend/playwright-report/
 benchmark/results/*
 !benchmark/results/README.md
+__pycache__/
