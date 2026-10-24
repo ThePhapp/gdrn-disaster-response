@@ -61,6 +61,17 @@ function Require-Value([string]$name, [string]$value) {
     if ([string]::IsNullOrWhiteSpace($value)) { throw "$name is required through a parameter or environment variable." }
 }
 
+function Protect-K6Summary([string]$path) {
+    if (-not (Test-Path -LiteralPath $path)) { return }
+    $summary = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
+    if ($summary.PSObject.Properties.Name -contains 'setup_data' -and $summary.setup_data) {
+        if ($summary.setup_data.PSObject.Properties.Name -contains 'token') {
+            $summary.setup_data.PSObject.Properties.Remove('token')
+        }
+    }
+    $summary | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $path -Encoding UTF8
+}
+
 Require-Value 'BASE_URL' $BaseUrl
 Require-Value 'BENCHMARK_EMAIL' $Email
 Require-Value 'BENCHMARK_PASSWORD' $Password
@@ -157,6 +168,7 @@ try {
                 --out "json=/work/$relativeRaw" --summary-export "/work/$relativeSummary" /work/benchmark/k6/reporting.js
         }
         $k6ExitCode = $LASTEXITCODE
+        Protect-K6Summary $summaryPath
         if ($collector) { Wait-Process -Id $collector.Id -ErrorAction SilentlyContinue }
         $manifest.finishedAt = (Get-Date).ToUniversalTime().ToString('o')
         $manifest.exitCode = $k6ExitCode

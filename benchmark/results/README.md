@@ -11,4 +11,6 @@ containing:
 
 Result data is intentionally ignored by Git because it is machine-specific and
 can be large. Preserve the directory as an external D3 evidence artifact and
-reference its path/checksum in the handoff.
+reference its path/checksum in the handoff. The runner removes the short-lived
+setup JWT from `summary.json` before saving it; do not retain raw outputs from a
+custom invocation unless they have been checked for credentials.
