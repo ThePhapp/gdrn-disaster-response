@@ -19,6 +19,14 @@ authority. Unit/architecture tests 73 PASS; frontend 20 files/93 tests, typechec
 và build PASS. `clean verify` đã chạy nhưng 4 integration suites chưa thể chạy vì
 Testcontainers không tìm thấy Docker daemon; xem [handoff attachments](handoffs/report-evidence-attachments.md).
 
+**D3 benchmark — 24/10/2026:** nhánh `feat/d3-benchmark-kaggle` được tạo từ `main`
+tại `16fb3a5`, tách commit theo workload, tooling, notebook/fix và evidence. Đã
+chạy local disposable Compose/PostGIS: E07 write, E08 page, E08 radius smoke và
+E08 page ở 10/50/100 VU; raw k6, summary đã redaction JWT, seed manifest và Docker
+stats được lưu dưới `benchmark/results/` (ignored). Đây là local baseline, không phải
+Kaggle completion; notebook chỉ preflight và ghi rõ k6/server Kaggle chưa cấu hình.
+Xem [handoff D3](handoffs/D3.md) và [benchmark contract](benchmark/D3.md).
+
 **X1 tích hợp luồng thật — 18/10/2026, nền `a12d8e1`: DONE trên nhánh `feat/X1-integration-freeze`, chờ review/merge.**
 Compose thật, API smoke ba demo account, browser 19/19, OpenAPI E01–E15 và feature
 freeze đã được kiểm tra; evidence tại [checklist X1](qa/phase1-integration-checklist.md)
