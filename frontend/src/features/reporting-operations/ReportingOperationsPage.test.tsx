@@ -41,6 +41,7 @@ beforeEach(() => {
     }
     if (url.pathname === '/api/reports') return json(page(url.searchParams.get('status') === 'PENDING' && report.status !== 'PENDING' ? [] : [report]))
     if (url.pathname === `/api/reports/${original.id}`) return detailFailure ? json({}, 404) : json(report)
+    if (url.pathname === `/api/reports/${original.id}/attachments`) return json([])
     if (url.pathname === '/api/disasters') return json(page(url.searchParams.get('page') === '1' ? [disaster] : [{ ...disaster, id: 'other-disaster', name: 'Trang đầu' }], Number(url.searchParams.get('page')), 2))
     throw new Error(`Unexpected test request ${path}`)
   })

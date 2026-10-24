@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "GDRN Reporting implemented contract",
-    "version": "B2",
-    "description": "E07-E11, verification, withdrawal and geography radius filtering."
+    "version": "B3",
+    "description": "E07-E11 and E17-E20, verification, withdrawal, private evidence images and geography radius filtering. Evidence is limited to five JPEG/PNG files per report, 5 MiB each, and is streamed only after authorization."
   },
   "paths": {
     "/api/reports": {
@@ -532,7 +532,79 @@
         ]
       }
     },
-    "/api/reports/{id}": {
+    "/api/reports/{id}/attachments": {
+        "post": {
+          "operationId": "E17",
+          "summary": "Attach a private evidence image",
+          "description": "CITIZEN owner only, while the report is PENDING. The file is stored outside the public web root.",
+          "security": [{ "bearerAuth": [] }],
+          "parameters": [{ "$ref": "#/components/parameters/ReportId" }],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "multipart/form-data": {
+                "schema": {
+                  "type": "object",
+                  "required": ["file"],
+                  "properties": { "file": { "type": "string", "format": "binary" } }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": { "description": "Created.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ReportAttachment" } } } },
+            "400": { "$ref": "#/components/responses/AttachmentValidation" },
+            "403": { "$ref": "#/components/responses/Forbidden" },
+            "404": { "$ref": "#/components/responses/NotFound" },
+            "409": { "$ref": "#/components/responses/AttachmentConflict" },
+            "413": { "$ref": "#/components/responses/AttachmentTooLarge" },
+            "415": { "$ref": "#/components/responses/AttachmentFormat" },
+            "500": { "$ref": "#/components/responses/AttachmentStorage" }
+          }
+        },
+        "get": {
+          "operationId": "E18",
+          "summary": "List visible evidence images",
+          "description": "The report owner and AUTHORITY may list metadata. Content is never exposed as a public URL.",
+          "security": [{ "bearerAuth": [] }],
+          "parameters": [{ "$ref": "#/components/parameters/ReportId" }],
+          "responses": {
+            "200": { "description": "Visible attachment metadata.", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ReportAttachment" }, "maxItems": 5 } } } },
+            "404": { "$ref": "#/components/responses/NotFound" }
+          }
+        }
+      },
+      "/api/reports/{id}/attachments/{attachmentId}": {
+        "delete": {
+          "operationId": "E20",
+          "summary": "Delete an owned evidence image",
+          "description": "CITIZEN owner only, while the report is PENDING. The row is hidden before physical deletion to avoid accidental re-access on storage errors.",
+          "security": [{ "bearerAuth": [] }],
+          "parameters": [{ "$ref": "#/components/parameters/ReportId" }, { "$ref": "#/components/parameters/AttachmentId" }],
+          "responses": {
+            "204": { "description": "Deleted." },
+            "403": { "$ref": "#/components/responses/Forbidden" },
+            "404": { "$ref": "#/components/responses/NotFound" },
+            "409": { "$ref": "#/components/responses/AttachmentConflict" },
+            "500": { "$ref": "#/components/responses/AttachmentStorage" }
+          }
+        }
+      },
+      "/api/reports/{id}/attachments/{attachmentId}/content": {
+        "get": {
+          "operationId": "E19",
+          "summary": "Download visible evidence content",
+          "description": "Authenticated private stream. The endpoint performs report ownership/authority and attachment checks before opening the file; no public or signed bypass URL is issued.",
+          "security": [{ "bearerAuth": [] }],
+          "parameters": [{ "$ref": "#/components/parameters/ReportId" }, { "$ref": "#/components/parameters/AttachmentId" }],
+          "responses": {
+            "200": { "description": "JPEG or PNG bytes.", "content": { "image/jpeg": { "schema": { "type": "string", "format": "binary" } }, "image/png": { "schema": { "type": "string", "format": "binary" } } } },
+            "404": { "$ref": "#/components/responses/NotFound" },
+            "500": { "$ref": "#/components/responses/AttachmentStorage" }
+          }
+        }
+      },
+      "/api/reports/{id}": {
       "get": {
         "operationId": "E09",
         "summary": "E09 GET /api/reports/{id}",
@@ -1304,7 +1376,43 @@
     }
   },
   "components": {
+    "parameters": {
+      "ReportId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "$ref": "#/components/schemas/Id" }
+      },
+      "AttachmentId": {
+        "name": "attachmentId",
+        "in": "path",
+        "required": true,
+        "schema": { "$ref": "#/components/schemas/Id" }
+      }
+    },
+    "responses": {
+      "AttachmentValidation": { "description": "Missing or invalid image file.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "Forbidden": { "description": "Access denied.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "NotFound": { "description": "Report or attachment not found.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "AttachmentConflict": { "description": "Attachment limit reached or report is no longer editable.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "AttachmentTooLarge": { "description": "Image exceeds 5 MiB.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "AttachmentFormat": { "description": "Only JPEG and PNG images are accepted.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "AttachmentStorage": { "description": "Private storage operation failed.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+    },
     "schemas": {
+      "ReportAttachment": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/components/schemas/Id" },
+          "reportId": { "$ref": "#/components/schemas/Id" },
+          "originalFilename": { "type": "string", "minLength": 1, "maxLength": 255 },
+          "mediaType": { "type": "string", "enum": ["image/jpeg", "image/png"] },
+          "sizeBytes": { "type": "integer", "format": "int64", "minimum": 1, "maximum": 5242880 },
+          "createdAt": { "$ref": "#/components/schemas/Timestamp" }
+        },
+        "required": ["id", "reportId", "originalFilename", "mediaType", "sizeBytes", "createdAt"]
+      },
       "CreateReportRequest": {
         "type": "object",
         "additionalProperties": false,

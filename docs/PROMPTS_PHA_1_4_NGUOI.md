@@ -47,6 +47,17 @@ PostGIS integration cho quyền/filter/biên ngày/withdraw/availability/global 
 frontend loading/error/empty/race/filter/i18n, browser thật, full Maven verify và
 frontend typecheck/test/build; handoff ghi PASS/FAIL/NOT RUN. Không tự push/deploy.
 
+### Bổ sung 23/10/2026 — Ảnh minh chứng cho báo cáo
+
+Đây là ngoại lệ scope do user giao trực tiếp trên nhánh `feat/report-evidence-attachments`
+tạo từ `main`. Phạm vi E17–E20: citizen owner upload/xóa ảnh khi report còn `PENDING`; citizen
+owner và AUTHORITY xem danh sách/tải nội dung theo quyền. Chỉ nhận JPEG/PNG, tối đa 5
+MiB/ảnh và 5 ảnh/report; lưu file ngoài web root bằng storage port, không phát hành
+public URL. API phải kiểm tra ownership ở application trước khi stream, trả lỗi rõ cho
+file thiếu/sai định dạng/quá dung lượng/quá số lượng/report đã khóa/lỗi storage; xóa
+ẩn metadata trước khi xóa physical file. Migration/contract/ADR và test phải đi cùng
+slice; không đổi trạng thái DONE của các task lõi hoặc tự push/deploy.
+
 | Câu hỏi | Nguồn sở hữu | Khi cần cập nhật |
 | --- | --- | --- |
 | Làm gì, ai làm, đợi task nào? | Catalog/dependency trong file này | Thay scope, ownership hoặc điều kiện bắt đầu/hoàn tất |

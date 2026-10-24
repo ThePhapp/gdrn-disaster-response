@@ -27,6 +27,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import javax.imageio.ImageIO;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +37,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -167,6 +173,36 @@ class ReportingIT {
         var all = call(HttpMethod.GET, "/api/reports", token(AUTHORITY, "AUTHORITY"), null).getBody();
         assertThat(all.path("totalElements").asInt()).isEqualTo(2);
         assertThat(call(HttpMethod.GET, "/api/reports/" + first.path("id").asText(), token(AUTHORITY, "AUTHORITY"), null).getBody()).isEqualTo(first);
+    }
+
+    @Test void evidenceIsPrivateOwnerMutableAndAuthorityReadableThroughAuthorizedStream() throws Exception {
+        UUID report = createReport(ONE);
+        byte[] png = png();
+        var uploaded = upload(report, ONE, "CITIZEN", png, "现场.png", "image/png");
+        assertThat(uploaded.getStatusCode().value()).isEqualTo(201);
+        UUID attachment = UUID.fromString(uploaded.getBody().path("id").asText());
+        assertThat(uploaded.getBody().path("originalFilename").asText()).isEqualTo("现场.png");
+        assertThat(uploaded.getBody().path("mediaType").asText()).isEqualTo("image/png");
+
+        var ownList = call(HttpMethod.GET, "/api/reports/" + report + "/attachments", token(ONE, "CITIZEN"), null);
+        assertThat(ownList.getStatusCode().value()).isEqualTo(200);
+        assertThat(ownList.getBody()).hasSize(1);
+        assertThat(call(HttpMethod.GET, "/api/reports/" + report + "/attachments", token(AUTHORITY, "AUTHORITY"), null)
+                .getBody()).hasSize(1);
+        assertError(call(HttpMethod.GET, "/api/reports/" + report + "/attachments", token(TWO, "CITIZEN"), null), 404, "NOT_FOUND");
+
+        var content = download(report, attachment, AUTHORITY, "AUTHORITY");
+        assertThat(content.getStatusCode().value()).isEqualTo(200);
+        assertThat(content.getHeaders().getContentType()).isEqualTo(MediaType.IMAGE_PNG);
+        assertThat(content.getHeaders().getCacheControl()).isEqualTo("no-store");
+        assertThat(content.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION)).contains("inline");
+        assertThat(content.getBody()).containsExactly(png);
+        assertError(upload(report, AUTHORITY, "AUTHORITY", png, "authority.png", "image/png"), 403, "FORBIDDEN");
+        assertError(call(HttpMethod.DELETE, "/api/reports/" + report + "/attachments/" + attachment, token(TWO, "CITIZEN"), null), 404, "NOT_FOUND");
+        assertError(call(HttpMethod.DELETE, "/api/reports/" + report + "/attachments/" + attachment, token(AUTHORITY, "AUTHORITY"), null), 403, "FORBIDDEN");
+        assertThat(call(HttpMethod.DELETE, "/api/reports/" + report + "/attachments/" + attachment, token(ONE, "CITIZEN"), null)
+                .getStatusCode().value()).isEqualTo(204);
+        assertThat(download(report, attachment, ONE, "CITIZEN").getStatusCode().value()).isEqualTo(404);
     }
 
     @Test void paginationAndFiltersAreAppliedBeforeCountWithStableIdTieBreaks() {
@@ -480,6 +516,32 @@ class ReportingIT {
         var response = call(HttpMethod.POST, "/api/reports", token(reporter, "CITIZEN"), BODY);
         assertThat(response.getStatusCode().value()).isEqualTo(201);
         return UUID.fromString(response.getBody().path("id").asText());
+    }
+    private ResponseEntity<JsonNode> upload(UUID report, UUID actor, String role, byte[] content,
+                                            String filename, String contentType) {
+        var headers = new HttpHeaders();
+        headers.setBearerAuth(token(actor, role));
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        var partHeaders = new HttpHeaders();
+        partHeaders.setContentType(MediaType.parseMediaType(contentType));
+        body.add("file", new HttpEntity<>(new ByteArrayResource(content) {
+            @Override public String getFilename() { return filename; }
+        }, partHeaders));
+        return http.exchange("/api/reports/" + report + "/attachments", HttpMethod.POST,
+                new HttpEntity<>(body, headers), JsonNode.class);
+    }
+    private ResponseEntity<byte[]> download(UUID report, UUID attachment, UUID actor, String role) {
+        var headers = new HttpHeaders();
+        headers.setBearerAuth(token(actor, role));
+        return http.exchange("/api/reports/" + report + "/attachments/" + attachment + "/content", HttpMethod.GET,
+                new HttpEntity<>(headers), byte[].class);
+    }
+    private byte[] png() throws Exception {
+        var image = new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB);
+        var output = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", output);
+        return output.toByteArray();
     }
     private UUID createDisaster() {
         var response = call(HttpMethod.POST, "/api/disasters", token(AUTHORITY, "AUTHORITY"),

@@ -15,6 +15,13 @@ Không thêm migration hoặc slot ledger: sử dụng V1–V6 hiện có, khôn
 Semantics null-window, date boundary, withdrawn, availability và failure được định
 nghĩa trong contract bổ sung; integration tests DS1 kiểm tra với PostGIS thật.
 
+## Ảnh minh chứng bổ sung — 23/10/2026
+
+User giao thêm một slice reporting ngoài baseline DS1. Slice này cấp V7 trong ledger
+bên dưới, giữ nguyên V1–V6 và checksum đã áp dụng. Contract E12–E15 dùng storage port
+private; quyền citizen owner/AUTHORITY và giới hạn JPEG/PNG được ghi trong
+[ADR 010](../adr/010-report-evidence-private-storage.md) và OpenAPI reporting.
+
 **Contracts P00; tích hợp B1/C1 09/10/2026:** Identity V2, Disaster V3 và Reporting V4 đã có;
 DisasterQuery đã triển khai trong C1. ReportingQuery được triển khai trên nhánh B2
 từ ca3751d; xem [handoff B2](../handoffs/B2.md) và progress cho review/merge.
@@ -168,6 +175,7 @@ nhánh riêng, không dùng ngày/owner prefix để lách thứ tự.
 | 3 | Reporting / 2; tích hợp / 1 | B1 | V4__reporting_reports.sql | Đã tích hợp/chốt tại c850103 trên nền bacf960 có V1–V3; PENDING/geography, không seed/FK xuyên module |
 | Tiếp theo | Reporting / 2 | B2 | V5__reporting_verification_withdrawal.sql | Nhánh B2 từ main ca3751d: đối chiếu V1–V4 trước khi cấp V5; mở lifecycle constraints, metadata/withdrawn_at/version và GiST cho E08; giữ nguyên V4, chờ review/merge |
 | 4 | Rescue / 4 | D1 | V6__rescue_teams_and_missions.sql | rescue_teams + rescue_missions; intra-module FK; report_id UNIQUE; partial unique index idx_rescue_missions_team_active cho active mission/team; timestamp & lifecycle checks |
+| Tiếp theo | Reporting / 2 | User extension | V7__reporting_evidence_attachments.sql | Private attachment metadata, max 5 images/report, JPEG/PNG, max 5 MiB/image, soft-delete marker; binary content remains in the storage adapter outside the web root |
 
 B1 domain/application có thể làm song song C1 sau P01, nhưng persistence migration
 B1 phải chờ C1 merge rồi mới cấp số. Mọi migration Reporting B2 phải vào trước Rescue

@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --system gdrn && useradd --system --gid gdrn gdrn
 WORKDIR /app
+RUN mkdir -p /app/.data/report-attachments && chown -R gdrn:gdrn /app
 COPY --from=build --chown=gdrn:gdrn /workspace/target/gdrn-*.jar app.jar
 USER gdrn
 EXPOSE 8080

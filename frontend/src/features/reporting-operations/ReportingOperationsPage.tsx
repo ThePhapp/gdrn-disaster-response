@@ -4,6 +4,7 @@ import { ApiError } from '../../shared/api'
 import { EmptyState, ErrorMessage, Loading, PageHeader } from '../../shared/components'
 import { useI18n } from '../../shared/i18n'
 import { LocationMap } from '../../shared/location'
+import { ReportAttachments } from '../reporting-attachments/ReportAttachments'
 import type { Disaster } from '../disaster/disaster-api'
 import { disasterLabel } from '../disaster/DisasterBadges'
 import { DecisionDialog } from './DecisionDialog'
@@ -157,6 +158,7 @@ export function ReportingOperationsPage() {
             </dl>
             <LocationMap value={{ latitude: selected.latitude, longitude: selected.longitude }} readOnly
               label={`${t('reporting.reportLocation')} ${selected.id}`} className="report-detail__map" />
+            <ReportAttachments reportId={selected.id} canManage={false} />
             {selected.status === 'VERIFIED' && !forbidden && <Link to={`/operations/rescue?reportId=${encodeURIComponent(selected.id)}`}>{t('reporting.rescueLink')}</Link>}
             {selected.status === 'PENDING' && !forbidden ? <section className="report-decision" aria-label={t('reporting.decision')}>
               {!decision ? <><h3>{t('reporting.decision')}</h3><div className="report-actions">

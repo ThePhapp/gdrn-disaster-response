@@ -49,6 +49,11 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.DELETE, "/api/reports/*").hasRole("CITIZEN")
                         .requestMatchers(HttpMethod.GET, "/api/reports", "/api/reports/*")
                         .hasAnyRole("CITIZEN", "AUTHORITY")
+                        .requestMatchers(HttpMethod.POST, "/api/reports/*/attachments").hasRole("CITIZEN")
+                        .requestMatchers(HttpMethod.GET, "/api/reports/*/attachments",
+                                "/api/reports/*/attachments/*/content")
+                        .hasAnyRole("CITIZEN", "AUTHORITY")
+                        .requestMatchers(HttpMethod.DELETE, "/api/reports/*/attachments/*").hasRole("CITIZEN")
                         .requestMatchers(HttpMethod.GET, "/api/rescue-teams").hasRole("AUTHORITY")
                         .requestMatchers(HttpMethod.POST, "/api/rescue-missions").hasRole("AUTHORITY")
                         .requestMatchers(HttpMethod.GET, "/api/rescue-missions").hasAnyRole("CITIZEN", "AUTHORITY")
