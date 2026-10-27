@@ -126,8 +126,8 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | UI01-B | 1 + owners | B3, C2, D2, UI01-C1 | DONE, đã merge main PR #21 | [Handoff](handoffs/UI01-B.md): retest 6 màn hình PASS, 18 ảnh evidence |
 | X1 | 1 + owners | UI01-B, A1, A2 runtime | DONE trên nhánh, chờ review/merge | [Handoff](handoffs/X1.md); flow thật xuyên suốt, feature freeze; X2/C3/D3 có thể lấy baseline |
 | X2 | 2 + 1 ghép CI | X1 | DONE trên nhánh, chờ review/merge | [Handoff](handoffs/X2.md): 23/23 local; CI-style 18 pass/5 map skip |
-| D3 | 4 | X1 cho số đo; smoke D10 | TODO | Benchmark/Kaggle evidence |
-| C3 | 3 | X1; bổ sung X2/D3 | TODO | Tài liệu/rubric/demo |
+| D3 | 4 | X1 cho số đo; smoke D10 | DONE, đã merge PR #31 | [Handoff](handoffs/D3.md), [benchmark contract](benchmark/D3.md); baseline 6 workloads, raw artifacts dưới `benchmark/results/` |
+| C3 | 3 | X1; bổ sung X2/D3 | IN PROGRESS trên nhánh | [Rubric](qa/phase1-rubric.md), [kiến trúc](architecture/architecture-overview.md), [kịch bản demo](qa/phase1-demo-script.md); dẫn số liệu D3 |
 | A3 | 1 + nhóm | X2, C3, D3, UI01-B và mọi task trước | TODO | Audit cuối; không tuyên bố Pha 1 DONE khi thiếu evidence |
 
 P00/P01/B1/B2/C1/UI01-A/UI01-C1/C2/D1/D2, UI01-B và phần nghiệp vụ B3 đã tích hợp trên nền

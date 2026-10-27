@@ -291,15 +291,54 @@ flowchart TD
 - **Clean Verify**: Lệnh `.\mvnw.cmd clean verify` chạy trọn vẹn toàn bộ Unit Tests, Architecture Tests và Integration Tests với Testcontainers (yêu cầu Docker daemon).
 - **Frontend Verify**: Lệnh `npm ci`, `npm run typecheck`, `npm test` và `npm run build` xác thực 93 unit tests giao diện, tính tương thích TypeScript và đóng gói production bundle.
 - **Continuous Integration (CI)**: GitHub Actions workflow tự động kiểm tra cú pháp Compose, chạy clean verify, build frontend/backend image, khởi động stack kiểm tra healthcheck và chạy bộ hồi quy Playwright browser test.
+- **Đo lường Hiệu năng k6 (Performance Benchmark Task D3)**: Hệ thống duy trì bộ kịch bản kiểm thử tải k6 có khả năng tái lập cao tại `benchmark/`, đo lường throughput, p50, p95, p99 và tài nguyên Docker stats trên cơ sở dữ liệu thật PostGIS.
+
+### 8.4. Đo lường Hiệu năng & Baseline Tải Thực nghiệm (Task D3 Benchmark)
+
+Để phục vụ phân tích kiến trúc dựa trên bằng chứng định lượng (empirical evidence) thay vì cảm tính, hệ thống đã thực thi bộ kiểm chuẩn tải k6 (Task D3) đo lường các workload đọc/ghi trên cơ sở dữ liệu disposable PostGIS riêng biệt (xem chi tiết tại [Handoff D3](../handoffs/D3.md) và [D3 Benchmark Contract](../benchmark/D3.md)):
+
+- **Cấu hình môi trường đo lường:** Host Windows 11 (Acer Nitro AN515-58, Intel Core i5-12500H, 16 logical processors, 15.7 GiB RAM), Docker Desktop Engine 27.3.1, container `grafana/k6` kết nối tới Backend host qua `host.docker.internal`, cơ sở dữ liệu PostGIS 16-3.5.
+- **Dữ liệu mẫu thực nghiệm:** Sinh ngẫu nhiên xác định với 70% mật độ tập trung / 30% phân tán rộng qua `benchmark/generate_reports.py`.
+
+#### Bảng Số Liệu Đo Tải Thực Nghiệm k6 (Dẫn xuất từ Handoff D3)
+
+| Workload | Endpoint / Hợp đồng | Dataset | VUs | Requests/s | Avg / p50 / p95 / p99 (ms) | Error rate | Kích thước Artifact thô |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **E07 Write** | `POST /api/reports` | DB rỗng sau reset | 1 | **164.57** | 3.81 / 3.67 / 4.98 / **5.82** | 0% | 5.15 MiB |
+| **E08 Page Smoke** | `GET /api/reports` | 100 reports | 1 | **137.71** | 5.00 / 4.73 / 7.67 / **10.85** | 0% | 8.97 MiB |
+| **E08 Radius Smoke** | `GET /api/reports` (`ST_DWithin`) | 100 reports | 1 | **156.06** | 4.31 / 4.10 / 5.85 / **7.78** | 0% | 11.68 MiB |
+| **E08 Page Ladder** | `GET /api/reports` (Phân trang) | 1,000 reports | 10 | **928.17** | 7.23 / 6.49 / 12.58 / **17.55** | 0% | 60.49 MiB |
+| **E08 Page Ladder** | `GET /api/reports` (Phân trang) | 1,000 reports | 50 | **1,439.13** | 18.93 / 17.35 / 36.35 / **48.63** | 0% | 117.63 MiB |
+| **E08 Page Ladder** | `GET /api/reports` (Phân trang) | 1,000 reports | 100 | **1,996.98** | 34.93 / 30.19 / 78.70 / **105.28** | 0% | 130.06 MiB |
+
+#### Giám Sát Tài Nguyên Container (Docker Stats)
+
+| Tải người dùng | Backend CPU (TB / Đỉnh) | Backend RAM Đỉnh | Database CPU (TB / Đỉnh) | Database RAM Đỉnh |
+| :---: | :---: | :---: | :---: | :---: |
+| **10 VU** | 208.68% / 790.33% | 7.56% (~1.18 GiB) | 69.92% / 212.42% | 2.14% (~344 MiB) |
+| **50 VU** | 306.05% / 451.29% | 8.87% (~1.39 GiB) | 142.44% / 324.68% | 2.14% (~344 MiB) |
+| **100 VU** | 238.21% / 494.43% | 9.22% (~1.45 GiB) | 194.88% / 333.07% | 2.15% (~345 MiB) |
+
+- **Bảo mật và Tái lập trong Benchmark:**
+  - JWT token được cấp phát với thời hạn 900 giây, bảo đảm bao phủ toàn bộ chu kỳ warm-up, steady run và ramp-down mà không gây lỗi giả tạo do hết hạn token.
+  - Công cụ runner tự động lọc bỏ (redact) setup JWT token trước khi lưu `summary.json` và kiểm tra an toàn dữ liệu thô.
+  - Bounded in-flight requests ngăn chặn tình trạng tràn bộ đệm k6 client.
+  - Kết quả thô được lưu trữ tại `benchmark/results/20261024-142105-01` đến `benchmark/results/20261024-142703-01`.
 
 ---
 
-## 9. Định hướng Không gian Pha 2 (Architectural Non-Goals)
+## 9. Định hướng Không gian Pha 2 (Architectural Non-Goals & Empirical Hypotheses)
 
-Để bảo đảm tính tập trung cho phạm vi Pha 1, hệ thống **chưa và không** triển khai các thành phần sau:
-- Không sử dụng kiến trúc Microservices (vẫn giữ vững Modular Monolith).
-- Không thêm Message Broker phân tán (RabbitMQ, Apache Kafka).
-- Không sử dụng bộ nhớ đệm phân tán ngoài (Redis, Memcached).
-- Không triển khai API Gateway trung gian hay Service Discovery (Eureka, Consul).
-- Không áp dụng giao dịch phân tán (2PC, Saga).
-- Mọi quyết định tách module hoặc nâng cấp hạ tầng sang Pha 2 bắt buộc phải dựa trên số liệu đo lường chất lượng thực tế (**Task D3 Benchmark**) và được phê duyệt thông qua Architecture Decision Record (ADR) mới.
+Để bảo đảm tính tập trung cho phạm vi Pha 1, hệ thống **chưa và không** triển khai các thành phần phân tán phức tạp khi chưa có bằng chứng thực nghiệm bắt buộc. Mọi đề xuất cải tiến cho Pha 2 được xây dựng dưới dạng **Giả thuyết khoa học được dẫn xuất trực tiếp từ số liệu đo lường Task D3**:
+
+1. **Giả thuyết 1 — Message Queue cho luồng ghi báo cáo (RabbitMQ / Kafka):**
+   - *Bằng chứng từ D3:* Cơ chế HTTP đồng bộ buộc Tomcat thread pool xử lý tuần tự toàn bộ chu trình xác thực JWT, mã hóa không gian PostGIS và ghi đĩa. Khi số lượng kết nối đồng thời tăng cao, thread pool trở thành điểm nghẽn (p99 đạt 105.28 ms tại 100 VU).
+   - *Đề xuất Pha 2:* Chuyển đổi endpoint `POST /api/reports` sang tiếp nhận bất đồng bộ (Asynchronous Ingestion) qua Message Queue, trả về mã xác nhận tức thì và phân tán xử lý ghi xuống database.
+2. **Giả thuyết 2 — Caching và Read Replica cho truy vấn không gian (Redis & PostgreSQL Replica):**
+   - *Bằng chứng từ D3:* Khi tải đọc tăng lên 100 VU, CPU của container Database tăng vọt lên mức trung bình 194.88% và đỉnh 333.07% do các hàm tính toán không gian trắc địa `ST_DWithin` và phân trang danh sách.
+   - *Đề xuất Pha 2:* Tích hợp bộ nhớ đệm phân tán Redis cho dữ liệu báo cáo đã thẩm định hoặc thiết lập PostgreSQL Read Replica để tách riêng lưu lượng đọc/ghi.
+3. **Các thành phần tiếp tục là Non-Goals cho đến khi có ADR mới:**
+   - Không chuyển đổi sang Microservices nếu Modular Monolith vẫn đáp ứng tốt thông lượng (hiện đạt gần 2,000 req/s trên 1 máy đơn).
+   - Không triển khai API Gateway hay Service Discovery khi hệ thống chỉ có một tiến trình deploy duy nhất.
+   - Không áp dụng giao dịch phân tán (2PC / Saga).
+   - Mọi thay đổi hạ tầng trong tương lai bắt buộc phải trải qua quy trình đo kiểm tải trước/sau (A/B baseline) và có Architecture Decision Record (ADR) phê duyệt chính thức theo quy định tại [AGENTS.md](../../AGENTS.md).

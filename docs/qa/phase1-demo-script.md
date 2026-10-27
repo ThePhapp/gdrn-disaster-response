@@ -221,10 +221,14 @@ Theo nguyên tắc bảo mật của dự án ([AGENTS.md](../../AGENTS.md) và 
 #### 7.2. Đối chiếu số liệu đo lường hiệu năng Task D3
 - **Thao tác thuyết minh:**
   - Trình chiếu tệp kết quả benchmark k6 tại [docs/benchmark/D3.md](../benchmark/D3.md) và [docs/handoffs/D3.md](../handoffs/D3.md).
-  - Nêu rõ các số liệu đo kiểm thực tế trên baseline phần cứng cố định (16 CPUs, 16GB RAM):
-    - **Throughput ghi (E07 Write):** 164.57 req/s, p99 = 5.82 ms, lỗi 0%.
-    - **Throughput đọc phân trang (E08 Read 100 VU):** **1,996.98 req/s**, p99 = 105.28 ms, lỗi 0%.
-    - **Truy vấn bán kính PostGIS GiST (E08 Radius):** 156.06 req/s, p99 = 7.78 ms, lỗi 0%.
+  - Nêu rõ các số liệu đo kiểm thực tế trên baseline phần cứng cố định (16 CPUs, 15.7 GiB RAM, Docker 27.3.1):
+    - **Throughput ghi (E07 Write - 1 VU):** **164.57 req/s**, avg 3.81 ms, p99 = **5.82 ms**, lỗi **0%**.
+    - **Truy vấn bán kính PostGIS GiST (E08 Radius - 1 VU):** **156.06 req/s**, avg 4.31 ms, p99 = **7.78 ms**, lỗi **0%**.
+    - **Thang tải đọc phân trang (E08 Page Load Ladder trên 1,000 báo cáo):**
+      - **10 VU:** **928.17 req/s**, avg 7.23 ms, p99 = 17.55 ms, lỗi 0% (Backend CPU 208.68%, DB CPU 69.92%).
+      - **50 VU:** **1,439.13 req/s**, avg 18.93 ms, p99 = 48.63 ms, lỗi 0% (Backend CPU 306.05%, DB CPU 142.44%).
+      - **100 VU:** **1,996.98 req/s**, avg 34.93 ms, p99 = **105.28 ms**, lỗi 0% (Backend CPU 238.21%, DB CPU 194.88%).
+  - **Phân tích cơ sở khoa học:** Nêu rõ độ trễ p99 tăng lên 105.28 ms tại 100 VU phản ánh giới hạn khớp nối đồng bộ HTTP của thread pool máy chủ, làm tiền đề khoa học vững chắc để đề xuất Message Queue cho Pha 2.
 
 ---
 
