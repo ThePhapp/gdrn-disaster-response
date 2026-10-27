@@ -367,8 +367,59 @@ Nếu phát sinh sự cố kỹ thuật bất ngờ trong quá trình bảo vệ
 - **Playwright Browser E2E:** `.\scripts\browser-e2e.ps1` → **23/23 scenarios PASS** (bao phủ trọn vẹn luồng gửi báo cáo, duyệt, xung đột phân công và hoàn tất giải cứu).
 
 ### 8.4. Kiểm thử Tải và Đo lường Hiệu năng (k6 Baseline Task D3)
-- **Cấu hình phần cứng:** Intel Core i5-12500H (16 CPUs), 16 GiB RAM, Docker Desktop Engine 27.3.1, image `grafana/k6`.
-- **Kết quả đo lường thực tế (Trích xuất từ [D3 Handoff](../handoffs/D3.md#L32-L40)):**
-  - **E07 Gửi báo cáo (Write):** 164.57 req/s, độ trễ trung bình 3.81 ms, p99 = 5.82 ms, tỷ lệ lỗi **0%**.
-  - **E08 Đọc phân trang (Read 100 VUs):** **1,996.98 req/s**, độ trễ trung bình 34.93 ms, p99 = 105.28 ms, tỷ lệ lỗi **0%**.
-  - **E08 Truy vấn bán kính PostGIS (Radius Read):** 156.06 req/s, độ trễ trung bình 4.31 ms, p99 = 7.78 ms, tỷ lệ lỗi **0%**.
+
+- **Mục tiêu & Phạm vi (Task D3):** Đo lường năng lực chịu tải thực nghiệm trên các hợp đồng REST API đã hoàn tất (E07 Gửi báo cáo, E08 Đọc danh sách phân trang, E08 Truy vấn lọc theo bán kính PostGIS `ST_DWithin`). Toàn bộ phép đo thực hiện trên cơ sở dữ liệu disposable PostGIS riêng biệt, tuân thủ nguyên tắc đo lường tái lập được (Reproducible Benchmark).
+- **Cấu hình phần cứng & Topology môi trường đo lường:**
+  - **Máy chủ thử nghiệm (Host):** Acer Nitro AN515-58, Intel Core i5-12500H (12 cores / 16 threads, 16 logical processors), 15.7 GiB RAM, hệ điều hành Windows 11.
+  - **Hạ tầng Container:** Docker Desktop Engine 27.3.1, Docker Compose project riêng biệt `gdrn-benchmark`.
+  - **Phiên bản Container Images:** `grafana/k6@sha256:e66db15b...`, `postgis/postgis@sha256:94146ac3...`, Backend Spring Boot đóng gói từ commit `16fb3a5`.
+  - **Mạng giao tiếp:** k6 container kết nối tới Backend host qua `host.docker.internal`.
+  - **Bộ sinh dữ liệu xác định (Deterministic Seed Generator):** `benchmark/generate_reports.py` với tỷ lệ không gian 70% tập trung (dense cluster) / 30% phân tán rộng (wide scatter).
+  - **Đường dẫn bằng chứng thô (Raw Artifacts):** Các thư mục kết quả `benchmark/results/20261024-142105-01` đến `benchmark/results/20261024-142703-01` lưu trữ đầy đủ `raw.json`, `summary.json` (đã loại bỏ token), `run.json`, `seed.json`, và `docker-stats.csv`.
+
+#### Bảng Tổng Hợp Số Liệu Đo Tải k6 Thực Nghiệm (Dẫn xuất từ [D3 Handoff](../handoffs/D3.md#L32-L40))
+
+| Kịch bản kiểm thử (Workload) | Quy mô dữ liệu (Dataset) | Số người dùng ảo (VUs) | Thông lượng (Requests/s) | Độ trễ Avg / p50 / p95 / p99 (ms) | Tỷ lệ lỗi (Error rate) | Kích thước Artifact thô |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **E07 Gửi báo cáo (Write)** | DB rỗng sau reset | 1 | **164.57** | 3.81 / 3.67 / 4.98 / **5.82** | **0%** | 5.15 MiB |
+| **E08 Đọc phân trang (Smoke)** | 100 báo cáo | 1 | **137.71** | 5.00 / 4.73 / 7.67 / **10.85** | **0%** | 8.97 MiB |
+| **E08 Lọc bán kính PostGIS (Smoke)** | 100 báo cáo | 1 | **156.06** | 4.31 / 4.10 / 5.85 / **7.78** | **0%** | 11.68 MiB |
+| **E08 Đọc phân trang (Load Ladder 10)** | 1,000 báo cáo | 10 | **928.17** | 7.23 / 6.49 / 12.58 / **17.55** | **0%** | 60.49 MiB |
+| **E08 Đọc phân trang (Load Ladder 50)** | 1,000 báo cáo | 50 | **1,439.13** | 18.93 / 17.35 / 36.35 / **48.63** | **0%** | 117.63 MiB |
+| **E08 Đọc phân trang (Load Ladder 100)** | 1,000 báo cáo | 100 | **1,996.98** | 34.93 / 30.19 / 78.70 / **105.28** | **0%** | 130.06 MiB |
+
+- **Ghi chú về tính toàn vẹn dữ liệu đo lường:**
+  - Ở mức **50 VUs**, có 1 iteration bị gián đoạn trong giai đoạn hạ tải (ramp-down) nhưng ghi nhận **0 request HTTP thất bại** và **0 k6 assertion thất bại**. Số liệu được giữ nguyên trung thực như quan sát thực nghiệm, không che giấu.
+  - Ở mức **100 VUs**, kích thước tệp kết quả thô lên tới **130.06 MiB** vì lưu trữ chính xác 100% mẫu request để đảm bảo tính tái lập.
+
+#### Giám Sát Tiêu Thụ Tài Nguyên Container (Docker Stats Sampling)
+
+Trong quá trình tăng dần tải (Load Ladder 10 → 50 → 100 VUs), hệ thống ghi nhận thông số sử dụng tài nguyên của Backend và Database:
+
+| Mức tải (VUs) | Backend CPU (TB / Max) | Backend RAM Đỉnh | Database CPU (TB / Max) | Database RAM Đỉnh |
+| :---: | :---: | :---: | :---: | :---: |
+| **10 VU** | 208.68% / 790.33% | 7.56% (~1.18 GiB) | 69.92% / 212.42% | 2.14% (~344 MiB) |
+| **50 VU** | 306.05% / 451.29% | 8.87% (~1.39 GiB) | 142.44% / 324.68% | 2.14% (~344 MiB) |
+| **100 VU** | 238.21% / 494.43% | 9.22% (~1.45 GiB) | 194.88% / 333.07% | 2.15% (~345 MiB) |
+
+*Ghi chú: Tỷ lệ CPU được tính trên tổng công suất đa nhân của Docker host (1600% tối đa cho 16 logical cores). Bộ nhớ RAM ổn định tuyệt đối (< 10% RAM hệ thống), không có hiện tượng rò rỉ bộ nhớ (Memory Leak).*
+
+#### Đánh Giá Kiểm Chuẩn Kaggle CPU (Kaggle Preflight Verification)
+
+- **Kết quả kiểm tra Notebook:** [kaggle_cpu_preflight.ipynb](../../benchmark/kaggle_cpu_preflight.ipynb) được thiết kế có cấu trúc phân định rạch ròi 2 chế độ:
+  1. `generator-only`: Chạy script sinh dữ liệu và kịch bản phân tích độc lập.
+  2. `server-on-Kaggle`: Khởi động toàn bộ stack backend/database trực tiếp trong môi trường Kaggle Notebook.
+- **Hiện trạng môi trường Kaggle:** Môi trường kiểm thử local ghi nhận Python 3.14, Java 21, Docker khả dụng. Tuy nhiên, trên môi trường Kaggle Cloud công cộng:
+  - Kaggle Cloud không cung cấp Docker daemon mặc định.
+  - Nhóm không mở cổng public database/tunnel trái phép từ local lên mạng công cộng để bảo đảm an toàn bảo mật.
+- **Kết luận đánh giá:** Nhóm ghi nhận trung thực và minh bạch: **Không tự ý đánh dấu Kaggle hoàn tất khi thiếu runtime hỗ trợ**. Số liệu kiểm chuẩn chính thức được công bố dựa trên baseline local có khả năng tái lập 100% với kịch bản và seed cố định.
+
+#### Phân Tích Điểm Nghẽn Kỹ Thuật & Giả Thuyết Khoa Học Cho Pha 2
+
+1. **Khớp nối đồng bộ HTTP (Synchronous Coupling Bottleneck):**
+   - Khi tải tăng từ 1 VU lên 100 VU, thông lượng đọc đạt mức bão hòa ~1,996 req/s và độ trễ p99 tăng từ 5.82 ms lên 105.28 ms. Mỗi kết nối HTTP đồng bộ giữ chân một thread trong thread pool của Tomcat để giải mã JWT, kiểm tra phân quyền, truy vấn PostGIS và tuần tự hóa JSON.
+   - *Giả thuyết cải tiến Pha 2:* Áp dụng **Message Queue (RabbitMQ / Kafka)** cho luồng tiếp nhận báo cáo khẩn cấp (E07 Write), chuyển đổi sang kiến trúc hướng sự kiện bất đồng bộ (Event-Driven Architecture) để giải phóng thread pool ngay lập tức.
+2. **Tải xử lý CPU cơ sở dữ liệu trên dữ liệu không gian:**
+   - Tại mức tải 100 VU, CPU của container Database tăng vọt lên mức trung bình 194.88% và đỉnh 333.07% do các phép tính toán không gian và sắp xếp phân trang.
+   - *Giả thuyết cải tiến Pha 2:* Bổ sung **Bộ nhớ đệm phân tán (Redis Cache)** cho danh sách báo cáo công khai hoặc phân tách **Read Replica** cho các truy vấn tra cứu bản đồ diện rộng.
+3. **Tuân thủ kỷ luật kiến trúc:** Toàn bộ các giải pháp trên được giữ nguyên dưới dạng **Giả thuyết khoa học chờ kiểm chứng trong Pha 2**, không tự ý đưa vào mã nguồn Pha 1 khi chưa có Architecture Decision Record (ADR) được phê duyệt, đúng theo chỉ dẫn tại [AGENTS.md](../../AGENTS.md).

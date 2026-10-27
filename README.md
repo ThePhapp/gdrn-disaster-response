@@ -81,6 +81,8 @@ các handoff module cho contract, API examples và evidence.
 | HTTP/API/role/race | [P00 contract](docs/api/phase1-contract.md), [OpenAPI](docs/api/phase1-contract.yaml) |
 | Published interfaces và cấp migration | [Module contracts/ledger](docs/architecture/phase1-module-contracts.md) |
 | Kiến trúc và quyết định | [Architecture](docs/architecture/architecture-overview.md), [ADRs](docs/adr/) |
+| Đo kiểm tải và bằng chứng hiệu năng | [Benchmark D3](docs/benchmark/D3.md), [Handoff D3](docs/handoffs/D3.md) |
+| Ma trận rubric và đối chiếu kiểm toán | [Rubric Phase 1](docs/qa/phase1-rubric.md) |
 | UI chung và cách dùng components | [Design system](docs/design/GDRN_UI_DESIGN_SYSTEM.md), [UI01-A](docs/handoffs/UI01-A.md) |
 | Quy tắc phát triển | [AGENTS.md](AGENTS.md) |
 | Tầm nhìn dài hạn/backlog | [Project context](GDRN_CODEX_PROJECT_CONTEXT.md) |
