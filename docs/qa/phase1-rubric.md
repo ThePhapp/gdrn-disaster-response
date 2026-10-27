@@ -2,20 +2,96 @@
 
 > **Cập nhật:** 27/10/2026  
 > **Nhánh:** `feat/c3-architecture-docs` | **Commit cơ sở:** `c99ebd5`  
-> **Mục đích:** Tài liệu hóa việc đối chiếu toàn diện từng tiêu chí chấp nhận của dự án (theo [Mục 27 GDRN_CODEX_PROJECT_CONTEXT.md](../../GDRN_CODEX_PROJECT_CONTEXT.md#L1143-L1165), kế hoạch [Task C3 PROMPTS_PHA_1_4_NGUOI.md](../PROMPTS_PHA_1_4_NGUOI.md#L903-L930) và đề bài môn Kiến trúc Phần mềm) với các tệp mã nguồn, tệp kiểm thử tự động và bằng chứng đo lường thực tế trong repository.
+> **Mục đích:** Tài liệu hóa việc đối chiếu toàn diện từng tiêu chí chấp nhận của dự án theo [Mục 27 GDRN_CODEX_PROJECT_CONTEXT.md](../../GDRN_CODEX_PROJECT_CONTEXT.md#L1143-L1165), kế hoạch [Task C3 PROMPTS_PHA_1_4_NGUOI.md](../PROMPTS_PHA_1_4_NGUOI.md#L903-L930) và đề bài môn Kiến trúc Phần mềm.  
+> **Quy định thuyết trình bảo vệ đồ án:** Mỗi nhóm có **5 – 7 phút** để trình bày tổng quan bài toán, luồng nghiệp vụ cốt lõi và các vấn đề kiến trúc / kỹ thuật dễ thấy của Pha 1 trước khi bước vào phần demo chi tiết và đối chiếu rubric.
 
 ---
 
-## 1. Tóm Tắt Trạng Thái Đối Chiếu Tiêu Chí
+## 1. Khung Thuyết Trình 5–7 Phút: Bài Toán, Nghiệp Vụ và Các Vấn Đề Dễ Thấy
 
-| Nhóm tiêu chí | Số lượng | Đạt hoàn toàn (PASS) | Đạt có lưu ý / Môi trường (NOTE / ACTION) |
-|---|:---:|:---:|:---:|
-| **Tiêu chí cốt lõi đề bài môn học (Mục 27)** | 17 | 15 | 2 (Public GitHub, Kaggle Cloud Server) |
-| **Tiêu chí kiến trúc nâng cao GDRN** | 5 | 5 | 0 |
-| **Tổng cộng** | **22** | **20** | **2** |
+Khung thuyết minh này được thiết kế để nhóm trình bày mạch lạc, súc tích trong 5–7 phút đầu của buổi bảo vệ đồ án:
 
-> [!NOTE]
-> **Nguyên tắc kiểm chứng trung thực (Audit Integrity):** Mọi tuyên bố "ĐẠT" đều đi kèm tệp nguồn, tệp test và kết quả kiểm thử tái lập được. Đối với tiêu chí thiết lập ngoài mã nguồn (quyền Public của repository GitHub) hoặc năng lực hạ tầng phụ thuộc bên thứ ba (máy chủ benchmark live trên Kaggle Cloud), tài liệu ghi nhận chính xác hiện trạng kỹ thuật và hướng dẫn kích hoạt, tuyệt đối không tạo link ảo hay giả mạo kết quả.
+```mermaid
+timeline
+    title Khung thời gian thuyết trình (5 – 7 phút)
+    00:00 - 01:30 : 1. Mô tả bài toán & Bối cảnh hệ thống GDRN
+    01:30 - 03:30 : 2. Nghiệp vụ cốt lõi & Luồng điều phối khép kín
+    03:30 - 06:30 : 3. Các vấn đề kiến trúc & Điểm nghẽn kỹ thuật dễ thấy
+    06:30 - 07:00 : 4. Chuyển tiếp sang Demo & Đối chiếu Ma trận Rubric
+```
+
+---
+
+### 1.1. Mô tả bài toán và Bối cảnh hệ thống (1.5 phút)
+
+1. **Bối cảnh thực tế (Problem Context):**
+   - Khi thiên tai, thảm họa (bão, ngập lụt, sạt lở, cháy rừng) xảy ra, các kênh liên lạc thông thường thường bị nghẽn hoặc quá tải. Thông tin kêu cứu từ người dân phân tán, thiếu tọa độ chính xác, dẫn đến việc điều phối cứu nạn bị chậm trễ hoặc chồng chéo.
+   - Các lực lượng cứu hộ tại hiện trường cần một hệ thống thông tin thống nhất, tin cậy để xác định mức độ ưu tiên và vị trí cần giải cứu khẩn cấp.
+
+2. **Mục tiêu của hệ thống GDRN (Global Disaster Response Network):**
+   - Xây dựng nền tảng điều phối thông tin ứng phó thảm họa mô phỏng theo thời gian thực.
+   - Kết nối 3 nhóm tác nhân chính:
+     - **Người dân (Citizen):** Gửi báo cáo sự cố kèm tọa độ GPS WGS84, mô tả chi tiết, ảnh minh chứng hiện trường; theo dõi tiến độ cứu hộ và rút báo cáo khi chưa duyệt.
+     - **Điều phối viên (Authority / Dispatcher):** Thẩm định tính xác thực của tin báo, gom nhóm các báo cáo vào thảm họa diện rộng (`ACTIVE`), phân công đội cứu hộ thích hợp và giám sát toàn bộ hoạt động cứu nạn.
+     - **Đội cứu hộ (Rescue Team / Responders):** Tiếp nhận nhiệm vụ cứu nạn tại hiện trường, thực thi giải cứu và cập nhật trạng thái hoàn thành.
+
+3. **Ranh giới kiến trúc Pha 1 (Phase 1 Architectural Scope):**
+   - Đơn ứng dụng **Modular Monolith** đóng gói trong một tiến trình chạy trên nền **Java 21**, **Spring Boot 3.5**, cơ sở dữ liệu quan hệ kết hợp không gian địa lý **PostgreSQL 16 + PostGIS 3.5**, và giao diện web **React 18 SPA**.
+   - Phân rã thành 5 bounded contexts độc lập theo Domain-Driven Design (DDD): `identity`, `disaster`, `reporting`, `rescue`, `dashboard`.
+
+---
+
+### 1.2. Mô hình Nghiệp vụ Cốt lõi và Luồng Điều Phối (2.0 phút)
+
+Nghiệp vụ của hệ thống vận hành theo chu trình khép kín 4 giai đoạn:
+
+```text
+[Người dân gửi báo cáo (GPS WGS84)]
+             ↓ (PENDING)
+[Điều phối viên lọc không gian & Thẩm định] ──(Gắn thảm họa)──> [Trạng thái VERIFIED]
+             ↓
+[Phân công đội cứu hộ khả dụng (AVAILABLE)] ──(Chống xung đột)──> [Tạo Mission ASSIGNED]
+             ↓
+[Đội cứu hộ tiếp cận & Giải cứu thành công] ─────────────────────> [Trạng thái COMPLETED]
+             ↓
+[Người dân nhận cập nhật hoàn tất trên màn hình]
+```
+
+- **Giai đoạn 1 — Tiếp nhận tin báo tọa độ:** Người dân ghim vị trí sự cố trên bản đồ số, hệ thống lưu trữ dưới định dạng chuẩn `GEOMETRY(Point, 4326)` và lập tức đánh chỉ mục không gian PostGIS GiST. Người dân có toàn quyền quản lý, đính kèm ảnh và rút đơn khi đang ở trạng thái `PENDING`.
+- **Giai đoạn 2 — Xác thực & Phân loại thảm họa:** Điều phối viên dùng bộ lọc không gian bán kính (`ST_DWithin`) để rà quét các báo cáo nằm trong vùng ảnh hưởng. Khi được thẩm định, báo cáo chuyển sang `VERIFIED` và liên kết với một thảm họa đang diễn ra.
+- **Giai đoạn 3 — Phân công cứu hộ & Ngăn chặn xung đột:** Điều phối viên lựa chọn đội cứu trợ sẵn sàng (`AVAILABLE`) để tạo nhiệm vụ cứu hộ. Hệ thống áp dụng cơ chế cập nhật điều kiện nguyên tử (Atomic Conditional Update) để bảo đảm một đội cứu hộ hoặc một báo cáo không bao giờ bị phân công trùng lặp.
+- **Giai đoạn 4 — Hoàn tất cứu trợ & Phản hồi công dân:** Nhiệm vụ chuyển từ `ASSIGNED` → `IN_PROGRESS` → `COMPLETED`. Khi hoàn tất, đội cứu hộ được giải phóng về `AVAILABLE` và người dân nhìn thấy cập nhật trạng thái cứu hộ đã hoàn thành trên màn hình cá nhân.
+
+---
+
+### 1.3. Các Vấn Đề Kiến Trúc và Điểm Nghẽn Kỹ Thuật Dễ Thấy của Pha 1 (2.5 – 3.0 phút)
+
+> [!IMPORTANT]
+> **Trọng tâm kiến trúc môn học:** Pha 1 là kiến trúc cơ sở (Baseline Architecture). Việc chỉ ra trung thực các vấn đề dễ thấy (Noticeable Bottlenecks & Architectural Trade-offs) cùng các bằng chứng số liệu đo lường thực tế là cơ sở khoa học cốt lõi để đưa ra các quyết định cải tiến kiến trúc cho Pha 2 (Event-Driven / Caching / Workers).
+
+Dưới đây là 5 vấn đề kiến trúc nổi cộm dễ thấy nhất trong hệ thống Pha 1:
+
+#### 1. Khớp nối đồng bộ và Nguy cơ cạn kiệt tài nguyên khi có bùng nổ tải (Synchronous Coupling & Thread Exhaustion)
+- **Vấn đề dễ thấy:** Mọi yêu cầu HTTP (gửi báo cáo, thẩm định, phân công cứu hộ) đều được xử lý đồng bộ (Synchronous Request-Response). Khi xảy ra thảm họa lớn, lượng người dân truy cập gửi tin báo tăng đột biến (flash crowd), việc giữ kết nối HTTP trong suốt chuỗi xử lý (xác thực JWT → validation → ghi DB PostGIS → tính toán không gian) sẽ nhanh chóng làm cạn kiệt thread pool của máy chủ (Tomcat max threads mặc định 200).
+- **Bằng chứng thực tế:** Đo kiểm tải Task D3 cho thấy ở mức 100 người dùng đồng thời (100 VUs), độ trễ p99 vọt lên **105.28 ms** (gấp 18 lần so với mức 1 VU là 5.82 ms).
+- **Định hướng cải tiến Pha 2:** Áp dụng mô hình hướng sự kiện (Event-Driven Architecture) với Message Broker (RabbitMQ): Controller chỉ tiếp nhận request, đẩy message vào hàng đợi và trả ngay HTTP `202 Accepted` cho người dân; các tác vụ nặng được xử lý bất đồng bộ bởi các Background Workers.
+
+#### 2. Toàn bộ áp lực đọc/ghi dồn trực tiếp vào RDBMS và Thiếu tầng đệm Cache (Database Contention & Lack of Caching)
+- **Vấn đề dễ thấy:** Hệ thống chưa trang bị tầng lưu đệm phân tán (Redis). Mọi truy vấn đọc danh sách thảm họa `ACTIVE`, lọc báo cáo bán kính, kiểm tra danh sách đội cứu hộ đều truy vấn trực tiếp vào PostgreSQL.
+- **Bằng chứng thực tế:** Dữ liệu giám sát container trong Task D3 ghi nhận tại mức tải 100 VUs, mức chiếm dụng CPU của database container đạt đỉnh tới **194.88% (trung bình)** và **333.07% (cực đại)**.
+- **Định hướng cải tiến Pha 2:** Bổ sung Redis Cache cho các dữ liệu có tần suất đọc cao nhưng ít thay đổi (danh sách thảm họa đang diễn ra, danh mục loại sự cố, số liệu thống kê Dashboard), giảm tải 70–80% truy vấn trực tiếp vào cơ sở dữ liệu.
+
+#### 3. Điểm nóng tranh chấp tài nguyên khi điều phối cứu hộ đồng thời (Concurrency Hotspots in Dispatching)
+- **Vấn đề dễ thấy:** Trong bối cảnh thảm họa, số lượng đội cứu hộ sẵn sàng (`AVAILABLE`) là hữu hạn so với lượng lớn báo cáo cần cứu trợ. Khi nhiều điều phối viên cùng mở màn hình phân công, cơ chế bảo vệ nguyên tử ở tầng database (`UPDATE rescue_teams SET status = 'BUSY' WHERE id = ? AND status = 'AVAILABLE'`) đảm bảo tính toàn vẹn dữ liệu nhưng sẽ làm tăng tỷ lệ request thất bại nhận lỗi HTTP `409 Conflict (TEAM_BUSY)`. Người điều phối phải tải lại trang và thao tác thủ công từ đầu.
+- **Định hướng cải tiến Pha 2:** Bổ sung hàng đợi phân công ưu tiên (Priority Dispatch Queue) và cơ chế tự động khớp nối (Auto-assignment engine) dựa trên khoảng cách địa lý gần nhất giữa đội cứu hộ và hiện trường sự cố.
+
+#### 4. Khớp nối lưu trữ tệp tin trên hệ thống tập tin cục bộ (Local Storage Coupling)
+- **Vấn đề dễ thấy:** Tính năng tải ảnh minh chứng sự cố (E17) đang lưu trữ tệp trực tiếp vào ổ đĩa cục bộ của container backend (`.data/report-attachments`). Cơ chế này tạo ra trạng thái lưu trữ nội bộ (stateful storage), cản trở việc mở rộng ngang (Horizontal Scaling) thành nhiều container backend chạy song song vì các container không chia sẻ được ổ đĩa cục bộ.
+- **Định hướng cải tiến Pha 2:** Chuyển đổi tầng lưu trữ tệp sang dịch vụ Object Storage tập trung (MinIO hoặc AWS S3) kết hợp Presigned URLs, tách rời hoàn toàn dữ liệu tệp khỏi máy chủ ứng dụng.
+
+#### 5. Đánh đổi giữa Stateless JWT và Cơ chế thu hồi phiên tức thì (Stateless Token Revocation Trade-off)
+- **Vấn đề dễ thấy:** Hệ thống sử dụng Bearer JWT hoàn toàn stateless để đạt hiệu năng xử lý cao và không cần tra cứu database mỗi khi xác thực. Đổi lại, hệ thống không thể thu hồi tức thì (immediate revocation / blacklisting) một token đã phát hành nếu tài khoản bị xâm nhập trước khi token tự hết hạn.
+- **Định hướng cải tiến Pha 2:** Triển khai cơ chế Refresh Token lưu trong Redis với vòng đời ngắn của Access Token (5–15 phút), cho phép điều phối viên thu hồi phiên hoạt động của tài khoản khi cần thiết.
 
 ---
 
@@ -25,7 +101,7 @@
 
 | STT | Tiêu chí đề bài môn học | Trạng thái | Tệp mã nguồn / Cấu hình chính | Tệp kiểm thử / Đo lường | Bằng chứng thực tế & Kết quả xác minh |
 |:---:|---|:---:|---|---|---|
-| **01** | **REST API giao tiếp JSON** | **ĐẠT (PASS)** | - [ReportController.java](../../src/main/java/com/gdrn/reporting/api/ReportController.java)<br/>- [DisasterController.java](../../src/main/java/com/gdrn/disaster/api/DisasterController.java)<br/>- [RescueController.java](../../src/main/java/com/gdrn/rescue/api/RescueController.java)<br/>- [IdentityController.java](../../src/main/java/com/gdrn/identity/api/IdentityController.java)<br/>- [DashboardController.java](../../src/main/java/com/gdrn/dashboard/api/DashboardController.java)<br/>- [ApiExceptionHandler.java](../../src/main/java/com/gdrn/shared/api/ApiExceptionHandler.java)<br/>- [api.ts](../../frontend/src/shared/api.ts) | - [ReportingIT.java](../../src/test/java/com/gdrn/reporting/ReportingIT.java)<br/>- [RescueIT.java](../../src/test/java/com/gdrn/rescue/RescueIT.java)<br/>- [GdrnApplicationIT.java](../../src/test/java/com/gdrn/GdrnApplicationIT.java)<br/>- [DashboardIT.java](../../src/test/java/com/gdrn/dashboard/DashboardIT.java) | - Toàn bộ controllers sử dụng `@RestController` và cấu hình bắt buộc kiểu MIME trên tầng class/method: `@RequestMapping(produces = "application/json")`, `@PostMapping(consumes = "application/json")`.<br/>- Phía client, [api.ts](../../frontend/src/shared/api.ts) tự động thiết lập headers `Content-Type: application/json` và `Accept: application/json`.<br/>- Bộ xử lý ngoại lệ tập trung [ApiExceptionHandler.java](../../src/main/java/com/gdrn/shared/api/ApiExceptionHandler.java) và các `@RestControllerAdvice` theo module (`ReportErrors`, `DisasterErrors`, `RescueErrors`, `IdentityErrors`, `DashboardErrors`) trả về cấu trúc lỗi JSON/ProblemDetail đồng nhất.<br/>- [Checklist X1](./phase1-integration-checklist.md#L22-L29): Toàn bộ 20 endpoints (E01–E20) đều trả về JSON DTO, không lộ entity JPA hay schema DB ra ngoài. |
+| **01** | **REST API giao tiếp JSON** | **ĐẠT (PASS)** | - [ReportController.java](../../src/main/java/com/gdrn/reporting/api/ReportController.java)<br/>- [DisasterController.java](../../src/main/java/com/gdrn/disaster/api/DisasterController.java)<br/>- [RescueController.java](../../src/main/java/com/gdrn/rescue/api/RescueController.java)<br/>- [IdentityController.java](../../src/main/java/com/gdrn/identity/api/IdentityController.java)<br/>- [DashboardController.java](../../src/main/java/com/gdrn/dashboard/api/DashboardController.java)<br/>- [ApiExceptionHandler.java](../../src/main/java/com/gdrn/shared/api/ApiExceptionHandler.java)<br/>- [api.ts](../../frontend/src/shared/api.ts) | - [ReportingIT.java](../../src/test/java/com/gdrn/reporting/ReportingIT.java)<br/>- [RescueIT.java](../../src/test/java/com/gdrn/rescue/RescueIT.java)<br/>- [GdrnApplicationIT.java](../../src/test/java/com/gdrn/GdrnApplicationIT.java)<br/>- [DashboardIT.java](../../src/test/java/com/gdrn/dashboard/DashboardIT.java) | - Toàn bộ controllers sử dụng `@RestController` và cấu hình bắt buộc kiểu MIME: `@RequestMapping(produces = "application/json")`, `@PostMapping(consumes = "application/json")`.<br/>- Phía client, [api.ts](../../frontend/src/shared/api.ts) tự động thiết lập headers `Content-Type: application/json` và `Accept: application/json`.<br/>- Bộ xử lý ngoại lệ tập trung [ApiExceptionHandler.java](../../src/main/java/com/gdrn/shared/api/ApiExceptionHandler.java) và các `@RestControllerAdvice` theo module (`ReportErrors`, `DisasterErrors`, `RescueErrors`, `IdentityErrors`, `DashboardErrors`) trả về cấu trúc lỗi JSON/ProblemDetail đồng nhất.<br/>- [Checklist X1](./phase1-integration-checklist.md#L22-L29): Toàn bộ 20 endpoints (E01–E20) đều trả về JSON DTO, không lộ entity JPA hay schema DB ra ngoài. |
 | **02** | **Có POST** | **ĐẠT (PASS)** | - [ReportController.java#L53-L65](../../src/main/java/com/gdrn/reporting/api/ReportController.java#L53-L65) (`POST /api/reports`)<br/>- [DisasterController.java](../../src/main/java/com/gdrn/disaster/api/DisasterController.java) (`POST /api/disasters`)<br/>- [RescueController.java](../../src/main/java/com/gdrn/rescue/api/RescueController.java) (`POST /api/rescue-missions`)<br/>- [IdentityController.java](../../src/main/java/com/gdrn/identity/api/IdentityController.java) (`POST /api/auth/login`)<br/>- [ReportController.java#L112-L132](../../src/main/java/com/gdrn/reporting/api/ReportController.java#L112-L132) (`POST /api/reports/{id}/attachments`) | - [ReportingIT.java](../../src/test/java/com/gdrn/reporting/ReportingIT.java)<br/>- [RescueIT.java](../../src/test/java/com/gdrn/rescue/RescueIT.java)<br/>- [GdrnApplicationIT.java](../../src/test/java/com/gdrn/GdrnApplicationIT.java)<br/>- [reporting-operations.spec.ts](../../frontend/e2e/reporting-operations.spec.ts)<br/>- [rescue.spec.ts](../../frontend/e2e/rescue.spec.ts) | - Tạo báo cáo `POST /api/reports` trả HTTP `201 Created` kèm `ReportResponse`.<br/>- Tạo thảm họa `POST /api/disasters` trả HTTP `201 Created`.<br/>- Phân công cứu hộ `POST /api/rescue-missions` trả HTTP `201 Created`.<br/>- Tích hợp browser E2E Playwright kiểm thử thành công toàn bộ luồng gửi và phân công thật. |
 | **03** | **Có GET** | **ĐẠT (PASS)** | - [ReportController.java#L67-L86](../../src/main/java/com/gdrn/reporting/api/ReportController.java#L67-L86) (`GET /api/reports`, `GET /api/reports/{id}`)<br/>- [DisasterController.java](../../src/main/java/com/gdrn/disaster/api/DisasterController.java) (`GET /api/disasters`, `GET /api/disasters/{id}`)<br/>- [RescueController.java](../../src/main/java/com/gdrn/rescue/api/RescueController.java) (`GET /api/rescue-teams`, `GET /api/rescue-missions`)<br/>- [IdentityController.java](../../src/main/java/com/gdrn/identity/api/IdentityController.java) (`GET /api/auth/me`)<br/>- [DashboardController.java](../../src/main/java/com/gdrn/dashboard/api/DashboardController.java) (`GET /api/dashboard`) | - [ReportingIT.java](../../src/test/java/com/gdrn/reporting/ReportingIT.java)<br/>- [RescueIT.java](../../src/test/java/com/gdrn/rescue/RescueIT.java)<br/>- [GdrnApplicationIT.java](../../src/test/java/com/gdrn/GdrnApplicationIT.java)<br/>- [reports-paginated-read-e08.js](../../benchmark/k6/reports-paginated-read-e08.js)<br/>- [reports-radius-read-e08.js](../../benchmark/k6/reports-radius-read-e08.js) | - Đọc danh sách phân trang (PageResponse) và chi tiết theo ID.<br/>- Đọc lọc không gian bán kính (`lat`, `lon`, `radiusKm`).<br/>- Kiểm thử tải k6 workload E08 đạt tới 1,996 req/s tại 100 VU với 0% lỗi. |
 | **04** | **Có DELETE** | **ĐẠT (PASS)** | - [ReportController.java#L100-L110](../../src/main/java/com/gdrn/reporting/api/ReportController.java#L100-L110) (`DELETE /api/reports/{id}`)<br/>- [ReportController.java#L168-L184](../../src/main/java/com/gdrn/reporting/api/ReportController.java#L168-L184) (`DELETE /api/reports/{id}/attachments/{attachmentId}`) | - [ReportingIT.java](../../src/test/java/com/gdrn/reporting/ReportingIT.java)<br/>- [b3-citizen.spec.ts](../../frontend/e2e/b3-citizen.spec.ts)<br/>- [reporting-operations.spec.ts](../../frontend/e2e/reporting-operations.spec.ts) | - Rút báo cáo đang chờ duyệt (`PENDING`): trả HTTP `204 No Content`.<br/>- Rút báo cáo đã duyệt (`VERIFIED`): chặn với HTTP `409 Conflict`.<br/>- Citizen khác cố xóa: chặn với HTTP `404 Not Found` (cô lập dữ liệu người dùng).<br/>- Xóa ảnh minh chứng đính kèm (E20) thành công. |
