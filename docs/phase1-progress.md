@@ -128,7 +128,7 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | X2 | 2 + 1 ghép CI | X1 | DONE trên nhánh, chờ review/merge | [Handoff](handoffs/X2.md): 23/23 local; CI-style 18 pass/5 map skip |
 | D3 | 4 | X1 cho số đo; smoke D10 | DONE, đã merge PR #31 | [Handoff](handoffs/D3.md), [benchmark contract](benchmark/D3.md); baseline 6 workloads, raw artifacts dưới `benchmark/results/` |
 | C3 | 3 | X1; bổ sung X2/D3 | IN PROGRESS trên nhánh | [Rubric](qa/phase1-rubric.md), [kiến trúc](architecture/architecture-overview.md), [kịch bản demo](qa/phase1-demo-script.md); dẫn số liệu D3 |
-| A3 | 1 + nhóm | X2, C3, D3, UI01-B và mọi task trước | TODO | Audit cuối; không tuyên bố Pha 1 DONE khi thiếu evidence |
+| A3 | 1 + nhóm | X2, C3, D3, UI01-B và mọi task trước | DONE trên nhánh | [Final Audit](qa/phase1-final-audit.md): 130 backend tests (clean verify), 93 frontend tests, Flyway V1–V7 DB rỗng, 0 secrets lộ, DoD PASS |
 
 P00/P01/B1/B2/C1/UI01-A/UI01-C1/C2/D1/D2, UI01-B và phần nghiệp vụ B3 đã tích hợp trên nền
 hiện tại. D2 bổ sung vị trí đã merge PR #20; UI01-B đã merge PR #21 và X1 đã PASS
