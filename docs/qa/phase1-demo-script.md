@@ -85,10 +85,11 @@ Theo nguyên tắc bảo mật của dự án ([AGENTS.md](../../AGENTS.md) và 
   - Chọn vị trí trên bản đồ tương tác `LocationMap` hoặc nhập tọa độ:
     - **Vĩ độ (Latitude):** `21.0285`
     - **Kinh độ (Longitude):** `105.8542`
+  - Đính kèm hình ảnh minh chứng sự cố (JPEG/PNG <= 5 MiB): Tải ảnh hiện trường ngập lụt minh chứng tính năng lưu trữ tệp tin riêng tư theo [ADR-010](../adr/010-report-evidence-private-storage.md) và Migration Flyway V7 (`E17 POST /api/reports/{id}/attachments`).
   - Nhấn nút **Gửi báo cáo**.
 - **Kết quả kỳ vọng:**
-  - Hệ thống gọi API `POST /api/reports` trả về HTTP `201 Created`.
-  - Tự động chuyển hướng về trang `/my-reports`. Báo cáo 1 xuất hiện trên đầu danh sách với trạng thái huy hiệu màu vàng: **`Đang chờ duyệt (PENDING)`**.
+  - Hệ thống gọi API `POST /api/reports` tạo báo cáo thành công (`201 Created`), sau đó upload ảnh minh chứng an toàn vào filesystem riêng tư (`REPORT_ATTACHMENT_STORAGE_ROOT`).
+  - Tự động chuyển hướng về trang `/my-reports`. Báo cáo 1 xuất hiện trên đầu danh sách với trạng thái huy hiệu màu vàng: **`Đang chờ duyệt (PENDING)`**, có biểu tượng đính kèm tệp minh chứng.
 
 #### 2.3. Gửi Báo cáo 2 — Sự cố phụ để kiểm thử rút đơn (S02 — `/reports/new`)
 - **Thao tác:**
@@ -157,6 +158,7 @@ Theo nguyên tắc bảo mật của dự án ([AGENTS.md](../../AGENTS.md) và 
     - Danh sách lọc tức thì hiển thị đúng Báo cáo 1 của Citizen 1 nằm trong vùng ảnh hưởng.
   - Nhấp vào Báo cáo 1 để mở màn hình chi tiết duyệt:
     - Xem tọa độ, mô tả của người dân trên bản đồ trực quan.
+    - **Xem ảnh minh chứng hiện trường:** Kiểm tra hình ảnh ngập lụt được tải qua luồng dữ liệu bảo mật (`E18 GET /api/reports/{id}/attachments` và `E19 GET /api/reports/{id}/attachments/{id}/content`), chứng minh dữ liệu được kiểm soát quyền chặt chẽ, không sinh URL công khai lộ lọt ra ngoài.
   - **Thực hiện Duyệt báo cáo (Verification):**
     - Tại mục *Gán thảm họa liên quan*, chọn: `"Đợt ngập lụt diện rộng Cầu Giấy - Ba Đình 10/2026"`.
     - Nhấn nút **Duyệt báo cáo** (Verify Report).
