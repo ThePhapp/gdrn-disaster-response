@@ -38,7 +38,8 @@ dùng Vite host để phát triển nhanh.
 
 Swagger ở `http://127.0.0.1:<APP_PORT>/swagger-ui/index.html`. Frontend port 5173
 khác backend port; browser chỉ gọi `/api` qua Vite proxy hoặc Nginx proxy khi chạy
-production. JWT nằm trong memory, reload/new tab cần login lại.
+production. JWT lưu theo phạm vi tab (`sessionStorage`, khóa `gdrn.auth.session`) để giữ
+phiên khi reload cùng tab và tự xóa khi đóng tab hoặc logout.
 
 Hướng dẫn đầy đủ: [cài đặt/chạy/debug](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md) và
 [env, auth, seed, frontend local](docs/P01_LOCAL.md). `scripts/dev.ps1` quản lý
@@ -46,31 +47,29 @@ Compose production và smoke/verify; dùng `local.ps1` khi muốn chạy Vite ho
 
 ## Runtime hiện có
 
-**Bổ sung DS1 (18/10/2026):** AUTHORITY có [Dashboard thống kê](docs/api/dashboard-contract.md)
-tại `/operations/dashboard` (mục Tổng quan/Dashboard trên thanh điều hướng).
-E16 `GET /api/dashboard` tổng hợp reports theo trạng thái, missions đang xử lý và
-đội rảnh hiện tại; lọc từ ngày–đến ngày theo giờ Việt Nam. Reports lọc theo ngày gửi,
-missions theo ngày phân công; availability đội luôn phản ánh hiện tại.
-Runtime của nhánh DS1 có **16 operations / 7 màn hình**, vẫn V1–V6 và cùng Modular
-Monolith. Các mô tả E01–E15/S01–S06 bên dưới là phạm vi baseline trước DS1.
+Nền tảng Pha 1 đã hoàn tất toàn bộ **16 task lõi + 3 checkpoint UI** (`P00` → `A3`)
+cùng 2 gói mở rộng có kiểm soát (`DS1` Dashboard và `report-evidence-attachments`):
 
-Nền hiện tại đã tích hợp E01–E15, S01–S06, UI01-A/UI01-C1 và A1 security audit.
-Trạng thái merge và evidence tiếp tục được cập nhật tại [progress](docs/phase1-progress.md).
+- **Baseline MVP (`P00`):** **15 endpoints (`E01`–`E15`)**, **6 màn hình (`S01`–`S06`)**, **Flyway `V1`–`V6`**.
+- **Mở rộng có kiểm soát đã tích hợp vào `main`:**
+  - **DS1 (`E16 GET /api/dashboard`, màn hình `S07 /operations/dashboard`):** Tổng hợp báo cáo theo trạng thái, nhiệm vụ đang xử lý và đội cứu hộ rảnh cho `AUTHORITY` ([dashboard-contract.md](docs/api/dashboard-contract.md), [ADR-009](docs/adr/009-dashboard-statistics.md)).
+  - **Report Evidence Attachments (`E17`–`E20`, Flyway `V7`):** Đính kèm, liệt kê, tải và xóa ảnh minh chứng báo cáo lưu trữ riêng tư cho `PENDING` report ([report-evidence-attachments.md](docs/handoffs/report-evidence-attachments.md), [ADR-010](docs/adr/010-report-evidence-private-storage.md)).
+- **Tổng phạm vi runtime hiện tại:** **20 OpenAPI operations (`E01`–`E20`)**, **7 màn hình (`S01`–`S07`)**, **Flyway `V1`–`V7`** (không chứa credentials/demo accounts trong SQL; Hibernate `ddl-auto: validate`).
 
-| Phần | Đã triển khai | Còn lại theo catalog |
+| Phần | Đã triển khai | Trạng thái nghiệm thu Pha 1 |
 | --- | --- | --- |
-| Identity / P01 | E01 login, E02 me; JWT/BCrypt/demo seed; CITIZEN/AUTHORITY | A2 CI/E2E và các cổng tích hợp sau |
-| Disaster / C1 | E03–E06; ACTIVE→RESOLVED; S05 `/operations/disasters` | UI01-B audit chung |
-| Reporting / B1+B2+B3 | E07–E11; S02/S03/S04; ownership/radius/mission progress | UI01-B/X2 hồi quy xuyên luồng |
-| Rescue / D1+D2 | E12–E15; S06 `/operations/rescue`; concurrency | UI01-B/X2 hồi quy xuyên luồng |
-| Shared UI / A1 | Role nav/guard, memory session, error behavior, exact API allowlist | A2 runtime đã có; CI E2E chờ X2 |
+| Identity / P01 | E01 login, E02 me; JWT/BCrypt/idempotent demo seed; CITIZEN/AUTHORITY | Đã tích hợp & kiểm toán (`PASS`) |
+| Disaster / C1 | E03–E06; ACTIVE→RESOLVED; S05 `/operations/disasters` | Đã tích hợp & kiểm toán (`PASS`) |
+| Reporting / B1+B2+B3 + Attachments | E07–E11, E17–E20; S02/S03/S04; ownership, PostGIS radius, mission progress, private evidence | Đã tích hợp & kiểm toán (`PASS`) |
+| Rescue / D1+D2 | E08 verified consumption, E12–E15; S06 `/operations/rescue`; atomic conditional update & partial unique index | Đã tích hợp & kiểm toán (`PASS`) |
+| Dashboard / DS1 | E16; S07 `/operations/dashboard`; read-only aggregation cho AUTHORITY | Đã tích hợp & kiểm toán (`PASS`) |
+| Shared UI / A1+A2+UI01+X1+X2 | Role nav/guard, tab-scoped session, exact API allowlist, Nginx SPA, CI + Playwright E2E | Đã tích hợp & kiểm toán (`PASS`) |
+| Architecture / Benchmark / Audit (C3+D3+A3) | ADRs `001`–`010`, k6 raw benchmark (`D3`), kịch bản demo 8–10 phút (`C3`), kiểm toán cuối (`A3`) | Hoàn tất trên nhánh `feat/a3-final-audit` |
 
-Swagger runtime công bố **E01–E15** và frontend production chạy cùng origin qua Nginx.
+Swagger runtime công bố **20 operations (`E01`–`E20`)** và frontend production chạy cùng origin qua Nginx.
 Browser không dùng hostname `backend`; mọi client API dùng path tương đối `/api`.
-
-Flyway hiện có **V1–V6** theo migration ledger; migration không chứa credentials/demo
-accounts và Hibernate validate schema. Xem [progress](docs/phase1-progress.md) và
-các handoff module cho contract, API examples và evidence.
+Xem [progress](docs/phase1-progress.md), [báo cáo kiểm toán cuối A3](docs/qa/phase1-final-audit.md)
+và các handoff module cho contract, API examples và evidence.
 
 ## Nguồn tài liệu và cách phát triển
 
@@ -78,6 +77,8 @@ các handoff module cho contract, API examples và evidence.
 | --- | --- |
 | Chọn task, owner, dependency, acceptance | [Kế hoạch duy nhất: 16 task lõi + 3 checkpoint UI](docs/PROMPTS_PHA_1_4_NGUOI.md) |
 | Tình trạng hiện tại và bằng chứng merge | [Progress](docs/phase1-progress.md), [handoffs](docs/handoffs/) |
+| Báo cáo kiểm toán cuối và nghiệm thu Pha 1 | [Final Audit A3](docs/qa/phase1-final-audit.md), [Handoff A3](docs/handoffs/A3.md) |
+| Kịch bản thuyết trình & demo 8–10 phút | [Demo Script](docs/qa/phase1-demo-script.md), [Handoff C3](docs/handoffs/C3.md) |
 | HTTP/API/role/race | [P00 contract](docs/api/phase1-contract.md), [OpenAPI](docs/api/phase1-contract.yaml) |
 | Published interfaces và cấp migration | [Module contracts/ledger](docs/architecture/phase1-module-contracts.md) |
 | Kiến trúc và quyết định | [Architecture](docs/architecture/architecture-overview.md), [ADRs](docs/adr/) |
@@ -89,9 +90,8 @@ các handoff module cho contract, API examples và evidence.
 
 Dependency đi vào domain/application; domain plain Java, không JPA/Spring/HTTP.
 Không truy cập infrastructure/table của module khác. Chiều published query mục tiêu
-là Rescue → Reporting → Disaster; E09 không gọi Rescue, UI tiến độ dùng E09 +E14.
-ReportingQuery đã có trong B2 và Rescue dùng published query contracts. Shared chỉ dành
-cho technical concerns nhỏ có nhu cầu.
+là Rescue → Reporting → Disaster (và Dashboard → Reporting/Rescue chỉ đọc); E09 không gọi Rescue, UI tiến độ dùng E09 + E14.
+Shared chỉ dành cho technical concerns nhỏ có nhu cầu.
 
 Resource/Alert, map/risk, user administration, refresh/register và event bus ngoài
 scope MVP. Không đưa microservices, broker, Redis hoặc hạ tầng Pha2 vào Pha1;
@@ -100,7 +100,7 @@ Pha2 cần benchmark, vấn đề đo được và ADR. Backlog sản phẩm kh�
 ## Stack và kiểm chứng
 
 Java 21 / Spring Boot 3.5.16 / Maven Wrapper 3.9.9, PostgreSQL 16/PostGIS 3.5, Flyway,
-JPA cho Identity/Disaster và JDBC data mapper cho Reporting. React/TypeScript/Vite
+JPA cho Identity/Disaster/Rescue và JDBC data mapper cho Reporting/Dashboard. React/TypeScript/Vite
 dùng phiên bản pin trong `frontend/package.json` và lockfile; Node pin tại `.nvmrc`.
 
 ```powershell
@@ -114,15 +114,17 @@ npm.cmd ci
 npm.cmd run typecheck
 npm.cmd test
 npm.cmd run build
+
+# Browser E2E (sau khi chạy .\scripts\dev.ps1 up)
+.\scripts\browser-e2e.ps1
 ```
 
-`mvnw test` chỉ unit/architecture, không thay thế full verify. Browser thật dùng
-`npm.cmd run test:login` sau khi backend/Vite đã chạy và nạp DEMO_* của cùng DB vào
-process env; xem [hướng dẫn checks](docs/P01_LOCAL.md#checks). Suite hiện bao gồm
-login, S05 và UI01; không phải toàn bộ luồng X2. C1 E2E tạo một disaster test thật
-và kết thúc nó trong DB local, không xóa dữ liệu qua SQL để làm test xanh.
+`mvnw test` chỉ unit/architecture, không thay thế full verify. Bộ Playwright E2E
+(`.\scripts\browser-e2e.ps1`) kiểm chứng trọn vẹn 23 kịch bản trình duyệt Chromium thật
+trên Docker Compose stack (`18 passed, 5 skipped` khi `VITE_MAP_PROVIDER=none`, `0 failed`).
+Xem [hướng dẫn checks](docs/P01_LOCAL.md#checks).
 
-CI hiện chạy backend verify, validate/build Compose images, Compose smoke và frontend
-typecheck/test/build; full browser E2E job chỉ ghép sau X2. Test counts và giới hạn môi trường được ghi
+CI (`.github/workflows/ci.yml`) gồm 4 jobs: `backend-verify`, `frontend-verify`,
+`compose-smoke` và `browser-e2e`. Test counts và giới hạn môi trường được ghi
 theo từng lần chạy trong handoff, không dùng con số cũ làm bằng chứng cho commit mới.
 Khi Maven mirror/IDE gây lỗi, xem phần xử lý trong [runbook](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md).
