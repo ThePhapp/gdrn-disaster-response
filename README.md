@@ -134,6 +134,9 @@ volume ảnh bền vững, giới hạn upload Nginx phù hợp và chính sách
 
 ## API và tài liệu báo cáo
 
+[Dữ liệu mẫu và hướng dẫn review sản phẩm](docs/PRODUCT_REVIEW.md): bộ tình huống
+cho cả hai citizen/authority, ảnh minh chứng và cách chạy môi trường review local.
+
 [**OpenAPI 3.0.3 — 20 operations**](docs/openapi.yaml) mô tả endpoint thực tế, DTO,
 validation, response, lỗi và quyền. Dán file vào Swagger Editor hoặc import bằng công
 cụ OpenAPI 3.x; Swagger runtime dùng `/v3/api-docs` (có thể khác ở mức mô tả lỗi/ví dụ).
