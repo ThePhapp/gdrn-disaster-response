@@ -319,27 +319,31 @@ function ReportList({ selectedId, onSelect, onWithdrawn }: {
           <ul className="report-list__items">
             {result.items.map(report => (
               <li key={report.id}>
-                <div className="report-list__item-row">
+                <div className="report-list__item-row" data-selected={selectedId === report.id}>
                   <button type="button" className="report-list__item" aria-pressed={selectedId === report.id} onClick={() => onSelect(report.id)}>
-                    <span className="report-list__item-main">
+                    <span className="report-list__item-heading">
                       <strong>{typeLabel(t, report.type)}</strong>
-                      <span>{report.description}</span>
-                      <small>{formatDate(report.createdAt)}</small>
+                      <ReportStatus status={report.status} />
                     </span>
-                    <ReportStatus status={report.status} />
+                    <span className="report-list__item-main">
+                      <span>{report.description}</span>
+                    </span>
                   </button>
-                  {report.status === 'PENDING' && (
-                    <button
-                      type="button"
-                      className="report-withdraw-btn"
-                      disabled={Boolean(withdrawingId)}
-                      onClick={event => {
-                        withdrawTriggerRef.current = event.currentTarget
-                        setActionError('')
-                        setConfirmingReport(report)
-                      }}
-                    >{t('citizen.withdraw')}</button>
-                  )}
+                  <div className="report-list__item-footer">
+                    <small>{formatDate(report.createdAt)}</small>
+                    {report.status === 'PENDING' && (
+                      <button
+                        type="button"
+                        className="report-withdraw-btn"
+                        disabled={Boolean(withdrawingId)}
+                        onClick={event => {
+                          withdrawTriggerRef.current = event.currentTarget
+                          setActionError('')
+                          setConfirmingReport(report)
+                        }}
+                      >{t('citizen.withdraw')}</button>
+                    )}
+                  </div>
                 </div>
               </li>
             ))}
