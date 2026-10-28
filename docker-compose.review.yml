@@ -1,0 +1,8 @@
+# Optional local product-review storage. Use together with docker-compose.yml.
+# Keep the same project name to retain the existing database-data volume.
+services:
+  backend:
+    volumes:
+      - review-attachment-data:/app/.data/report-attachments
+volumes:
+  review-attachment-data:

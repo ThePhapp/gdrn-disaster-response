@@ -289,6 +289,12 @@ Nhóm thực hiện tuần tự 8 bước chuẩn bị dưới đây trước gi
 ### Câu 7 (Lưu trữ): Việc lưu trữ file ảnh trên ổ cứng máy chủ cục bộ có hạn chế gì khi mở rộng?
 - **Trả lời:** Trong Pha 1, hình ảnh minh chứng được ghi vào thư mục máy chủ `.data/report-attachments`. Giải pháp này đơn giản nhưng có hạn chế là khiến máy chủ có trạng thái (Stateful), gây khó khăn khi mở rộng ngang thành nhiều máy chủ backend (Multi-node scaling) do các node không chia sẻ chung ổ cứng cục bộ. Hướng nâng cấp ở Pha 2 là chuyển sang dịch vụ lưu trữ đối tượng tương thích S3 (như MinIO hoặc AWS S3) kết hợp CDN để phục vụ ảnh tĩnh tốc độ cao.
 
+### Câu 8 (Kiến trúc & Dữ liệu): Tại sao module Reporting lại lựa chọn JDBC Data Mapper thay vì Spring Data JPA như Identity hay Disaster?
+- **Trả lời:** Theo [ADR-007](../adr/007-reporting-postgis-data-mapper.md), module Reporting là trung tâm tiếp nhận tin báo với tần suất ghi và truy vấn không gian PostGIS rất cao (hàm `ST_DWithin`, chuyển đổi geography, chỉ mục GiST). Việc sử dụng Spring Data JPA / Hibernate trong trường hợp này mang lại overhead lớn về entity tracking, dirty checking, và phụ thuộc phức tạp vào Hibernate Spatial dialect. Việc áp dụng JDBC Data Mapper thuần túy giúp nhóm kiểm soát trực tiếp câu lệnh SQL trắc địa, tối ưu hóa triệt để hiệu năng thông lượng (đạt 164 req/s ghi và gần 2,000 req/s đọc), đồng thời giữ Domain Model hoàn toàn độc lập với annotations ORM.
+
+### Câu 9 (Ranh giới Module): Khi không sử dụng Khóa ngoại (Foreign Key) xuyên module, hệ thống làm thế nào để đảm bảo tính toàn vẹn dữ liệu?
+- **Trả lời:** Theo triết lý Domain-Driven Design và Clean Architecture của Modular Monolith ([ADR-001](../adr/001-use-modular-monolith.md) và [ADR-008](../adr/008-reporting-decisions-and-query-contract.md)), mỗi module sở hữu một Bounded Context và schema độc lập. Thay vì dùng Database Foreign Key ràng buộc vật lý, tính toàn vẹn được thực thi ở tầng Application thông qua các **Published Query Contracts** (ví dụ `DisasterQuery` và `ReportingQuery`). Khi duyệt báo cáo hoặc phân công đội, use case gọi qua interface contract để xác thực trạng thái tài nguyên đích (ví dụ kiểm tra thảm họa đang `ACTIVE`, báo cáo đang `VERIFIED`). Điều này ngăn chặn sự khớp nối cứng về schema và cho phép tách thành microservices độc lập trong tương lai mà không cần refactor lại cơ sở dữ liệu.
+
 ---
 
 ## PHẦN 6 – Phương Án Demo Dự Phòng (Contingency Fallback Plans)

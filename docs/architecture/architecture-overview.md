@@ -6,16 +6,16 @@ Tài liệu này mô tả kiến trúc tổng thể của hệ thống **Global 
 
 ## 1. Tổng quan và Hiện trạng Kiến trúc Pha 1
 
-GDRN là hệ thống mô phỏng điều phối cứu trợ và ứng phó thảm họa thiên tai, phục vụ mục tiêu học thuật và nghiên cứu kiến trúc phần mềm. Toàn bộ các năng lực cốt lõi của **Pha 1 (MVP)** và các phần mở rộng scope đã được triển khai, kiểm chứng và tích hợp hoàn chỉnh trên nhánh `main`:
+GDRN là hệ thống mô phỏng điều phối cứu trợ và ứng phó thảm họa thiên tai, phục vụ mục tiêu học thuật và nghiên cứu kiến trúc phần mềm. Đối chiếu mã nguồn tại `main 2ddf9d0` ngày 28/10/2026: MVP và phần mở rộng đã có code; kết quả kiểm tra và giới hạn triển khai được ghi riêng trong [biên bản rà soát](../PHASE1_REVIEW.md). Phạm vi hiện có:
 
 - **Kiến trúc phân rã**: Đơn ứng dụng **Modular Monolith** (Java 21 / Spring Boot 3.5) đóng gói trong một tiến trình duy nhất, kết hợp cơ sở dữ liệu **PostgreSQL 16 + PostGIS 3.5**.
-- **Giao diện người dùng**: Ứng dụng đơn trang **SPA** (React 18 / TypeScript / Vite / Vanilla CSS Design Tokens) phục vụ qua Nginx container với reverse proxy `/api`.
+- **Giao diện người dùng**: Ứng dụng đơn trang **SPA** (React 19.3.0 / TypeScript / Vite / Vanilla CSS Design Tokens) phục vụ qua Nginx container với reverse proxy `/api`.
 - **Hệ thống API nghiệp vụ**: Hoàn thành 20 endpoints nghiệp vụ (E01–E20), bao gồm Identity (E01–E02), Disaster (E03–E06), Reporting (E07–E11), Rescue (E12–E15), Dashboard (E16) và Photo Attachments (E17–E20).
 - **Hệ thống màn hình**: 7 màn hình hoàn chỉnh (S01 Login, S02 Gửi báo cáo, S03 Báo cáo của tôi, S04 Điều phối duyệt báo cáo, S05 Quản lý thảm họa, S06 Phân công cứu hộ, S07 Dashboard thống kê).
 - **Cơ sở dữ liệu & Không gian**: Quản lý tiến hóa lược đồ qua 7 bản migration Flyway (V1–V7). Xử lý vị trí không gian địa lý WGS84 (SRID 4326) với PostGIS GiST index và JDBC Data Mapper.
 - **Bảo mật & Phiên làm việc**: Xác thực stateless Bearer JWT (HS256), phân quyền dựa trên vai trò `CITIZEN` / `AUTHORITY`, lưu trữ token trong `sessionStorage` phạm vi tab trình duyệt, bảo vệ default-deny trên toàn bộ endpoint.
 - **Chống xung đột & Concurrency**: Bảo vệ toàn vẹn bằng atomic conditional updates, unique index và partial unique index chống race condition ở tầng database.
-- **Đo lường & Kiểm chuẩn**: Bộ công cụ benchmark tải k6 và kịch bản Kaggle CPU (Task D3) đo lường các workload đọc/ghi thực tế.
+- **Đo lường & Kiểm chuẩn**: Bộ công cụ k6 có số đo local cho workload đọc/ghi; notebook Kaggle mới là preflight, chưa xác nhận server trên Kaggle.
 
 ---
 
@@ -40,8 +40,8 @@ flowchart TD
         BenchmarkRunner["Bộ công cụ kiểm chuẩn tải (Load Runner)<br/><i>[External System: k6 / Docker / Kaggle]</i><br/>Kích hoạt các kịch bản kiểm thử tải E07/E08<br/>để đo lường p50, p95, p99 và năng lực chịu tải."]
     end
 
-    Citizen -->|"Đăng nhập, gửi báo cáo (lat/lon), đính kèm ảnh,<br/>xem tiến độ và rút báo cáo (HTTPS / JSON)"| GDRN
-    Authority -->|"Quản lý thảm họa, duyệt/từ chối báo cáo,<br/>phân công đội cứu trợ, xem dashboard (HTTPS / JSON)"| GDRN
+    Citizen -->|"Đăng nhập, gửi báo cáo (lat/lon), đính kèm ảnh,<br/>xem tiến độ và rút báo cáo (HTTP local / JSON)"| GDRN
+    Authority -->|"Quản lý thảm họa, duyệt/từ chối báo cáo,<br/>phân công đội cứu trợ, xem dashboard (HTTP local / JSON)"| GDRN
     Responder -.->|"Báo cáo trạng thái nhiệm vụ cho điều phối viên"| Authority
 
     GDRN -.->|"Tải tile bản đồ nền hiển thị trên web client<br/>(HTTPS / Vector Tiles)"| MapProvider
@@ -61,9 +61,9 @@ flowchart TD
     end
 
     subgraph GDRNContainers ["Hệ thống GDRN (Docker Compose Topology)"]
-        subgraph WebContainer ["Frontend Web Container (Port 3000 -> 80)"]
+        subgraph WebContainer ["Frontend Web Container (FRONTEND_PORT mặc định 5173 -> 80)"]
             Nginx["<b>Web Server & Reverse Proxy</b><br/><i>[Nginx 1.27 Alpine]</i><br/>Phục vụ static assets của SPA.<br/>Proxy đường dẫn <code>/api/**</code> sang Backend.<br/>Cấu hình SPA fallback <code>try_files</code>."]
-            SPA["<b>Single Page Application (SPA)</b><br/><i>[React 18 / TypeScript / Vite]</i><br/>Crisis Command CSS design tokens, S01–S07,<br/>MapLibre GL bản đồ, i18n Anh/Việt,<br/>quản lý phiên trong tab-scoped sessionStorage."]
+            SPA["<b>Single Page Application (SPA)</b><br/><i>[React 19.3.0 / TypeScript / Vite]</i><br/>Crisis Command CSS design tokens, S01–S07,<br/>MapLibre GL bản đồ, i18n Anh/Việt,<br/>quản lý phiên trong tab-scoped sessionStorage."]
         end
 
         subgraph BackendContainer ["Backend Container (Port 8080)"]
@@ -74,12 +74,12 @@ flowchart TD
             PostgreSQL["<b>Cơ sở dữ liệu quan hệ & không gian</b><br/><i>[PostgreSQL 16 + PostGIS 3.5]</i><br/>Lưu trữ thực thể quan hệ, dữ liệu địa lý WGS84,<br/>chỉ mục GiST không gian, quản lý ràng buộc<br/>khóa ngoại nội module và partial unique index."]
         end
 
-        subgraph StorageVolume ["Private File Storage Volume"]
+        subgraph StorageVolume ["Private File Storage — chưa mount volume trong Compose"]
             AttachmentStorage["<b>Private Filesystem Storage</b><br/><i>[Local Disk: .data/report-attachments]</i><br/>Lưu trữ tệp nhị phân ảnh minh chứng (JPEG/PNG).<br/>Nằm ngoài thư mục web root, truy cập bảo mật<br/>thông qua Application Storage Port."]
         end
     end
 
-    Browser -->|"Tải trang web, CSS, JS<br/>[HTTPS / Port 3000]"| Nginx
+    Browser -->|"Tải trang web, CSS, JS<br/>[HTTP local / Port 5173]"| Nginx
     Nginx -->|"Phục vụ static files"| SPA
     SPA -->|"Gọi API nghiệp vụ và xác thực<br/>[JSON / REST qua proxy /api]"| Nginx
     Nginx -->|"Chuyển tiếp yêu cầu HTTP<br/>[HTTP / Port 8080]"| SpringBoot
@@ -97,84 +97,49 @@ Sơ đồ Component bóc tách bên trong khối **Backend Spring Boot Applicati
 
 ```mermaid
 flowchart TD
-    subgraph SharedInfrastructure ["Shared Technical Infrastructure"]
-        SecurityConfig["<b>SecurityConfiguration</b><br/>Stateless JWT Bearer Filter,<br/>Role mapping, Default-deny matcher"]
-        OpenApiConfig["<b>OpenApiConfiguration</b><br/>Tích hợp Swagger UI & OpenAPI specs"]
-        GlobalErrors["<b>SecurityErrorWriter & ProblemDetail</b><br/>Chuẩn hóa định dạng lỗi RFC 7807"]
+    subgraph Identity["Identity"]
+        IAPI["IdentityController"] --> IAPP["IdentityService / ProvisionDemoAccounts"]
+        IAPP --> IDOM["User / EmailAddress / Role"]
+        IAPP --> IPORT["AccountStore / Passwords / TokenIssuer ports"]
+        IINFRA["JpaAccountStore / EncodedPasswords / JwtConfiguration"] -.->|"implements"| IPORT
     end
-
-    subgraph IdentityModule ["Module Identity (com.gdrn.identity)"]
-        AuthController["<b>AuthController</b><br/>E01: POST /api/auth/login<br/>E02: GET /api/auth/me"]
-        IdentityService["<b>IdentityService</b><br/>Xác thực người dùng, cấp phát JWT,<br/>khởi tạo tài khoản demo profile"]
-        IdentityDomain["<b>Domain Model</b><br/>User, Role (CITIZEN, AUTHORITY),<br/>EmailAddress"]
-        IdentityInfra["<b>Infrastructure Adapters</b><br/>JpaUserRepository, JpaCredentialRepository,<br/>BCryptPasswordEncoder, NimbusTokenAdapter"]
+    subgraph Disaster["Disaster"]
+        DAPI["DisasterController"] --> DAPP["DisasterService"] --> DDOM["Disaster"]
+        DAPP --> DPORT["DisasterRepository port"]
+        DINFRA["JpaDisasterRepository"] -.->|"implements"| DPORT
+        DPUB["PublishedDisasterQuery"] --> DPORT
+        DPUB -.->|"implements"| DQUERY["DisasterQuery published contract"]
     end
-
-    subgraph DisasterModule ["Module Disaster (com.gdrn.disaster)"]
-        DisasterController["<b>DisasterController</b><br/>E03: GET /api/disasters<br/>E04: GET /api/disasters/{id}<br/>E05: POST /api/disasters<br/>E06: PATCH /api/disasters/{id}"]
-        DisasterService["<b>DisasterService</b><br/>Quản lý vòng đời thảm họa<br/>ACTIVE -> RESOLVED"]
-        DisasterContract["<b>Published Contract: DisasterQuery</b><br/>findById(id), findByIds(ids)<br/>DisasterSnapshot, DisasterState"]
-        DisasterDomain["<b>Domain Model</b><br/>Disaster, DisasterType, DisasterStatus"]
-        DisasterInfra["<b>Infrastructure Adapters</b><br/>JpaDisasterRepository,<br/>PublishedDisasterQuery Adapter"]
+    subgraph Reporting["Reporting"]
+        RAPI["ReportController E07–E11/E17–E20"] --> RAPP["ReportService / ReportModerationService / ReportAttachmentService"]
+        RAPP --> RDOM["Report / Coordinates / ReportAttachment"]
+        RAPP --> RPORT["ReportStore / DisasterLookup / attachment ports"]
+        RINFRA["JdbcReportStore / DisasterQueryAdapter / file adapters"] -.->|"implements"| RPORT
+        RPUB["PublishedReportingQuery"] --> RPORT
+        RPUB -.->|"implements"| RQUERY["ReportingQuery published contract"]
+        RSTAT["JdbcReportStatistics"] -.->|"implements"| RSTATQUERY["ReportStatisticsQuery published contract"]
     end
-
-    subgraph ReportingModule ["Module Reporting (com.gdrn.reporting)"]
-        ReportController["<b>ReportController</b><br/>E07: Tạo báo cáo<br/>E08: Danh sách/lọc bán kính<br/>E09: Chi tiết báo cáo<br/>E10: Duyệt/Từ chối<br/>E11: Rút báo cáo"]
-        ReportAttachmentController["<b>ReportAttachmentController</b><br/>E17: Upload ảnh<br/>E18: Danh sách ảnh<br/>E19: Tải nội dung ảnh<br/>E20: Xóa ảnh"]
-        ReportService["<b>Application Services</b><br/>ReportService, ReportModerationService,<br/>ReportAttachmentService"]
-        ReportContracts["<b>Published Contracts:</b><br/>- ReportingQuery (cho Rescue)<br/>- ReportStatisticsQuery (cho Dashboard)"]
-        ReportingDomain["<b>Domain Model</b><br/>IncidentReport, Coordinates (WGS84),<br/>IncidentReportStatus, ReportEvidenceAttachment"]
-        ReportingInfra["<b>Infrastructure Adapters</b><br/>JdbcReportStore (PostGIS Mapper, GiST),<br/>FilesystemAttachmentStorageAdapter,<br/>DisasterLookupAdapter"]
+    subgraph Rescue["Rescue"]
+        CAPI["RescueController"] --> CAPP["RescueService"] --> CDOM["Mission / RescueTeam"]
+        CAPP --> CPORT["MissionRepository / RescueTeamRepository / ReportLookupPort"]
+        CINFRA["JdbcMissionStore / JdbcRescueTeamStore / ReportingQueryAdapter"] -.->|"implements"| CPORT
+        CSTAT["JdbcRescueStatistics"] -.->|"implements"| CSTATQUERY["RescueStatisticsQuery published contract"]
     end
-
-    subgraph RescueModule ["Module Rescue (com.gdrn.rescue)"]
-        RescueController["<b>RescueController</b><br/>E12: Danh sách đội cứu hộ<br/>E13: Phân công nhiệm vụ<br/>E14: Tra cứu nhiệm vụ<br/>E15: Cập nhật tiến độ"]
-        RescueService["<b>RescueService</b><br/>Phân công đội, kiểm tra điều kiện thảm họa,<br/>chuyển trạng thái ASSIGNED -> IN_PROGRESS -> COMPLETED"]
-        RescueContract["<b>Published Contract:</b><br/>RescueStatisticsQuery (cho Dashboard)"]
-        RescueDomain["<b>Domain Model</b><br/>RescueMission, RescueTeam,<br/>MissionStatus, RescueTeamStatus"]
-        RescueInfra["<b>Infrastructure Adapters</b><br/>JdbcRescueStore, JdbcRescueTeamStore<br/>(Khóa chống race condition đội & nhiệm vụ),<br/>ReportLookupAdapter"]
+    subgraph Dashboard["Dashboard — read use case, không có domain aggregate"]
+        BAPI["DashboardController"] --> BAPP["DashboardService"] --> BPORT["DashboardStatistics port"]
+        BINFRA["ModuleDashboardStatistics / REPEATABLE READ"] -.->|"implements"| BPORT
     end
-
-    subgraph DashboardModule ["Module Dashboard (com.gdrn.dashboard)"]
-        DashboardController["<b>DashboardController</b><br/>E16: GET /api/dashboard"]
-        DashboardService["<b>DashboardService</b><br/>Tổng hợp số liệu báo cáo, nhiệm vụ & đội cứu hộ,<br/>áp dụng bộ lọc ngày Asia/Ho_Chi_Minh"]
-        DashboardInfra["<b>Dashboard Adapters</b><br/>ReportingStatisticsAdapter,<br/>RescueStatisticsAdapter<br/>(Repeatable Read read-only transaction)"]
-    end
-
-    %% Giao tiếp giữa các tầng trong module
-    AuthController --> IdentityService --> IdentityDomain
-    IdentityService --> IdentityInfra
-
-    DisasterController --> DisasterService --> DisasterDomain
-    DisasterService --> DisasterInfra
-    DisasterInfra -.->|Hiện thực| DisasterContract
-
-    ReportController --> ReportService
-    ReportAttachmentController --> ReportService
-    ReportService --> ReportingDomain
-    ReportService --> ReportingInfra
-    ReportingInfra -.->|Hiện thực| ReportContracts
-
-    RescueController --> RescueService --> RescueDomain
-    RescueService --> RescueInfra
-    RescueInfra -.->|Hiện thực| RescueContract
-
-    DashboardController --> DashboardService --> DashboardInfra
-
-    %% Giao tiếp liên module (Chỉ qua Published Application Contracts)
-    ReportingInfra -->|"Gọi DisasterLookupPort<br/>(DisasterQuery)"| DisasterContract
-    RescueInfra -->|"Gọi ReportLookupPort<br/>(ReportingQuery)"| ReportContracts
-    DashboardInfra -->|"Gọi ReportStatisticsPort"| ReportContracts
-    DashboardInfra -->|"Gọi RescueStatisticsPort"| RescueContract
-
-    %% Security áp dụng lên Controllers
-    SecurityConfig -.->|Bảo vệ đường dẫn & JWT| AuthController
-    SecurityConfig -.->|Bảo vệ đường dẫn & JWT| DisasterController
-    SecurityConfig -.->|Bảo vệ đường dẫn & JWT| ReportController
-    SecurityConfig -.->|Bảo vệ đường dẫn & JWT| ReportAttachmentController
-    SecurityConfig -.->|Bảo vệ đường dẫn & JWT| RescueController
-    SecurityConfig -.->|Bảo vệ đường dẫn & JWT| DashboardController
+    RINFRA -->|"DisasterQueryAdapter"| DQUERY
+    CINFRA -->|"ReportingQueryAdapter"| RQUERY
+    BINFRA --> RSTATQUERY
+    BINFRA --> CSTATQUERY
+    SHARED["shared: SecurityConfiguration / ApiError / OpenApiConfiguration"]
 ```
+
+Mũi tên thể hiện phụ thuộc mã nguồn/contract; nét đứt là hiện thực interface,
+không phải luồng xử lý HTTP. Spring configuration nối services với adapters lúc
+khởi tạo. `shared` giữ technical concerns; filter security áp dụng trước controller.
+
 
 ---
 
@@ -193,7 +158,7 @@ Infrastructure (Persistence, Adapters, Spring Security, External Storage)
 
 - **Domain độc lập tuyệt đối**: Viết hoàn toàn bằng Java thuần (POJO), không chứa bất kỳ annotation hay import nào từ Spring Framework, Jakarta Persistence (JPA), Jackson JSON hay PostgreSQL/PostGIS. Toàn bộ quy tắc tính hợp lệ và biến đổi trạng thái (Invariants) được thực thi trong Domain.
 - **Application Port / Adapter**: Mọi giao tiếp với thế giới bên ngoài (cơ sở dữ liệu, lưu trữ tệp, xác thực token) đều thông qua Interface (Port) định nghĩa ở tầng Application. Tầng Infrastructure cung cấp Adapter hiện thực các Interface này.
-- **Kiểm soát bằng ArchUnit**: Bộ kiểm tra kiến trúc tự động (`ArchUnitTest`) xác thực tính độc lập của Domain, ngăn chặn controller truy cập trực tiếp repository và cấm rò rỉ cơ sở hạ tầng giữa các module.
+- **Kiểm soát bằng ArchUnit**: Bộ kiểm tra kiến trúc tự động (`ArchitectureTests`) xác thực tính độc lập của Domain, ngăn chặn controller truy cập trực tiếp repository và cấm rò rỉ cơ sở hạ tầng giữa các module.
 
 ### 5.2. Giao tiếp liên Module và Ranh giới Dữ liệu
 Dự án áp dụng mô hình **Modular Monolith** chặt chẽ, không biến tướng thành "Distributed Monolith" hoặc Microservices phức tạp không cần thiết:
@@ -224,7 +189,7 @@ Hệ thống sử dụng một cơ sở dữ liệu duy nhất với 7 bản mig
 | **V4** | `V4__reporting_reports.sql` | Reporting | Bảng `reporting_reports`, cột `geography(Point, 4326)`, ràng buộc ban đầu PENDING. |
 | **V5** | `V5__reporting_verification_withdrawal.sql` | Reporting | Mở rộng trạng thái VERIFIED/REJECTED, metadata rút báo cáo `withdrawn_at`, GiST index không gian. |
 | **V6** | `V6__rescue_teams_and_missions.sql` | Rescue | Bảng `rescue_teams` và `rescue_missions`, UNIQUE `report_id`, partial unique index cho active team. |
-| **V7** | `V7__reporting_evidence_attachments.sql` | Reporting | Bảng `reporting_report_attachments`, metadata ảnh minh chứng (tối đa 5 ảnh/báo cáo, 5 MiB/ảnh). |
+| **V7** | `V7__reporting_evidence_attachments.sql` | Reporting | Bảng `reporting_report_attachments`, metadata ảnh minh chứng, CHECK 5 MiB/ảnh và FK nội Reporting; mức 5 ảnh/báo cáo do application + adapter kiểm soát. |
 
 ### 6.2. Dữ liệu Không gian PostGIS (Spatial Handling)
 - Lưu trữ tọa độ theo hệ quy chiếu chuẩn WGS84 (SRID 4326) bằng kiểu dữ liệu `geography(Point, 4326)`.
@@ -232,7 +197,7 @@ Hệ thống sử dụng một cơ sở dữ liệu duy nhất với 7 bản mig
   ```sql
   ST_DWithin(r.location, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography, :radiusMeters)
   ```
-- Sử dụng chỉ mục không gian **GiST** (`idx_reporting_reports_location_gist`) trên tập các báo cáo nhìn thấy được (chưa rút) để tối ưu hóa hiệu năng truy vấn lọc theo vùng địa lý.
+- Sử dụng chỉ mục không gian **GiST** (`reporting_reports_visible_location_idx`) trên tập các báo cáo nhìn thấy được (chưa rút) để tối ưu hóa hiệu năng truy vấn lọc theo vùng địa lý.
 - Truy vấn thông qua **JDBC Data Mapper** (`JdbcReportStore`) thuần SQL, loại bỏ phụ thuộc nặng nề vào Hibernate Spatial trong khi vẫn đảm bảo độ chính xác tính toán theo mét thực tế trên mặt cầu Trái Đất.
 
 ### 6.3. Kiểm soát Giao dịch và Xử lý Đồng thời (Concurrency Controls)
@@ -250,7 +215,6 @@ Hệ thống sử dụng một cơ sở dữ liệu duy nhất với 7 bản mig
      ```sql
      CREATE UNIQUE INDEX idx_rescue_missions_team_active
      ON rescue_missions (team_id)
-     ON CONFLICT DO NOTHING
      WHERE status IN ('ASSIGNED', 'IN_PROGRESS');
      ```
    - Xung đột tranh chấp đội cứu trợ được giải quyết triệt để ở tầng database, ngăn chặn hoàn toàn race condition khi có 2 yêu cầu phân công cùng lúc.
@@ -263,7 +227,7 @@ Hệ thống sử dụng một cơ sở dữ liệu duy nhất với 7 bản mig
 ## 7. Mô hình Bảo mật và Quản lý Phiên
 
 - **Stateless Bearer JWT**: Token JWT ngắn hạn được ký bằng thuật toán HS256 với secret key nạp từ biến môi trường. Không lưu trạng thái phiên trên server (Stateless).
-- **Tab-scoped Session**: Frontend lưu trữ token trong `sessionStorage`. Việc tải lại trang (reload) trong cùng tab giữ nguyên phiên làm việc; mở tab mới hoặc đóng trình duyệt yêu cầu đăng nhập lại, ngăn chặn rò rỉ token qua `localStorage`.
+- **Tab-scoped Session**: Frontend lưu token trong `sessionStorage`, khóa `gdrn.session`; reload cùng tab giữ phiên đến hết hạn. Logout/hết hạn xóa phiên; không có refresh token. Storage fallback dùng memory khi trình duyệt chặn storage. Không coi tab scope là bảo vệ trước XSS hoặc việc trình duyệt sao chép/khôi phục tab.
 - **Default-Deny Security Filter**: Cấu hình Spring Security áp dụng quy tắc mặc định từ chối (`anyRequest().denyAll()`). Từng endpoint được khai báo chính xác phương thức HTTP và quyền tương ứng (`ROLE_CITIZEN`, `ROLE_AUTHORITY`).
 - **Phân quyền dữ liệu ở Application Layer**:
   - Người dân (`CITIZEN`) chỉ được đọc và thao tác trên báo cáo do chính mình tạo ra (`reporterId == currentUserId`).
@@ -324,21 +288,3 @@ flowchart TD
   - Công cụ runner tự động lọc bỏ (redact) setup JWT token trước khi lưu `summary.json` và kiểm tra an toàn dữ liệu thô.
   - Bounded in-flight requests ngăn chặn tình trạng tràn bộ đệm k6 client.
   - Kết quả thô được lưu trữ tại `benchmark/results/20261024-142105-01` đến `benchmark/results/20261024-142703-01`.
-
----
-
-## 9. Định hướng Không gian Pha 2 (Architectural Non-Goals & Empirical Hypotheses)
-
-Để bảo đảm tính tập trung cho phạm vi Pha 1, hệ thống **chưa và không** triển khai các thành phần phân tán phức tạp khi chưa có bằng chứng thực nghiệm bắt buộc. Mọi đề xuất cải tiến cho Pha 2 được xây dựng dưới dạng **Giả thuyết khoa học được dẫn xuất trực tiếp từ số liệu đo lường Task D3**:
-
-1. **Giả thuyết 1 — Message Queue cho luồng ghi báo cáo (RabbitMQ / Kafka):**
-   - *Bằng chứng từ D3:* Cơ chế HTTP đồng bộ buộc Tomcat thread pool xử lý tuần tự toàn bộ chu trình xác thực JWT, mã hóa không gian PostGIS và ghi đĩa. Khi số lượng kết nối đồng thời tăng cao, thread pool trở thành điểm nghẽn (p99 đạt 105.28 ms tại 100 VU).
-   - *Đề xuất Pha 2:* Chuyển đổi endpoint `POST /api/reports` sang tiếp nhận bất đồng bộ (Asynchronous Ingestion) qua Message Queue, trả về mã xác nhận tức thì và phân tán xử lý ghi xuống database.
-2. **Giả thuyết 2 — Caching và Read Replica cho truy vấn không gian (Redis & PostgreSQL Replica):**
-   - *Bằng chứng từ D3:* Khi tải đọc tăng lên 100 VU, CPU của container Database tăng vọt lên mức trung bình 194.88% và đỉnh 333.07% do các hàm tính toán không gian trắc địa `ST_DWithin` và phân trang danh sách.
-   - *Đề xuất Pha 2:* Tích hợp bộ nhớ đệm phân tán Redis cho dữ liệu báo cáo đã thẩm định hoặc thiết lập PostgreSQL Read Replica để tách riêng lưu lượng đọc/ghi.
-3. **Các thành phần tiếp tục là Non-Goals cho đến khi có ADR mới:**
-   - Không chuyển đổi sang Microservices nếu Modular Monolith vẫn đáp ứng tốt thông lượng (hiện đạt gần 2,000 req/s trên 1 máy đơn).
-   - Không triển khai API Gateway hay Service Discovery khi hệ thống chỉ có một tiến trình deploy duy nhất.
-   - Không áp dụng giao dịch phân tán (2PC / Saga).
-   - Mọi thay đổi hạ tầng trong tương lai bắt buộc phải trải qua quy trình đo kiểm tải trước/sau (A/B baseline) và có Architecture Decision Record (ADR) phê duyệt chính thức theo quy định tại [CONTRIBUTING.md](../../CONTRIBUTING.md).

@@ -1,5 +1,18 @@
 # Tiến độ Pha 1
 
+**Rà soát tài liệu báo cáo — 28/10/2026, nền `main 2ddf9d0`:** nhánh
+`docs/phase1-review-handoff`, chỉ sửa tài liệu/validator. README, OpenAPI runtime
+20 operations và kịch bản nói 6 phút được đối chiếu code; không thay catalog hoặc
+quyết định kiến trúc. Backend clean verify **130 PASS, 0 skip**, frontend **93 PASS**
++ typecheck/build, Compose cô lập build/up/smoke PASS, browser **18 PASS/5 map skip**.
+Nginx upload đã tái hiện lỗi `413` cho ảnh hợp lệ ~3 MiB, Compose thiếu volume ảnh,
+npm audit báo 1 dependency high. Không kết luận production/Kaggle/remote CI đã đạt.
+Xem [biên bản mới](PHASE1_REVIEW.md) cho lệnh, Git authors và hiệu đính audit cũ.
+Các đoạn dưới là evidence lịch sử tại nhánh/commit đã ghi; C3/A3 đã nằm trong main
+qua các merge đến `2ddf9d0`. Notebook D3 hiện có là
+`benchmark/kaggle_cpu_preflight.ipynb`; không dùng đường dẫn notebook cũ bên dưới
+như bằng chứng file hoặc Kaggle completion.
+
 **A3 kiểm toán cuối & bàn giao Pha 1 — 28/10/2026:** trên nhánh `feat/a3-final-audit`
 (tách từ `feat/c3-architecture-docs` @ `07cd20e`, kế thừa `main` @ `935e9ea`), đã thực
 hiện kiểm toán độc lập toàn diện theo đúng đặc tả `A3`:
@@ -18,6 +31,11 @@ hiện kiểm toán độc lập toàn diện theo đúng đặc tả `A3`:
   notebook `benchmark/kaggle/gdrn-d3-kaggle-benchmark.ipynb` ở chế độ `PREFLIGHT_ONLY`); (2) Lượt chạy GitHub Actions
   từ xa trên nhánh `feat/a3-final-audit` chờ push; (3) Thao tác merge PR cuối (`C3`, `A3`) vào `main` và kiểm tra
   chế độ hiển thị `Public` của GitHub repo bàn giao cho chủ sở hữu repo.
+- **Hoàn thiện Bộ Tài Liệu Diễn Tập & Vận Hành Bảo Vệ Đồ Án:**
+  - Bổ sung tài liệu kịch bản dẫn lời và căn chỉnh thời gian cho từng thành viên: [defense-speaker-cues.md](qa/defense-speaker-cues.md).
+  - Bổ sung kế hoạch dự phòng rớt mạng và lỗi tile map: [demo-contingency-plan.md](qa/demo-contingency-plan.md).
+  - Bổ sung hướng dẫn xử lý sự cố Docker Desktop 29.x & Testcontainers: [docker-desktop-troubleshooting.md](qa/docker-desktop-troubleshooting.md).
+  - Bổ sung hướng dẫn chuẩn hóa phần cứng đo tải k6: [benchmark-hardware-normalization.md](benchmark/benchmark-hardware-normalization.md).
   Xem chi tiết tại [Báo cáo kiểm toán cuối A3](qa/phase1-final-audit.md) và [Handoff A3](handoffs/A3.md).
 
 **C3 tài liệu kiến trúc, ADR, Rubric & Kịch bản Demo — 28/10/2026:** hoàn tất trên nhánh
