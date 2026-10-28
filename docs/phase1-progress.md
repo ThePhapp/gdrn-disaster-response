@@ -31,6 +31,11 @@ hiện kiểm toán độc lập toàn diện theo đúng đặc tả `A3`:
   notebook `benchmark/kaggle/gdrn-d3-kaggle-benchmark.ipynb` ở chế độ `PREFLIGHT_ONLY`); (2) Lượt chạy GitHub Actions
   từ xa trên nhánh `feat/a3-final-audit` chờ push; (3) Thao tác merge PR cuối (`C3`, `A3`) vào `main` và kiểm tra
   chế độ hiển thị `Public` của GitHub repo bàn giao cho chủ sở hữu repo.
+- **Hoàn thiện Bộ Tài Liệu Diễn Tập & Vận Hành Bảo Vệ Đồ Án:**
+  - Bổ sung tài liệu kịch bản dẫn lời và căn chỉnh thời gian cho từng thành viên: [defense-speaker-cues.md](qa/defense-speaker-cues.md).
+  - Bổ sung kế hoạch dự phòng rớt mạng và lỗi tile map: [demo-contingency-plan.md](qa/demo-contingency-plan.md).
+  - Bổ sung hướng dẫn xử lý sự cố Docker Desktop 29.x & Testcontainers: [docker-desktop-troubleshooting.md](qa/docker-desktop-troubleshooting.md).
+  - Bổ sung hướng dẫn chuẩn hóa phần cứng đo tải k6: [benchmark-hardware-normalization.md](benchmark/benchmark-hardware-normalization.md).
   Xem chi tiết tại [Báo cáo kiểm toán cuối A3](qa/phase1-final-audit.md) và [Handoff A3](handoffs/A3.md).
 
 **C3 tài liệu kiến trúc, ADR, Rubric & Kịch bản Demo — 28/10/2026:** hoàn tất trên nhánh

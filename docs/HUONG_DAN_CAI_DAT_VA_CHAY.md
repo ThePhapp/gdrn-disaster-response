@@ -387,6 +387,27 @@ và bấm Thảm họa trên nav trong cùng tab. Citizen bị chặn đúng rol
 hoặc permitAll để mở trang. Nếu login thành công nhưng không thấy dữ liệu, kiểm tra
 Vite proxy trỏ đúng backend port và response E03; không tạo dữ liệu giả thay API.
 
+### Quy trình Xóa Volume Tạm (Disposable Volume Lifecycle & Clean Reproduction Recipe)
+
+Khi cần kiểm thử tái lập trạng thái từ một cơ sở dữ liệu hoàn toàn rỗng mà không làm mất dữ liệu của volume đang phát triển (`gdrn-disaster-response_database-data`):
+1. **Kiểm tra volume đang dùng:**
+   ```powershell
+   docker volume ls | Select-String "gdrn"
+   ```
+2. **Khởi chạy môi trường cô lập tạm thời:**
+   Chỉ định cờ `-p` để tạo namespace riêng biệt:
+   ```powershell
+   docker compose -p gdrn-disposable up -d database
+   ```
+   Lệnh này tạo volume riêng `gdrn-disposable_database-data`, hoàn toàn độc lập với volume chính.
+3. **Dọn dẹp volume tạm sau khi kiểm thử:**
+   ```powershell
+   docker compose -p gdrn-disposable down -v
+   ```
+   Tùy chọn `-v` chỉ xóa volume của namespace `gdrn-disposable`, tuyệt đối bảo vệ an toàn cho volume chính.
+4. **Tham khảo thêm sự cố Docker Desktop:**
+   Xem chi tiết tại [Hướng dẫn xử lý sự cố Docker Desktop](qa/docker-desktop-troubleshooting.md).
+
 ## 10. Kiểm tra đã cài thành công
 
 - Chạy Compose: `database` và `backend` đều `healthy`; hoặc database `healthy` và
