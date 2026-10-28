@@ -1,6 +1,7 @@
 # ADR 009 — Read-only dashboard through published aggregate contracts
 
-Date: 18/10/2026. Status: implemented on DS1 branch, pending review/merge.
+Date: 18/10/2026. Status: Accepted; implemented and merged via PR #29 (`392714e`).
+Status verified against Git history at `main 2ddf9d0`, 28/10/2026; decision unchanged.
 
 ## Context
 
