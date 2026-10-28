@@ -2,7 +2,7 @@
 
 ## DS1 bổ sung — 18/10/2026
 
-User yêu cầu dashboard AUTHORITY; [catalog DS1](../PROMPTS_PHA_1_4_NGUOI.md) và
+User yêu cầu dashboard AUTHORITY; [catalog DS1](../PHASE1_PLAN.md) và
 [contract E16/S07](../api/dashboard-contract.md) bổ sung scope baseline bên dưới.
 Dependency mới: `Dashboard → Reporting` và `Dashboard → Rescue`, chỉ qua
 `ReportStatisticsQuery` / `RescueStatisticsQuery` thuộc `application.contract` của
@@ -25,7 +25,7 @@ private; quyền citizen owner/AUTHORITY và giới hạn JPEG/PNG được ghi 
 **Contracts P00; tích hợp B1/C1 09/10/2026:** Identity V2, Disaster V3 và Reporting V4 đã có;
 DisasterQuery đã triển khai trong C1. ReportingQuery được triển khai trên nhánh B2
 từ ca3751d; xem [handoff B2](../handoffs/B2.md) và progress cho review/merge.
-Theo [kế hoạch](../PROMPTS_PHA_1_4_NGUOI.md), [HTTP/UI contract](../api/phase1-contract.md)
+Theo [kế hoạch](../PHASE1_PLAN.md), [HTTP/UI contract](../api/phase1-contract.md)
 và [ADR 005](../adr/005-phase1-mvp-auth-frontend.md).
 
 ## Chiều phụ thuộc và owner

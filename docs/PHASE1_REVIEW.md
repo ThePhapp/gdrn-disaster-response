@@ -200,3 +200,9 @@ không tính Q&A hoặc demo 8-10 phút vào thời lượng 5-7 phút. Chưa di
 - Đây là cập nhật tài liệu; không thay đổi API/schema/runtime, không tái đo
   benchmark, không chạy lại browser E2E hoặc xác nhận cloud/Kaggle/remote CI.
   Findings ở mục 5 giữ nguyên giới hạn bằng chứng của lần review ban đầu.
+
+Kiểm tra lại sau khi đồng bộ `main ed8491d`: clean verify **130 PASS, 0 skip**;
+frontend **101 tests PASS** + typecheck/build (kế thừa phần upload tại create và
+tiêu đề tab từ main); hai validator P00/runtime và Compose config **PASS**.
+README giữ bản ngắn, cập nhật liên kết tới `PHASE1_PLAN.md`, `CONTRIBUTING.md`,
+`GDRN_PROJECT_CONTEXT.md`; bản in kiểm tra vẫn **3 trang A4** cùng thiết lập trên.

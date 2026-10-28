@@ -22,7 +22,7 @@ WCAG 2.2 AA; các mục NOT RUN/skipped vẫn được ghi rõ bên dưới.
 - Đã kiểm tra code/routes thật và ancestry: S01–S06, UI01-C1, B3/C2/D2 đã merge;
   vị trí shared PR #16 `df4777f`, C2/S05 PR #17 `d72ecb1`, B3 PR #18
   `a7471f0`, D2 PR #20 `1b47b6f`. Gate bắt đầu UI01-B được đáp ứng.
-- Đã đọc AGENTS, context/architecture, P00/contracts, Quy tắc chung/catalog,
+- Đã đọc CONTRIBUTING, context/architecture, P00/contracts, Quy tắc chung/catalog,
   design system, handoffs UI01-A/UI01-C1/B3/C2/D2; handoff cũ là evidence lịch sử.
 - Chỉ thay production code shared `LocationMap.tsx`: lỗi renderer/tiles ở preview
   chỉ đọc nói tọa độ vẫn có trong chi tiết, không hứa nhập tọa độ trên màn hình chỉ đọc.

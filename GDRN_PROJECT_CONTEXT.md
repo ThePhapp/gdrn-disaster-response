@@ -1,19 +1,19 @@
-# GDRN — Codex Project Context & Engineering Specification
+# GDRN — Project Context & Engineering Specification
 
 > **Cách đọc hiện tại — 10/10/2026:** Đây là context dài hạn/backlog, không phải
-> implementation plan hay bản mô tả runtime. Dùng [catalog duy nhất](docs/PROMPTS_PHA_1_4_NGUOI.md)
+> implementation plan hay bản mô tả runtime. Dùng [catalog duy nhất](docs/PHASE1_PLAN.md)
 > cho scope/dependency, [progress](docs/phase1-progress.md) cho merge/evidence,
 > [architecture hiện tại](docs/architecture/architecture-overview.md) và contracts P00
 > cho kỹ thuật. P00/P01/B1/C1/UI01-A đã tích hợp trên main `78f164b`: E01–E09,
 > S01/S05, V1–V4 và shared Crisis Command UI. Phần API/schema/events/phân công/rubric
 > bên dưới là lịch sử hoặc mục tiêu dài hạn khi chưa được catalog MVP chọn triển khai.
 > “Event mặc định internal/in-process” trong context cũ không cho phép thêm event bus
-> vào MVP; ADR004 là đề xuất tương lai. Không chạy lại prompt đã hoàn tất.
+> vào MVP; ADR004 là đề xuất tương lai. Không triển khai lại nhiệm vụ đã hoàn tất.
 
 > **Tích hợp B1/C1 — 09/10/2026:** E01–E09 và S01/S05 đã có, Flyway V1–V4.
 > Reporting ownership/PostGIS dùng policy production; radius/verify/withdraw thuộc B2,
 > S02/S03 thuộc B3, Rescue vẫn chưa triển khai. Chỉ giao task theo
-> [kế hoạch duy nhất](docs/PROMPTS_PHA_1_4_NGUOI.md); xem
+> [kế hoạch duy nhất](docs/PHASE1_PLAN.md); xem
 > [kết quả tích hợp](docs/handoffs/B1-C1-integration.md) cho kiểm chứng hiện tại.
 
 
@@ -24,7 +24,7 @@
 
 > **Scope note P00 — 08/10/2026:** Phần bên dưới giữ nguyên bối cảnh dài hạn/backlog,
 > không phải danh sách đã implemented. Scope thực thi hiện tại theo
-> [kế hoạch MVP 4 người / 3 tuần](docs/PROMPTS_PHA_1_4_NGUOI.md),
+> [kế hoạch MVP 4 người / 3 tuần](docs/PHASE1_PLAN.md),
 > [15 API + 6 UI/OpenAPI](docs/api/phase1-contract.md),
 > [published contracts và migration ledger](docs/architecture/phase1-module-contracts.md),
 > [ADR 005](docs/adr/005-phase1-mvp-auth-frontend.md) và
@@ -44,11 +44,11 @@
 > **Course:** Kiến trúc phần mềm  
 > **Team size:** 4 thành viên  
 > **Development window:** theo kế hoạch MVP duy nhất (3 tuần dự kiến)
-> **Purpose of this file:** Lưu ngữ cảnh dài hạn cho Codex/AI coding agent; scope và runtime hiện tại theo các nguồn ở ghi chú đầu file.
+> **Purpose of this file:** Lưu đặc tả và định hướng phát triển dài hạn; scope và runtime hiện tại theo các nguồn ở ghi chú đầu file.
 
 ---
 
-## 0. Instructions for Codex / Coding Agent
+## 0. Engineering Guidelines
 
 Khi làm việc trong repository này, phải tuân thủ các nguyên tắc sau:
 
@@ -1009,7 +1009,7 @@ Metrics có thể gồm:
 
 # 21–22. Phân công và lịch triển khai
 
-Chỉ dùng [kế hoạch và 16 prompt MVP](docs/PROMPTS_PHA_1_4_NGUOI.md).
+Chỉ dùng [kế hoạch và 16 nhiệm vụ MVP](docs/PHASE1_PLAN.md).
 Đề xuất phân công module và lịch một tháng trước đây đã được thay thế; không dùng
 context dài hạn để cấp task, đổi owner hay mở rộng scope Pha 1.
 
@@ -1035,7 +1035,7 @@ Unless repository configuration specifies otherwise:
 
 # 24. Architecture Smells to Reject
 
-Codex phải cảnh báo hoặc tránh khi phát hiện:
+Các dấu hiệu cần xử lý trong quá trình review:
 
 ```text
 Controller -> JpaRepository trực tiếp
@@ -1086,7 +1086,7 @@ Repository nên có:
 ```text
 README.md
 ARCHITECTURE.md
-CODEX.md hoặc AGENTS.md
+CONTRIBUTING.md
 /docs
     /adr
     /diagrams
@@ -1140,6 +1140,7 @@ Không cố tối ưu tất cả quality attributes cùng lúc. Mỗi quyết đ
 
 ---
 
+<a id="phase1-acceptance"></a>
 # 27. Acceptance Criteria for Phase 1
 
 Pha 1 tối thiểu phải đáp ứng đề bài môn học:
@@ -1230,9 +1231,9 @@ Compare Quality Attributes + Trade-offs
 
 ---
 
-# 30. Prompt Context for Future Codex Tasks
+# 30. Feature Review Checklist
 
-Khi được yêu cầu implement một feature, Codex nên tự kiểm tra:
+Trước khi triển khai tính năng, cần kiểm tra:
 
 1. Feature thuộc bounded context nào?
 2. Business rule thuộc domain hay application?

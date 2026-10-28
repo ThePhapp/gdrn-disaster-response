@@ -5,6 +5,8 @@ import { EmptyState, ErrorMessage, Field, Loading, PageHeader } from '../../shar
 import { useI18n, type TranslationKey } from '../../shared/i18n'
 import { LocationMap, type LocationValue } from '../../shared/location'
 import { ReportAttachments } from '../reporting-attachments/ReportAttachments'
+import { ReportEvidencePicker } from '../reporting-attachments/ReportEvidencePicker'
+import { uploadReportAttachment } from '../reporting-attachments/reporting-attachments-api'
 import {
   createReport,
   getReport,
@@ -77,6 +79,11 @@ function CreateReportForm({ onCreated }: { onCreated: (report: Report) => void }
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
   const [requestError, setRequestError] = useState('')
+  const [evidence, setEvidence] = useState<File[]>([])
+  const [savedReport, setSavedReport] = useState<Report>()
+  const [uploadedCount, setUploadedCount] = useState(0)
+  const [uploading, setUploading] = useState(false)
+  const fieldsDisabled = busy || Boolean(savedReport)
   const parsedLatitude = latitude.trim() === '' ? undefined : Number(latitude)
   const parsedLongitude = longitude.trim() === '' ? undefined : Number(longitude)
   const selectedLocation = parsedLatitude !== undefined && parsedLongitude !== undefined
@@ -119,12 +126,24 @@ function CreateReportForm({ onCreated }: { onCreated: (report: Report) => void }
 
     const request: CreateReportRequest = { type, description: normalizedDescription, latitude: lat, longitude: lon }
     setBusy(true)
+    let created = savedReport
     try {
-      onCreated(await createReport(request))
+      if (!created) {
+        created = await createReport(request)
+        setSavedReport(created)
+      }
+      setUploading(evidence.length > 0)
+      for (const file of evidence) {
+        await uploadReportAttachment(created.id, file)
+        setEvidence(current => current.filter(item => item !== file))
+        setUploadedCount(current => current + 1)
+      }
+      onCreated(created)
     } catch (error) {
-      setRequestError(getErrorMessage(error, t))
+      setRequestError(created ? t('citizen.evidenceUploadError') : getErrorMessage(error, t))
     } finally {
       setBusy(false)
+      setUploading(false)
     }
   }
 
@@ -132,7 +151,7 @@ function CreateReportForm({ onCreated }: { onCreated: (report: Report) => void }
     <form className="report-form" onSubmit={submit} noValidate>
       <div className="report-form__field">
         <label htmlFor="report-type">{t('citizen.type')}</label>
-        <select id="report-type" value={type} onChange={event => setType(event.target.value as ReportType)}>
+        <select id="report-type" value={type} disabled={fieldsDisabled} onChange={event => setType(event.target.value as ReportType)}>
           {reportTypes.map(value => <option key={value} value={value}>{typeLabel(t, value)}</option>)}
         </select>
       </div>
@@ -142,6 +161,7 @@ function CreateReportForm({ onCreated }: { onCreated: (report: Report) => void }
         <textarea
           id="report-description"
           value={description}
+          disabled={fieldsDisabled}
           onChange={event => setDescription(event.target.value)}
           rows={5}
           maxLength={2000}
@@ -154,17 +174,21 @@ function CreateReportForm({ onCreated }: { onCreated: (report: Report) => void }
       </div>
 
       <div className="report-form__coordinates">
-        <Field id="report-latitude" label={`${t('citizen.latitude')} (latitude)`} inputMode="decimal" value={latitude}
+        <Field id="report-latitude" label={`${t('citizen.latitude')} (latitude)`} inputMode="decimal" value={latitude} disabled={fieldsDisabled}
           onChange={event => setCoordinate('latitude', event.target.value)} placeholder={t('citizen.latitudePlaceholder')} error={errors.latitude} />
-        <Field id="report-longitude" label={`${t('citizen.longitude')} (longitude)`} inputMode="decimal" value={longitude}
+        <Field id="report-longitude" label={`${t('citizen.longitude')} (longitude)`} inputMode="decimal" value={longitude} disabled={fieldsDisabled}
           onChange={event => setCoordinate('longitude', event.target.value)} placeholder={t('citizen.longitudePlaceholder')} error={errors.longitude} />
       </div>
 
-      <LocationMap value={selectedLocation} onChange={setLocation} disabled={busy}
+      <LocationMap value={selectedLocation} onChange={setLocation} disabled={fieldsDisabled}
         label={t('citizen.chooseLocation')} className="report-form__map" />
 
+      <ReportEvidencePicker files={evidence} uploadedCount={uploadedCount} disabled={busy} onChange={setEvidence} />
       {requestError && <ErrorMessage>{requestError}</ErrorMessage>}
-      <button type="submit" disabled={busy}>{busy ? t('citizen.sending') : t('citizen.send')}</button>
+      <button type="submit" disabled={busy}>{busy ? t(uploading ? 'attachments.uploading' : 'citizen.sending')
+        : savedReport ? t(evidence.length ? 'citizen.retryEvidence' : 'citizen.viewCreatedReport') : t('citizen.send')}</button>
+      {savedReport && !busy && evidence.length > 0 && <button type="button" className="secondary"
+        onClick={() => onCreated(savedReport)}>{t('citizen.viewCreatedReport')}</button>}
     </form>
   )
 }
@@ -319,27 +343,31 @@ function ReportList({ selectedId, onSelect, onWithdrawn }: {
           <ul className="report-list__items">
             {result.items.map(report => (
               <li key={report.id}>
-                <div className="report-list__item-row">
+                <div className="report-list__item-row" data-selected={selectedId === report.id}>
                   <button type="button" className="report-list__item" aria-pressed={selectedId === report.id} onClick={() => onSelect(report.id)}>
-                    <span className="report-list__item-main">
+                    <span className="report-list__item-heading">
                       <strong>{typeLabel(t, report.type)}</strong>
-                      <span>{report.description}</span>
-                      <small>{formatDate(report.createdAt)}</small>
+                      <ReportStatus status={report.status} />
                     </span>
-                    <ReportStatus status={report.status} />
+                    <span className="report-list__item-main">
+                      <span>{report.description}</span>
+                    </span>
                   </button>
-                  {report.status === 'PENDING' && (
-                    <button
-                      type="button"
-                      className="report-withdraw-btn"
-                      disabled={Boolean(withdrawingId)}
-                      onClick={event => {
-                        withdrawTriggerRef.current = event.currentTarget
-                        setActionError('')
-                        setConfirmingReport(report)
-                      }}
-                    >{t('citizen.withdraw')}</button>
-                  )}
+                  <div className="report-list__item-footer">
+                    <small>{formatDate(report.createdAt)}</small>
+                    {report.status === 'PENDING' && (
+                      <button
+                        type="button"
+                        className="report-withdraw-btn"
+                        disabled={Boolean(withdrawingId)}
+                        onClick={event => {
+                          withdrawTriggerRef.current = event.currentTarget
+                          setActionError('')
+                          setConfirmingReport(report)
+                        }}
+                      >{t('citizen.withdraw')}</button>
+                    )}
+                  </div>
                 </div>
               </li>
             ))}

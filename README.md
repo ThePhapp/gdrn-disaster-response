@@ -136,7 +136,8 @@ Nhóm nhận đọc README → [API](docs/openapi.yaml) → [contracts/ADRs](doc
 → [evidence/hạn chế](docs/PHASE1_REVIEW.md), tự chạy stack và checks. Giữ các ràng buộc
 nghiệp vụ, module boundaries và migration đã phát hành. Đổi kiến trúc cần số liệu
 before/after và ADR; các nhận xét trên là findings bàn giao, không thay
-[catalog triển khai](docs/PROMPTS_PHA_1_4_NGUOI.md).
+[catalog triển khai](docs/PHASE1_PLAN.md), [quy tắc phát triển](CONTRIBUTING.md) và
+[bối cảnh dài hạn](GDRN_PROJECT_CONTEXT.md).
 
 ## 6. Khung trình bày 5-7 phút
 

@@ -5,7 +5,10 @@
 .report-attachments__upload { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: var(--gdrn-space-3); border: 1px dashed var(--gdrn-input-border); border-radius: var(--gdrn-radius-control); cursor: pointer; font-weight: 700; }
 .report-attachments__upload:hover { border-color: var(--gdrn-focus); background: var(--gdrn-info-surface); }
 .report-attachments__upload input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.report-attachments__upload[aria-disabled="true"] { cursor: not-allowed; opacity: 0.6; }
+.report-form .report-attachments__upload input { min-height: 0; padding: 0; border: 0; }
 .report-attachments__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: var(--gdrn-space-3); padding: 0; margin: 0; list-style: none; }
+.report-evidence-picker .report-attachments__grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 10rem), 1fr)); }
 .report-attachments__item { display: grid; gap: var(--gdrn-space-2); min-width: 0; padding: var(--gdrn-space-2); border: 1px solid var(--gdrn-border); border-radius: var(--gdrn-radius-control); background: var(--gdrn-canvas); }
 .report-attachments__item img, .report-attachments__placeholder { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: calc(var(--gdrn-radius-control) - 2px); background: var(--gdrn-info-surface); }
 .report-attachments__placeholder { display: grid; place-items: center; color: var(--gdrn-muted); font-size: var(--gdrn-text-xs); }

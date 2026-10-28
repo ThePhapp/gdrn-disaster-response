@@ -6,7 +6,7 @@
 **Vị trí trong repo:** `docs/design/GDRN_UI_DESIGN_SYSTEM.md`
 
 > Tài liệu này quy định **giao diện và trải nghiệm người dùng**, không thay thế
-> `AGENTS.md`, kế hoạch duy nhất tại `docs/PROMPTS_PHA_1_4_NGUOI.md`, hợp đồng P00
+> `CONTRIBUTING.md`, kế hoạch duy nhất tại `docs/PHASE1_PLAN.md`, hợp đồng P00
 > hay OpenAPI. Khi có xung đột về nghiệp vụ, API, quyền hoặc route, kế hoạch, hợp đồng
 > và code đã merge có ưu tiên cao hơn. Không đổi chức năng chỉ để khớp bản thiết kế.
 
@@ -28,11 +28,11 @@ Các câu dashboard ngoài scope phía dưới mô tả baseline trước ngoạ
 - **AUTHORITY (cơ quan chức năng):** giao diện điều hành có mật độ thông tin cao hơn; điều hướng xanh navy; bố cục danh sách–chi tiết–thao tác để xử lý nhiều báo cáo/nhiệm vụ.
 
 **Bổ sung phạm vi 14/10/2026, chưa triển khai:** cho phép bản đồ chọn/xem một vị trí
-và minh họa bán kính theo [catalog duy nhất](../PROMPTS_PHA_1_4_NGUOI.md#ui-vi-tri-sau-c2-d1).
+và minh họa bán kính theo [catalog duy nhất](../PHASE1_PLAN.md#ui-vi-tri-sau-c2-d1).
 Giữ nhập tay, fallback khi tiles lỗi, attribution, keyboard và shared tokens.
 Map chỉ hỗ trợ form/filter/detail, không thay danh sách, quyết định hay API thật.
 
-**Ngoài phạm vi Pha 1:** bản đồ tổng hợp, routing/tracking/geocoding, biểu đồ, dashboard số liệu, realtime feed, thông báo, upload, đăng nhập mạng xã hội, API/route mới, phân công tự động, tính năng AI. Không dùng dữ liệu giả trong runtime để làm đẹp giao diện. Hình minh họa chỉ mang tính nhận diện, không ngụ ý tính năng đã tồn tại.
+**Ngoài phạm vi Pha 1:** bản đồ tổng hợp, routing/tracking/geocoding, biểu đồ, dashboard số liệu, realtime feed, thông báo, upload, đăng nhập mạng xã hội, API/route mới, phân công tự động, tự động đánh giá rủi ro. Không dùng dữ liệu giả trong runtime để làm đẹp giao diện. Hình minh họa chỉ mang tính nhận diện, không ngụ ý tính năng đã tồn tại.
 
 ## 2. Nguyên tắc thiết kế
 
@@ -59,7 +59,7 @@ Khai báo biến CSS ngữ nghĩa trong shared theme. Không rải mã màu hex 
 | `--gdrn-border` | `#D6E0E8` | Đường phân cách, viền |
 | `--gdrn-muted` | `#506578` | Chữ phụ |
 
-Các màu trên là **giá trị khởi đầu**, không mặc định mọi tổ hợp chữ/nền đều đạt WCAG. Agent phải kiểm tra tương phản thật, bổ sung cặp foreground/background cho badge, button và các trạng thái.
+Các màu trên là **giá trị khởi đầu**, không mặc định mọi tổ hợp chữ/nền đều đạt WCAG. Cần kiểm tra tương phản thật, bổ sung cặp foreground/background cho badge, button và các trạng thái.
 
 **Trạng thái:** chỉ ánh xạ từ enum thực tế trong P00 và API. Không tự tạo enum mức độ thiên tai hay trạng thái mission mới. Mỗi trạng thái phải có **nhãn chữ + màu + biểu tượng khi cần**.
 
@@ -104,7 +104,7 @@ Tận dụng các component đã có từ P01 trước khi tạo mới. Chỉ x�
 - `StatusBadge`: nhãn trạng thái chính xác theo contract, màu và biểu tượng ngữ nghĩa.
 - `OperationalCard`: card nghiệp vụ có thanh nhấn trạng thái khi phù hợp.
 - `EmptyState`, `ErrorState`, `LoadingState`: trạng thái thống nhất.
-- `ConfirmDialog`: dùng cho hành động không thể đảo ngược hoặc destructive theo prompt nghiệp vụ.
+- `ConfirmDialog`: dùng cho hành động không thể đảo ngược hoặc destructive theo yêu cầu nghiệp vụ.
 - `FormField`, `Pagination`, `FilterBar`, `DetailPanel`: bổ sung nếu màn hình thật cần.
 
 Phải thiết kế các trạng thái `idle`, `loading`, `success`, `empty`, `validation error`, `request error`, `401`, `403`, `404`, `409`. Khi có thể, giữ kích thước layout ổn định trong lúc tải. Dialog phải có nhãn, điều khiển focus và trả focus hợp lý sau khi đóng.
@@ -136,7 +136,7 @@ Route ở bảng chỉ là tham chiếu theo kế hoạch. Với S05 và các fe
 
 ## 8. Giới hạn kỹ thuật và ownership
 
-1. Trước khi sửa, đọc `AGENTS.md`, kế hoạch MVP, P00 contracts, code frontend thật và các handoff liên quan.
+1. Trước khi sửa, đọc `CONTRIBUTING.md`, kế hoạch MVP, P00 contracts, code frontend thật và các handoff liên quan.
 2. **Người 1:** shared theme/layout/components/login/router. **Người 2:** Citizen Reporting. **Người 3:** Disaster và Operations Reporting. **Người 4:** Rescue.
 3. Không sửa file feature của owner khác khi chưa phối hợp. Nếu muốn chỉnh S05, người 1 chỉ đưa đề xuất; người 3 thực hiện/review phần sửa thuộc Disaster.
 4. Giữ nguyên token trong memory, router guards, API client, quyền, lỗi HTTP, request/response, business semantics, tests và backend behavior.
@@ -146,8 +146,8 @@ Route ở bảng chỉ là tham chiếu theo kế hoạch. Với S05 và các fe
 
 ## 9. Trình tự cải tạo sau khi P00/P01/C1/B1 đã hoàn thành
 
-Ba checkpoint UI dưới đây đã được đăng ký trong catalog chính. Prompt thực thi nằm
-ở `GDRN_UI01_PROMPTS.md`; file đó là phụ lục prompt, không phải kế hoạch độc lập.
+Ba checkpoint UI dưới đây đã được đăng ký trong catalog chính. Tiêu chí triển khai nằm
+ở `GDRN_UI_CHECKPOINTS.md`; file đó là phụ lục nghiệm thu, không phải kế hoạch độc lập.
 Không chạy lại P00/P01/B1/C1 và không coi việc thêm tài liệu UI là task đã hoàn tất.
 
 **UI01-A — Người 1:** audit frontend hiện tại; thêm tokens/components nền; cải tạo S01; lập checklist đề xuất S05. Chỉ sửa shared UI và phần login thuộc người 1.
@@ -162,7 +162,7 @@ dùng E07–E09 sau UI01-A, nhưng chỉ DONE khi B2 và D1 đã cung cấp with
 giao diện và accessibility; lỗi shared do người 1 xử lý, lỗi feature giao owner tương
 ứng. UI01-B phải đạt trước X1 feature freeze.
 
-**Điều kiện kiểm tra tại mỗi bước:** chạy frontend `typecheck`, `test` không watch, `build`; backend verify theo `AGENTS.md` nếu được yêu cầu; thử trình duyệt thật nếu có công cụ. Nếu không thử được browser, ghi **NOT RUN**, nêu checklist thủ công, không báo PASS giả. Mỗi task cập nhật `docs/handoffs/UI01-*.md` và tiến độ thật.
+**Điều kiện kiểm tra tại mỗi bước:** chạy frontend `typecheck`, `test` không watch, `build`; backend verify theo `CONTRIBUTING.md` nếu được yêu cầu; thử trình duyệt thật nếu có công cụ. Nếu không thử được browser, ghi **NOT RUN**, nêu checklist thủ công, không báo PASS giả. Mỗi task cập nhật `docs/handoffs/UI01-*.md` và tiến độ thật.
 
 ## 10. Checklist review thiết kế
 
