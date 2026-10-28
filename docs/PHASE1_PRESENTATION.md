@@ -1,9 +1,14 @@
-# Kịch bản thuyết trình Phase 1 — khoảng 6 phút
+# Kịch bản thuyết trình Phase 1 — 5-7 phút, mục tiêu 6 phút
 
 Đây là **kịch bản nói**, tách với [demo thao tác 8–10 phút](qa/phase1-demo-script.md).
 Mốc mã nguồn: `main 2ddf9d0`, rà soát 28/10/2026. Đọc với nhịp vừa, nghỉ ngắn ở mỗi
 đoạn; phân bổ 1 + 1,5 + 1,5 + 1 + 1 phút. Thời lượng là ước lượng theo nội dung,
 chưa diễn tập có bấm giờ; nhóm nên đọc thử trước buổi báo cáo.
+
+Thứ tự trình bày bám [README](../README.md): bài toán/nghiệp vụ, tổ chức mã và
+yêu cầu kỹ thuật, build/deploy/API, rồi vấn đề hiện có và bàn giao Phase 2.
+Mở sẵn `docs/openapi.yaml` trong Swagger Editor hoặc Swagger UI local; chỉ giới
+thiệu một request/response để giữ thời lượng. Q&A và demo dài nằm ngoài 5-7 phút.
 
 ## 0:00–1:00 — Bài toán và mục tiêu
 
