@@ -2,8 +2,6 @@
 
 Ngày 14/10/2026. Checkout review: `888996a`. C2 implementation `ad7a010`, merge
 PR #9 `120dec8`; D1 merge PR #11 `e380d68`, fix review `888996a`.
-Tài liệu này ghi evidence review, không phải implementation plan. Plan/prompt UI
-vị trí chỉ ở [catalog](../PROMPTS_PHA_1_4_NGUOI.md#ui-vi-tri-sau-c2-d1).
 
 ## Kết luận và phạm vi
 

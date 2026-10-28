@@ -40,7 +40,6 @@ contains larger role/module/API/event proposals that cannot all fit this MVP.
 
 ## Decision for implementation
 
-Use the [three-week plan](../PROMPTS_PHA_1_4_NGUOI.md) and exactly
 [E01–E15 / S01–S06](../api/phase1-contract.md). Keep one Spring Boot modular monolith,
 Java 21 and one PostgreSQL/PostGIS database. Identity, Disaster, Reporting and Rescue
 are the active business slices. Geo radius filtering belongs to Reporting's adapter.

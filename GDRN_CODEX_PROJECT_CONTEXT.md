@@ -1,19 +1,16 @@
 # GDRN — Codex Project Context & Engineering Specification
 
 > **Cách đọc hiện tại — 10/10/2026:** Đây là context dài hạn/backlog, không phải
-> implementation plan hay bản mô tả runtime. Dùng [catalog duy nhất](docs/PROMPTS_PHA_1_4_NGUOI.md)
 > cho scope/dependency, [progress](docs/phase1-progress.md) cho merge/evidence,
 > [architecture hiện tại](docs/architecture/architecture-overview.md) và contracts P00
 > cho kỹ thuật. P00/P01/B1/C1/UI01-A đã tích hợp trên main `78f164b`: E01–E09,
 > S01/S05, V1–V4 và shared Crisis Command UI. Phần API/schema/events/phân công/rubric
 > bên dưới là lịch sử hoặc mục tiêu dài hạn khi chưa được catalog MVP chọn triển khai.
 > “Event mặc định internal/in-process” trong context cũ không cho phép thêm event bus
-> vào MVP; ADR004 là đề xuất tương lai. Không chạy lại prompt đã hoàn tất.
 
 > **Tích hợp B1/C1 — 09/10/2026:** E01–E09 và S01/S05 đã có, Flyway V1–V4.
 > Reporting ownership/PostGIS dùng policy production; radius/verify/withdraw thuộc B2,
 > S02/S03 thuộc B3, Rescue vẫn chưa triển khai. Chỉ giao task theo
-> [kế hoạch duy nhất](docs/PROMPTS_PHA_1_4_NGUOI.md); xem
 > [kết quả tích hợp](docs/handoffs/B1-C1-integration.md) cho kiểm chứng hiện tại.
 
 
@@ -24,7 +21,6 @@
 
 > **Scope note P00 — 08/10/2026:** Phần bên dưới giữ nguyên bối cảnh dài hạn/backlog,
 > không phải danh sách đã implemented. Scope thực thi hiện tại theo
-> [kế hoạch MVP 4 người / 3 tuần](docs/PROMPTS_PHA_1_4_NGUOI.md),
 > [15 API + 6 UI/OpenAPI](docs/api/phase1-contract.md),
 > [published contracts và migration ledger](docs/architecture/phase1-module-contracts.md),
 > [ADR 005](docs/adr/005-phase1-mvp-auth-frontend.md) và
@@ -1009,7 +1005,6 @@ Metrics có thể gồm:
 
 # 21–22. Phân công và lịch triển khai
 
-Chỉ dùng [kế hoạch và 16 prompt MVP](docs/PROMPTS_PHA_1_4_NGUOI.md).
 Đề xuất phân công module và lịch một tháng trước đây đã được thay thế; không dùng
 context dài hạn để cấp task, đổi owner hay mở rộng scope Pha 1.
 
@@ -1230,7 +1225,6 @@ Compare Quality Attributes + Trade-offs
 
 ---
 
-# 30. Prompt Context for Future Codex Tasks
 
 Khi được yêu cầu implement một feature, Codex nên tự kiểm tra:
 

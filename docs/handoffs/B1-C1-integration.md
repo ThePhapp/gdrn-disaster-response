@@ -1,7 +1,6 @@
 # Tích hợp B1/C1 vào kế hoạch duy nhất
 
 Ngày 09/10/2026. Theo yêu cầu người dùng: hòa giải hai nhánh feature và merge main,
-chạy lại với code thống nhất theo `docs/PROMPTS_PHA_1_4_NGUOI.md`.
 
 ## Nền và xử lý conflict
 

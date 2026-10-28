@@ -6,7 +6,6 @@
 **Vị trí trong repo:** `docs/design/GDRN_UI_DESIGN_SYSTEM.md`
 
 > Tài liệu này quy định **giao diện và trải nghiệm người dùng**, không thay thế
-> `AGENTS.md`, kế hoạch duy nhất tại `docs/PROMPTS_PHA_1_4_NGUOI.md`, hợp đồng P00
 > hay OpenAPI. Khi có xung đột về nghiệp vụ, API, quyền hoặc route, kế hoạch, hợp đồng
 > và code đã merge có ưu tiên cao hơn. Không đổi chức năng chỉ để khớp bản thiết kế.
 
@@ -28,7 +27,6 @@ Các câu dashboard ngoài scope phía dưới mô tả baseline trước ngoạ
 - **AUTHORITY (cơ quan chức năng):** giao diện điều hành có mật độ thông tin cao hơn; điều hướng xanh navy; bố cục danh sách–chi tiết–thao tác để xử lý nhiều báo cáo/nhiệm vụ.
 
 **Bổ sung phạm vi 14/10/2026, chưa triển khai:** cho phép bản đồ chọn/xem một vị trí
-và minh họa bán kính theo [catalog duy nhất](../PROMPTS_PHA_1_4_NGUOI.md#ui-vi-tri-sau-c2-d1).
 Giữ nhập tay, fallback khi tiles lỗi, attribution, keyboard và shared tokens.
 Map chỉ hỗ trợ form/filter/detail, không thay danh sách, quyết định hay API thật.
 
@@ -104,7 +102,6 @@ Tận dụng các component đã có từ P01 trước khi tạo mới. Chỉ x�
 - `StatusBadge`: nhãn trạng thái chính xác theo contract, màu và biểu tượng ngữ nghĩa.
 - `OperationalCard`: card nghiệp vụ có thanh nhấn trạng thái khi phù hợp.
 - `EmptyState`, `ErrorState`, `LoadingState`: trạng thái thống nhất.
-- `ConfirmDialog`: dùng cho hành động không thể đảo ngược hoặc destructive theo prompt nghiệp vụ.
 - `FormField`, `Pagination`, `FilterBar`, `DetailPanel`: bổ sung nếu màn hình thật cần.
 
 Phải thiết kế các trạng thái `idle`, `loading`, `success`, `empty`, `validation error`, `request error`, `401`, `403`, `404`, `409`. Khi có thể, giữ kích thước layout ổn định trong lúc tải. Dialog phải có nhãn, điều khiển focus và trả focus hợp lý sau khi đóng.
@@ -146,8 +143,6 @@ Route ở bảng chỉ là tham chiếu theo kế hoạch. Với S05 và các fe
 
 ## 9. Trình tự cải tạo sau khi P00/P01/C1/B1 đã hoàn thành
 
-Ba checkpoint UI dưới đây đã được đăng ký trong catalog chính. Prompt thực thi nằm
-ở `GDRN_UI01_PROMPTS.md`; file đó là phụ lục prompt, không phải kế hoạch độc lập.
 Không chạy lại P00/P01/B1/C1 và không coi việc thêm tài liệu UI là task đã hoàn tất.
 
 **UI01-A — Người 1:** audit frontend hiện tại; thêm tokens/components nền; cải tạo S01; lập checklist đề xuất S05. Chỉ sửa shared UI và phần login thuộc người 1.
