@@ -341,4 +341,4 @@ flowchart TD
    - Không chuyển đổi sang Microservices nếu Modular Monolith vẫn đáp ứng tốt thông lượng (hiện đạt gần 2,000 req/s trên 1 máy đơn).
    - Không triển khai API Gateway hay Service Discovery khi hệ thống chỉ có một tiến trình deploy duy nhất.
    - Không áp dụng giao dịch phân tán (2PC / Saga).
-   - Mọi thay đổi hạ tầng trong tương lai bắt buộc phải trải qua quy trình đo kiểm tải trước/sau (A/B baseline) và có Architecture Decision Record (ADR) phê duyệt chính thức theo quy định tại [AGENTS.md](../../AGENTS.md).
+   - Mọi thay đổi hạ tầng trong tương lai bắt buộc phải trải qua quy trình đo kiểm tải trước/sau (A/B baseline) và có Architecture Decision Record (ADR) phê duyệt chính thức theo quy định tại [CONTRIBUTING.md](../../CONTRIBUTING.md).

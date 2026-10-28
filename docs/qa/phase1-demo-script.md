@@ -25,7 +25,7 @@ Trước buổi thuyết trình hoặc demo, khởi chạy toàn bộ hệ thố
 
 ### 1.2. Nguồn tài khoản lấy từ môi trường `.env`
 
-Theo nguyên tắc bảo mật của dự án ([AGENTS.md](../../AGENTS.md) và [P01_LOCAL.md](../P01_LOCAL.md)), thông tin đăng nhập không được hard-code mà được cấu hình trong tệp `.env` cục bộ (được sinh ngẫu nhiên an toàn qua `scripts/local.ps1 -Action setup`):
+Theo nguyên tắc bảo mật của dự án ([CONTRIBUTING.md](../../CONTRIBUTING.md) và [P01_LOCAL.md](../P01_LOCAL.md)), thông tin đăng nhập không được hard-code mà được cấu hình trong tệp `.env` cục bộ (được sinh ngẫu nhiên an toàn qua `scripts/local.ps1 -Action setup`):
 
 | Vai trò (Role) | Biến Email trong `.env` | Biến Mật khẩu trong `.env` | Mục đích trong kịch bản Demo |
 |---|---|---|---|

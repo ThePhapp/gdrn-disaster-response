@@ -75,7 +75,7 @@ và các handoff module cho contract, API examples và evidence.
 
 | Nhu cầu | Đọc ở đâu |
 | --- | --- |
-| Chọn task, owner, dependency, acceptance | [Kế hoạch duy nhất: 16 task lõi + 3 checkpoint UI](docs/PROMPTS_PHA_1_4_NGUOI.md) |
+| Chọn task, owner, dependency, acceptance | [Kế hoạch duy nhất: 16 task lõi + 3 checkpoint UI](docs/PHASE1_PLAN.md) |
 | Tình trạng hiện tại và bằng chứng merge | [Progress](docs/phase1-progress.md), [handoffs](docs/handoffs/) |
 | Báo cáo kiểm toán cuối và nghiệm thu Pha 1 | [Final Audit A3](docs/qa/phase1-final-audit.md), [Handoff A3](docs/handoffs/A3.md) |
 | Kịch bản thuyết trình & demo 8–10 phút | [Demo Script](docs/qa/phase1-demo-script.md), [Handoff C3](docs/handoffs/C3.md) |
@@ -85,8 +85,8 @@ và các handoff module cho contract, API examples và evidence.
 | Đo kiểm tải và bằng chứng hiệu năng | [Benchmark D3](docs/benchmark/D3.md), [Handoff D3](docs/handoffs/D3.md) |
 | Ma trận rubric và đối chiếu kiểm toán | [Rubric Phase 1](docs/qa/phase1-rubric.md) |
 | UI chung và cách dùng components | [Design system](docs/design/GDRN_UI_DESIGN_SYSTEM.md), [UI01-A](docs/handoffs/UI01-A.md) |
-| Quy tắc phát triển | [AGENTS.md](AGENTS.md) |
-| Tầm nhìn dài hạn/backlog | [Project context](GDRN_CODEX_PROJECT_CONTEXT.md) |
+| Quy tắc phát triển | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Tầm nhìn dài hạn/backlog | [Project context](GDRN_PROJECT_CONTEXT.md) |
 
 Dependency đi vào domain/application; domain plain Java, không JPA/Spring/HTTP.
 Không truy cập infrastructure/table của module khác. Chiều published query mục tiêu

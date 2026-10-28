@@ -83,15 +83,15 @@ qua PR #13 (`ff652bd`) và PR #14 (`242583c`).
 113 backend tests pass; smoke C2→D1 qua API thật pass. [Handoff D2](handoffs/D2.md)
 ghi 41 frontend tests, 1 browser E2E và 113 backend tests pass sau review.
 
-**UI bản đồ: UI01-A bổ sung đã merge PR #16 tại `df4777f`.** Phạm vi/prompt duy nhất nằm tại
-[UI vị trí sau C2/D1](PROMPTS_PHA_1_4_NGUOI.md#ui-vi-tri-sau-c2-d1).
-Xem [P00 handoff](handoffs/P00.md) và [kế hoạch/dependencies](PROMPTS_PHA_1_4_NGUOI.md).
+**UI bản đồ: UI01-A bổ sung đã merge PR #16 tại `df4777f`.** Phạm vi/nhiệm vụ duy nhất nằm tại
+[UI vị trí sau C2/D1](PHASE1_PLAN.md#ui-vi-tri-sau-c2-d1).
+Xem [P00 handoff](handoffs/P00.md) và [kế hoạch/dependencies](PHASE1_PLAN.md).
 
 **Bổ sung 09/10/2026 — F00 nền tảng chạy được:** hoàn tất readiness/liveness,
 script local, Compose smoke và full verification trên nhánh `feat/runnable-foundation`.
 Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền tảng đã merge qua
 `853a532`; các nhãn F00–F04 không phải task mới trong kế hoạch. Chỉ dùng 16 task lõi + 3 checkpoint UI ở
-[kế hoạch duy nhất](PROMPTS_PHA_1_4_NGUOI.md) để giao việc tiếp.
+[kế hoạch duy nhất](PHASE1_PLAN.md) để giao việc tiếp.
 
 | Task | Owner | Prerequisite đã merge | Trạng thái | Evidence / phần còn lại |
 | --- | --- | --- | --- | --- |
@@ -120,7 +120,7 @@ Toàn bộ 16 task lõi + 3 checkpoint UI cùng 2 gói mở rộng có kiểm so
 thao tác quản trị của chủ sở hữu repository (push/merge PR cuối `feat/a3-final-audit` vào `main`,
 xác nhận GitHub Actions từ xa trên PR và đặt chế độ hiển thị `Public` cho GitHub repository)
 được bàn giao minh bạch tại [Báo cáo kiểm toán cuối A3](qa/phase1-final-audit.md#62-các-bước-hành-động-thủ-công-bàn-giao-cho-chủ-sở-hữu-repository-post-audit-manual-actions).
-Chỉ thực hiện prompt được giao; bảng này không tự giao hoặc khởi chạy task tiếp theo.
+Chỉ thực hiện nhiệm vụ được giao; bảng này không tự giao hoặc khởi chạy task tiếp theo.
 
 ## Lịch sử rà soát tài liệu (10/10/2026)
 

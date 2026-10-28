@@ -46,8 +46,8 @@ thủ công bên dưới theo chính sách của máy. Script không tự thay e
 Docker/server/native command lỗi sẽ trả exit code 1; không coi container vừa chạy
 là ứng dụng đã sẵn sàng. Health không lộ chi tiết kết nối database.
 
-Task phát triển chỉ lấy từ [kế hoạch duy nhất](PROMPTS_PHA_1_4_NGUOI.md).
-[Handoff nền tảng](handoffs/F00.md) lưu kết quả lịch sử, không phải prompt giao việc.
+Task phát triển chỉ lấy từ [kế hoạch duy nhất](PHASE1_PLAN.md).
+[Handoff nền tảng](handoffs/F00.md) lưu kết quả lịch sử, không phải nhiệm vụ giao việc.
 
 ## 1. Chuẩn bị công cụ
 
@@ -395,5 +395,5 @@ Vite proxy trỏ đúng backend port và response E03; không tạo dữ liệu 
 - `clean verify` thành công nếu chuẩn bị môi trường để phát triển/test.
 - `.env` không được commit lên Git.
 
-Đọc thêm [README](../README.md), [quy tắc phát triển](../AGENTS.md) và
+Đọc thêm [README](../README.md), [quy tắc phát triển](../CONTRIBUTING.md) và
 [tổng quan kiến trúc](architecture/architecture-overview.md) trước khi bổ sung tính năng.
