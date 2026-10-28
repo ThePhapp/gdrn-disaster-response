@@ -146,5 +146,6 @@ Validator: `python docs/api/validate_openapi.py` với dependencies ghi trong fi
 [demo thao tác 8–10 phút](docs/qa/phase1-demo-script.md).
 - [Báo cáo rà soát/đóng góp/hạn chế](docs/PHASE1_REVIEW.md),
 [progress](docs/phase1-progress.md), [ADRs](docs/adr/).
-- [Catalog duy nhất để chọn task](docs/PROMPTS_PHA_1_4_NGUOI.md),
-[module contracts](docs/architecture/phase1-module-contracts.md), [AGENTS](AGENTS.md).
+- [Catalog duy nhất để chọn task](docs/PHASE1_PLAN.md),
+[module contracts](docs/architecture/phase1-module-contracts.md), [quy tắc phát triển](CONTRIBUTING.md),
+[bối cảnh dài hạn](GDRN_PROJECT_CONTEXT.md).

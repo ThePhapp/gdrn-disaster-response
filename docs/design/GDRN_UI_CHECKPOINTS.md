@@ -1,30 +1,14 @@
-# PHỤ LỤC PROMPT UI01 SAU P00, P01, C1, B1
+# Tiêu chí triển khai và nghiệm thu UI01
 
-**Ngôn ngữ:** Tiếng Việt. **Phạm vi:** cải tạo frontend theo
-`docs/design/GDRN_UI_DESIGN_SYSTEM.md`.
+Phạm vi: shared design system, S01, S05 và kiểm tra đồng nhất các màn hình Phase 1.
+Tài liệu này bổ sung tiêu chí UI cho [kế hoạch chính](../PHASE1_PLAN.md), không tạo
+task catalog thứ hai hoặc thay đổi contract nghiệp vụ. Dependency và owner theo
+kế hoạch; trạng thái triển khai xem [progress](../phase1-progress.md).
 
-File này là **phụ lục prompt thực thi** được catalog chính tại
-`docs/PROMPTS_PHA_1_4_NGUOI.md` viện dẫn. Nó không phải kế hoạch/task catalog thứ hai,
-không thay đổi 15 endpoint, 6 màn hình, owner hoặc dependency nghiệp vụ đã chốt.
-
-Tra [progress](../phase1-progress.md) trước khi copy prompt. Khối UI01-A được giữ để
-truy nguyên yêu cầu; không chạy lại nếu nhánh đã chứa implementation hoàn tất.
-
-**Điều kiện bắt đầu:** P00, P01, C1 và B1 đã merge vào nhánh tích hợp (nếu mới hoàn thành trên nhánh riêng, phải review/merge trước). Đặt file design system vào đúng `docs/design/GDRN_UI_DESIGN_SYSTEM.md` và commit để mọi nhánh cùng đọc được.
-
-**Cách dùng:** kiểm tra UI task tương ứng trong catalog chính rồi copy nguyên một khối
-prompt vào coding agent trên nhánh của owner. Đọc diff/tests và review trước khi merge;
-không chạy các khối liên tục trong cùng một phiên. UI01-A xong và merge rồi mới chạy
-UI01-C1 hoặc triển khai UI mới. UI01-B chỉ làm khi đủ 6 màn hình và là gate trước X1.
+UI01-A cần P00/P01/C1/B1 đã merge; UI01-C1 cần UI01-A. UI01-B kiểm tra sau khi đủ
+S01–S06 và các phần UI liên quan; đây là cổng nghiệm thu trước X1.
 
 ## UI01-A — Người 1: xây design system dùng chung và cải tạo S01 Login
-
-```text
-Thực hiện task UI01-A cho GDRN trên code hiện tại, sau khi P00, P01, C1, B1 đã merge.
-Đọc toàn bộ AGENTS.md áp dụng, kế hoạch và mục Quy tắc chung tại
-docs/PROMPTS_PHA_1_4_NGUOI.md, hợp đồng P00,
-docs/design/GDRN_UI_DESIGN_SYSTEM.md, handoff P01/C1 và code thật.
-Kiểm tra git status, git diff, commit nền, cấu trúc frontend/router/components trước khi sửa.
 
 Mục tiêu: xây dựng nhận diện GDRN Crisis Command trên nền React hiện có mà không
 regenerate frontend, không đổi API/auth/business logic và không làm màn hình ngoài
@@ -46,7 +30,7 @@ phạm vi task. Chỉ sở hữu shared frontend theme/layout/primitives và S01
 6. Kiểm tra nav theo role, 401/403, clear state khi logout; không lưu token vào
    `localStorage`, URL hoặc cookie, không sinh dữ liệu demo giả hoặc route mới.
 7. Chạy frontend typecheck, test chế độ không watch và build; backend verify
-   theo AGENTS.md. Thử browser thật nếu có công cụ; nếu không ghi NOT RUN kèm
+   theo CONTRIBUTING.md. Thử browser thật nếu có công cụ; nếu không ghi NOT RUN kèm
    checklist thao tác, tuyệt đối không báo PASS khi chưa kiểm tra.
 8. Ghi docs/handoffs/UI01-A.md: files, thay đổi hình thức, lệnh và output test,
    regression, blocker, hướng dẫn dùng tokens/components cho B3/C2/D2 và đề
@@ -55,13 +39,12 @@ phạm vi task. Chỉ sở hữu shared frontend theme/layout/primitives và S01
 Tiêu chí hoàn tất: S01 vẫn hoạt động với API thật; shared design system dùng được
 cho các feature; không regression auth/route; không sửa code owner khác.
 Không tự push, merge, deploy hoặc chạy UI01-C1/UI01-B.
-```
+
 
 ## UI01-C1 — Người 3: cải tạo S05 Disaster đã triển khai
 
-```text
 Thực hiện UI01-C1 sau khi UI01-A đã merge vào nhánh tích hợp.
-Đọc AGENTS.md, kế hoạch MVP, Quy tắc chung, P00 contracts,
+Đọc CONTRIBUTING.md, kế hoạch MVP, Quy tắc chung, P00 contracts,
 docs/design/GDRN_UI_DESIGN_SYSTEM.md, handoff C1/UI01-A và code thật.
 Kiểm tra git status/diff và route export S05 hiện tại.
 
@@ -77,33 +60,31 @@ vị trí 14/10 trong catalog; không thêm map ngoài phạm vi đó, dashboard
 API, dữ liệu giả hoặc module mới. Không sửa shared router/theme nếu chưa phối hợp
 người 1. Không thay backend, security, migration, OpenAPI.
 
-Chạy frontend typecheck, test không watch, build và backend verify theo AGENTS.md.
+Chạy frontend typecheck, test không watch, build và backend verify theo CONTRIBUTING.md.
 Thử UI trên browser thật nếu có công cụ; nếu không ghi NOT RUN và checklist thủ công.
 Ghi docs/handoffs/UI01-C1.md gồm file sửa, test/output thật, screenshot nếu có,
 kiểm tra bảo toàn nghiệp vụ và blockers. Cập nhật tiến độ. Không tự merge/push.
-```
+
 
 ## Hướng dẫn bổ sung cho B3, C2, D2
 
-```text
-Khi thực hiện task B3/C2/D2 theo prompt trong catalog chính, đọc thêm
+Khi thực hiện task B3/C2/D2 theo nhiệm vụ trong catalog chính, đọc thêm
 `docs/design/GDRN_UI_DESIGN_SYSTEM.md` và `docs/handoffs/UI01-A.md`.
 Xây màn hình mới theo đúng design tokens, shared components và phân biệt
 Citizen/Authority của GDRN Crisis Command. Giữ nguyên API, role, route,
-file ownership, acceptance và dependency của prompt gốc.
+file ownership, acceptance và dependency của nhiệm vụ gốc.
 Chỉ thêm map chọn/xem điểm và vòng radius theo mục UI vị trí 14/10 trong catalog;
 không thêm map tổng hợp/dashboard/số liệu giả chỉ để tăng độ đẹp. Không tự sửa theme,
 router hoặc feature người khác. Nếu phát hiện thiếu shared component, gửi
 đề xuất cụ thể cho người 1 và ghi blocker/handoff. Test giao diện và API thật.
-```
+
 
 ## UI01-B — Người 1 điều phối: kiểm tra đồng nhất cả 6 màn hình
 
-```text
 Thực hiện UI01-B chỉ sau khi S01–S06, UI01-C1 và các task UI có liên quan đã merge.
 Bao gồm phần UI vị trí bổ sung của UI01-A/UI01-C1/C2; kiểm tra fallback nhập tay,
 tiles lỗi, focus, attribution và toàn bộ ma trận regression trong catalog.
-Đọc AGENTS.md, P00, Quy tắc chung, docs/design/GDRN_UI_DESIGN_SYSTEM.md,
+Đọc CONTRIBUTING.md, P00, Quy tắc chung, docs/design/GDRN_UI_DESIGN_SYSTEM.md,
 handoffs UI01-A/UI01-C1 và handoffs của B3/C2/D2. Kiểm tra code thật.
 
 Audit tất cả 6 màn hình về màu, typography, spacing, bố cục Citizen/Authority,
@@ -112,20 +93,8 @@ loading/empty/error/401/403/404/409, xác nhận thao tác và luồng API thậ
 Không thêm tính năng, không đổi workflow/role/API/route. Chỉ sửa phần shared UI
 thuộc người 1; issue thuộc feature phải bàn giao patch cho owner và retest sau merge.
 
-Chạy frontend typecheck/test không watch/build, backend verify theo AGENTS.md và
+Chạy frontend typecheck/test không watch/build, backend verify theo CONTRIBUTING.md và
 browser smoke nếu có công cụ. Ghi PASS/FAIL/NOT RUN theo bằng chứng thật, không
 đánh dấu PASS cho bước chưa chạy. Ghi docs/handoffs/UI01-B.md, danh sách các
 màn hình đã kiểm tra, commands/output, screenshots nếu có, blockers và điểm còn lại.
 Không tự push/merge/deploy hoặc bắt đầu Pha 2.
-```
-
-## Mẫu tiếp tục task UI đang dở
-
-```text
-Tiếp tục UI01-<ID> từ code và nhánh hiện tại. Đọc AGENTS.md,
-docs/design/GDRN_UI_DESIGN_SYSTEM.md, đúng prompt UI01-<ID> và
-handoff docs/handoffs/UI01-<ID>.md nếu có. Kiểm tra git diff và dependency
-đã merge. Không regenerate frontend, không ghi đè thay đổi chưa commit,
-không chạy sang task khác. Hoàn thiện các tiêu chí chưa đạt, chạy test thật,
-cập nhật handoff và báo rõ blocker.
-```
