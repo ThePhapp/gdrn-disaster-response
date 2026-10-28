@@ -178,3 +178,31 @@ trên Docker local. Có thể dùng làm baseline học thuật khi chuyển kè
 các gate ngoài máy chưa có bằng chứng phù hợp. Trước báo cáo cần công khai lỗi proxy
 upload, giới hạn lưu ảnh, kết quả audit dependency và phần Kaggle/remoteCI chưa xác
 minh; không trình bày số đo local như chứng minh cần kiến trúc phân tán.
+
+## 7. Hoàn thiện README cho bàn giao 5-7 phút — 28/10/2026
+
+Trên nhánh `docs/phase1-review-handoff`, nền `b08101c`, README được sắp lại thành
+bài toán/nghiệp vụ, kiến trúc/mã nguồn/yêu cầu kỹ thuật, API, build/deploy, findings
+bàn giao Phase 2 và khung nói 6 phút. Kịch bản trình bày trỏ về cùng thứ tự;
+không tính Q&A hoặc demo 8-10 phút vào thời lượng 5-7 phút. Chưa diễn tập bấm giờ.
+
+- Bản in README bằng Chromium: **3 trang A4**, Arial 11pt, line-height 1,35,
+  lề trên/trái-phải/dưới 16/17/18 mm. Đã xem PNG cả ba trang, không cắt bảng/chữ.
+  PDF/PNG kiểm tra ở `.tools/readme-handoff/tmp/pdfs/` là artifact local ignored;
+  số trang phụ thuộc renderer, font và thiết lập in.
+- Giữ đặc tả `docs/openapi.yaml` hiện có; validator xác nhận **20 operations khớp
+  controller**, toàn bộ refs resolve và **139 examples hợp lệ**. README có cách
+  preview YAML bằng Swagger Editor và thử API bằng Swagger UI/backend đang chạy.
+- `.\mvnw.cmd clean verify`: **PASS**, 73 unit/architecture + 57 integration,
+  không fail/error/skip; Testcontainers dùng Docker/PostGIS thật.
+- Frontend typecheck, **93 tests**, production build: **PASS**; vẫn có cảnh báo
+  chunk MapLibre trên 500 kB. Compose config: **PASS**.
+- Đây là cập nhật tài liệu; không thay đổi API/schema/runtime, không tái đo
+  benchmark, không chạy lại browser E2E hoặc xác nhận cloud/Kaggle/remote CI.
+  Findings ở mục 5 giữ nguyên giới hạn bằng chứng của lần review ban đầu.
+
+Kiểm tra lại sau khi đồng bộ `main ed8491d`: clean verify **130 PASS, 0 skip**;
+frontend **101 tests PASS** + typecheck/build (kế thừa phần upload tại create và
+tiêu đề tab từ main); hai validator P00/runtime và Compose config **PASS**.
+README giữ bản ngắn, cập nhật liên kết tới `PHASE1_PLAN.md`, `CONTRIBUTING.md`,
+`GDRN_PROJECT_CONTEXT.md`; bản in kiểm tra vẫn **3 trang A4** cùng thiết lập trên.

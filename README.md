@@ -1,151 +1,136 @@
 # Global Disaster Response Network (GDRN)
 
-**Hệ thống Điều phối và Ứng phó Thảm họa Toàn cầu** — dự án mô phỏng môn Kiến trúc
-phần mềm. GDRN tập trung hóa báo cáo sự cố có vị trí để người dân theo dõi yêu cầu
-và điều phối viên xác minh, gắn thảm họa, phân công cứu hộ. Đây là mô hình học thuật,
-chưa phải hệ thống cứu hộ vận hành thực tế.
+## 1. Bài toán và nghiệp vụ
 
-## Nghiệp vụ và phạm vi Phase 1
+Thông tin sự cố trao đổi rời rạc khiến người dân khó theo dõi yêu cầu, điều phối viên
+khó xác minh vị trí và biết đội nào còn rảnh. GDRN tập hợp báo cáo có tọa độ, quyết
+định xác minh và tiến độ cứu hộ trong một hệ thống. Phase 1 có **20 API, 7 màn hình**.
 
-| Phần đã triển khai | Chức năng / người dùng                                                                                                       |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| Identity           | Đăng nhập, thông tin cá nhân; JWT HS256 15 phút, BCrypt; CITIZEN/AUTHORITY                                                   |
-| Disaster           | Xem/lọc; điều phối viên tạo/cập nhật, chuyển ACTIVE → RESOLVED, kiểm tra version                                             |
-| Reporting          | Người dân gửi/xem báo cáo của mình, rút khi PENDING; điều phối viên duyệt/từ chối, gắn thảm họa ACTIVE, lọc bán kính PostGIS |
-| Rescue             | Xem đội rảnh/bận, phân công báo cáo VERIFIED; ASSIGNED → IN\_PROGRESS → COMPLETED; người dân xem tiến độ của mình            |
-| Dashboard          | Thống kê toàn cục cho AUTHORITY; lọc ngày UTC+7; số đội luôn là trạng thái hiện tại                                          |
-| Ảnh minh chứng     | JPEG/PNG, tối đa 5 ảnh/báo cáo, 5 MiB/ảnh; upload/xóa khi PENDING; đọc ảnh qua API có kiểm tra quyền                         |
-| SPA                | Anh/Việt, phân quyền route, nhập tọa độ/bản đồ tùy chọn, giao diện responsive                                                |
+| Người dùng | Chức năng đã có |
+| --- | --- |
+| CITIZEN - người dân | Gửi mô tả/loại sự cố/tọa độ; xem báo cáo của mình; rút khi PENDING; đính kèm ảnh và xem tiến độ cứu hộ. |
+| AUTHORITY - điều phối | Quản lý thảm họa; lọc báo cáo theo trạng thái/bán kính; xác minh hoặc từ chối; phân công đội, cập nhật nhiệm vụ và xem dashboard. |
 
+Luồng chính: **gửi báo cáo PENDING → xác minh VERIFIED và gắn thảm họa ACTIVE →
+chọn đội rảnh → nhiệm vụ ASSIGNED → IN_PROGRESS → COMPLETED → người dân theo dõi**.
+Báo cáo có thể bị REJECTED kèm lý do; thảm họa chỉ chuyển ACTIVE → RESOLVED.
 
-Luồng chính: **người dân đăng nhập → gửi báo cáo PENDING → điều phối viên xác minh
-và gắn thảm họa ACTIVE → phân đội rảnh → bắt đầu/hoàn thành nhiệm vụ → người dân xem
-tiến độ**. Quyền sở hữu hạn chế lộ dữ liệu; ràng buộc database ngăn phân trùng đội/báo cáo.
+Quy tắc cần giữ: không đọc chéo báo cáo giữa hai citizen; một báo cáo chỉ có một
+nhiệm vụ trong toàn vòng đời; một đội chỉ có một nhiệm vụ đang hoạt động. Dashboard
+lọc ngày theo UTC+7, nhưng số đội rảnh/bận luôn phản ánh hiện tại. Ảnh JPEG/PNG tối
+đa **5 ảnh/báo cáo, 5 MiB/ảnh**; chỉ chủ báo cáo PENDING được upload/xóa.
+Chưa có đăng ký/quản trị tài khoản, refresh token, cảnh báo/tài nguyên hoặc tự động phân đội.
 
-**Chưa triển khai:** đăng ký/quản trị tài khoản, refresh token, cảnh báo và tài nguyên,
-tự động tính ưu tiên/phân đội, GPS/geocoding/theo dõi đội trực tiếp, event bus.
-Không có tính năng đang phát triển dở được xác nhận trong checkout này; xem các giới
-hạn kiểm chứng và việc cần bàn giao tại [báo cáo rà soát](docs/PHASE1_REVIEW.md).
+## 2. Kiến trúc, mã nguồn và yêu cầu kỹ thuật
 
-## Công nghệ và kiến trúc
+**Modular Monolith**: một Spring Boot backend, một SPA và PostgreSQL/PostGIS.
+Luồng triển khai: `Browser → Nginx/Vite proxy /api → backend → database/private files`.
+Giữ một ứng dụng để đơn giản hóa triển khai và giao dịch; chưa có bằng chứng cần tách dịch vụ.
 
-
-| Thành phần   | Công nghệ từ cấu hình / vai trò                                                                                   |
-| ------------ | ----------------------------------------------------------------------------------------------------------------- |
-| Backend      | Java **21**, Spring Boot **3.5.16**; Web, Security/OAuth2 Resource Server, Actuator                               |
-| Database     | PostgreSQL **16** + PostGIS **3.5**; Flyway quản lý schema, Hibernate chỉ validate                                |
-| Persistence  | Spring Data JPA/Hibernate cho Identity/Disaster; JDBC data mapper cho Reporting/Rescue và các truy vấn thống kê   |
-| Frontend     | React **19.3.0**, TypeScript **7.0.2**, Vite **8.3.4**, Router **7.18.4**; MapLibre **6.11.2**                    |
-| Công cụ      | Maven Wrapper **3.9.9**; Node **22.14.0**, npm lockfile; Docker Compose, Nginx **1.27**                           |
-| Kiểm thử/API | JUnit, Mockito, ArchUnit, Testcontainers/PostGIS; Vitest, Playwright; springdoc **2.8.17**, OpenAPI; k6 benchmark |
-
-
-Một backend **Modular Monolith**, một SPA và một PostgreSQL/PostGIS. Domain plain
-Java; API gọi application; infrastructure hiện thực ports, phụ thuộc hướng vào trong.
-Published queries: `Rescue → Reporting → Disaster`, `Dashboard → Reporting/Rescue`.
-Không join/FK xuyên module. ADR 001/002/003 giải thích lựa chọn: nhóm nhỏ, giao dịch
-cục bộ và dữ liệu địa lý; chưa có bằng chứng cần phân tán.
+| Thành phần | Framework/công nghệ hiện dùng |
+| --- | --- |
+| Backend | Java 21, Spring Boot 3.5.16; Web, Security, Actuator; Maven Wrapper 3.9.9. |
+| Dữ liệu | PostgreSQL 16/PostGIS 3.5; Flyway V1-V7; JPA/Hibernate cho Identity/Disaster, JDBC cho Reporting/Rescue và thống kê. |
+| Frontend | React 19.3.0, TypeScript 7.0.2, Vite 8.3.4, Router 7.18.4; MapLibre 6.11.2; Node 22.14.0. |
+| Đóng gói/kiểm thử | Docker Compose, Nginx 1.27; JUnit/Mockito, ArchUnit, Testcontainers, Vitest, Playwright và k6. |
 
 ```text
-.
-├── src/main/java/com/gdrn/   # identity, disaster, reporting, rescue, dashboard, shared
-│   └── <module>/           # api, application, infrastructure; domain khi có nghiệp vụ
-├── src/main/resources/     # application*.yml, db/migration/V1–V7, openapi/*.json
-├── src/test/               # domain, orchestration, architecture và integration tests
-├── frontend/               # React SPA: src/{app,auth,features,shared}, e2e, Nginx
-├── scripts/                # local.ps1, dev.ps1, browser-e2e.ps1
-├── benchmark/              # generator, k6, runner, notebook preflight
-├── docs/                   # contracts, ADRs, runbooks, handoffs, tài liệu báo cáo
-├── pom.xml                 # Backend; mvnw / mvnw.cmd
-├── Dockerfile              # Backend multi-stage
-├── docker-compose.yml      # database, backend, frontend
-└── .env.example            # Mẫu cấu hình, không chứa secret thật
+src/main/java/com/gdrn/
+  identity/ disaster/ reporting/ rescue/ dashboard/ shared/
+  <module>/api/ application/ domain/ infrastructure/
+src/main/resources/       # application.yml, db/migration/V1-V7, openapi/*.json
+src/test/                 # domain, orchestration, architecture, integration
+frontend/src/             # app, auth, features theo nghiệp vụ, shared
+frontend/e2e/             # kiểm thử trình duyệt
+scripts/                  # setup, build/start/stop, browser regression
+benchmark/                # k6, dữ liệu/runner, notebook preflight
 ```
 
-`alert/resource/geo` hiện chỉ giữ package boundaries; lọc không gian thực tế nằm ở
-Reporting. Xem [C4 và dữ liệu](docs/architecture/architecture-overview.md).
+Theo DDD/Hexagonal, domain là Java thuần; controller xử lý HTTP, application điều
+phối use case qua ports, infrastructure hiện thực adapters. Module chỉ tạo lớp khi
+cần; Dashboard là use case đọc, không có aggregate/bảng riêng. Phụ thuộc liên module:
+`Rescue → Reporting → Disaster`, `Dashboard → Reporting/Rescue`, qua published contracts,
+không truy cập infrastructure hoặc join bảng của nhau. `shared` chỉ chứa kỹ thuật chung.
 
-## Cài đặt và chạy
+JWT HS256 hết hạn sau 15 phút, BCrypt, default-deny và kiểm tra role/ownership;
+SPA giữ phiên trong `sessionStorage`. Flyway quản lý schema, Hibernate chỉ validate.
+PostGIS `geography(Point,4326)` + GiST + `ST_DWithin` lọc khoảng cách theo mét.
+Conditional updates/version chống ghi đè; UNIQUE report và partial UNIQUE active-team
+chống phân công trùng. Domain test không cần Spring, adapter test dùng PostGIS thật.
+Xem [C4](docs/architecture/architecture-overview.md), [contracts](docs/architecture/phase1-module-contracts.md), [ADRs](docs/adr/).
 
-Cần Git, Docker Desktop chạy **Linux containers**, PowerShell ≥5.1. Phát triển SPA
-cần Node **22.14.0** (`frontend/.nvmrc`); chạy Maven trên host cần JDK **21**.
-Dockerfile tự tải Maven/backend dependencies và `npm ci` khi build image.
+## 3. Đặc tả và preview API
+
+[**docs/openapi.yaml**](docs/openapi.yaml) là OpenAPI **3.0.3**, đủ **20 operations/14 paths**,
+request/response, ví dụ, mã lỗi, Bearer authentication và quyền. Gồm Identity (2),
+Disaster (4), Reporting (5), Rescue (4), Dashboard (1) và Evidence (4). Request tạo
+báo cáo bắt đầu ở `POST /api/reports`; phân công ở `POST /api/rescue-missions`.
+Đường dẫn, DTO, query filters và lỗi chi tiết nằm trong YAML để tránh lặp đặc tả.
+
+**Preview không cần backend:** mở [Swagger Editor](https://editor.swagger.io/), import
+file `docs/openapi.yaml` hoặc dán toàn bộ YAML vào editor để xem request/response.
+**Thử API đang chạy:** mở [Swagger UI](http://127.0.0.1:8080/swagger-ui/index.html),
+login lấy token, bấm **Authorize**, nhập JWT rồi dùng **Try it out**. Đổi port theo `.env`.
+Runtime xuất JSON tại `/v3/api-docs`; bản YAML là snapshot bàn giao đã đối chiếu code.
+
+Kiểm tra bằng `python docs/api/validate_openapi.py` sau khi cài dependencies ghi đầu file.
+Login public; API còn lại cần Bearer JWT. JSON lỗi dùng `ApiError` của dự án.
+Snapshot đã mô tả lỗi ảnh/413 mà JSON runtime còn thiếu; xem [biên bản](docs/PHASE1_REVIEW.md#2-api-thực-tế-và-nguồn-đặc-tả).
+
+## 4. Cài đặt, build và triển khai
+
+Cần Git, PowerShell >=5.1 và Docker Desktop **Linux containers**. Chạy Maven trên
+host cần JDK21; phát triển SPA cần Node **22.14.0** (`frontend/.nvmrc`). Từ root repo:
 
 ```powershell
-git clone https://github.com/ThePhapp/gdrn-disaster-response.git
-cd gdrn-disaster-response
-.\scripts\local.ps1 -Action setup
-.\scripts\dev.ps1 up
+.\scripts\local.ps1 -Action setup  # Tạo/bổ sung .env, secret và tài khoản demo
+.\scripts\dev.ps1 up              # Build/chạy DB, backend, frontend; kiểm tra health
 ```
 
-`setup` tạo/bổ sung `.env`, sinh secret và tài khoản demo, giữ cấu hình đã có.
-`dev.ps1 up` build/chạy cả DB, backend và frontend production, kiểm tra health/smoke.
-Flyway tự tạo schema khi backend khởi động; profile `demo` tạo tài khoản/đội cứu hộ,
-không có mật khẩu trong migration. Lấy tài khoản từ `.env` cá nhân, không đưa vào Git.
-Với volume cũ, dùng credentials gốc của volume; không xóa volume để chữa lỗi đăng nhập DB.
+Mặc định: [SPA](http://127.0.0.1:5173/login) **5173**, API/Swagger **8080**, PostgreSQL
+**5432**; health tại `/actuator/health/readiness`. `.env` quyết định
+`FRONTEND_PORT/APP_PORT/DB_PORT`, DB credentials, `JWT_SECRET_BASE64` (>=32 byte),
+profile `demo` và ba cặp `DEMO_*_EMAIL/PASSWORD`. Lấy tài khoản từ `.env` riêng,
+không commit secret; volume DB cũ phải dùng credentials gốc. Bản đồ cần cấu hình
+public `VITE_MAP*` lúc build; thiếu cấu hình vẫn nhập tọa độ thủ công được.
 
-Biến cần biết: `POSTGRES_DB/USER/PASSWORD`; `DB_URL/USERNAME/PASSWORD` cho backend host;
-`JWT_SECRET_BASE64` mã hóa ≥32 byte ngẫu nhiên; `APP_PORT/DB_PORT/FRONTEND_PORT`
-(mặc định **8080/5432/5173**). `SPRING_PROFILES_ACTIVE=demo` và ba cặp
-`DEMO_*_EMAIL/PASSWORD` dùng cho demo. `REPORT_ATTACHMENT_STORAGE_ROOT` dùng cho
-backend host; Compose hiện chưa truyền biến này hoặc mount volume ảnh.
-`VITE_MAPTILER_KEY` hoặc `VITE_MAP_STYLE_URL`, `VITE_MAP_ATTRIBUTION` là tùy chọn,
-public trong bundle; không cấu hình vẫn nhập tọa độ thủ công được.
-
-Mở [SPA /login](http://127.0.0.1:5173/login),
-[health](http://127.0.0.1:8080/actuator/health) (mong đợi `UP`) và
-[Swagger](http://127.0.0.1:8080/swagger-ui/index.html). Đổi URL nếu đổi port.
-JWT lưu `sessionStorage` khóa `gdrn.session`; reload cùng tab giữ phiên đến hết hạn.
-Frontend gọi relative `/api` qua Nginx hoặc Vite proxy.
-
-Để phát triển với Vite trên host, thay `dev.ps1 up` bằng
-`.\scripts\local.ps1 -Action start` (tự `npm ci`, chạy DB/backend và Vite).
-Dừng đúng chế độ: `local.ps1 -Action stop` hoặc `dev.ps1 down`; đều giữ database volume.
-Hướng dẫn backend chạy bằng Maven và debug: [runbook](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md),
-[env/auth local](docs/P01_LOCAL.md).
-
-## Build, kiểm tra và deploy
+Backend image build Maven → JAR → JRE21 chạy user riêng; frontend build `npm ci`
+→ `dist/` → Nginx phục vụ SPA và proxy `/api`. Compose chờ DB/backend healthy;
+Flyway tự migrate khi khởi động. Muốn dùng Vite host: thay `dev.ps1 up` bằng
+`local.ps1 -Action start`. Dừng bằng `dev.ps1 down` hoặc `local.ps1 -Action stop`, giữ DB volume.
 
 ```powershell
-# Tại root; Docker phải đang chạy cho integration tests
-.\mvnw.cmd clean verify
-docker compose --env-file .env.example config --quiet
-# Frontend (chạy xong quay về root)
+.\mvnw.cmd clean verify            # Unit + architecture + PostGIS integration; cần Docker
 Push-Location frontend
 npm.cmd ci
 npm.cmd run typecheck
 npm.cmd test
 npm.cmd run build
 Pop-Location
-# Sau khi stack demo đã chạy
-.\scripts\browser-e2e.ps1
+.\scripts\browser-e2e.ps1           # Sau khi stack demo đã chạy
 ```
 
-Build ra `target/gdrn-0.0.1-SNAPSHOT.jar` và `frontend/dist/`. Image backend dùng
-JRE21, frontend dùng Nginx; `dev.ps1 up` build/chạy Compose. Dockerfile package bỏ
-chạy tests khi lắp image, vì vậy image build không thay thế `clean verify`.
-CI thực tế có **3 jobs**: `verify` (backend + Compose smoke), `frontend`, `browser-e2e`.
+CI có 3 jobs: `verify`, `frontend`, `browser-e2e`. Dockerfile package bỏ tests nên
+image build không thay thế `clean verify`. Lần rà soát đã ghi nhận **130 backend,
+93 frontend tests PASS**, browser **18 PASS/5 map skip**; [biên bản](docs/PHASE1_REVIEW.md)
+ghi rõ revision và giới hạn, không coi số cũ là kiểm chứng cho mọi commit.
+Đã kiểm chứng Compose local; **chưa xác nhận cloud/production**. Chuyển máy cần
+secret riêng, TLS/reverse proxy, quyền PostGIS và backup/restore cả DB lẫn ảnh.
+Hướng dẫn chi tiết: [runbook](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md), [review/demo data](docs/PRODUCT_REVIEW.md).
 
-**Đã kiểm chứng local trong lượt rà soát:** backend 130 tests, frontend 93 tests,
-typecheck/build; chi tiết Compose/browser/validation ở [biên bản](docs/PHASE1_REVIEW.md).
-**Server/cloud:** chưa triển khai được xác nhận. Compose bind loopback; chuyển máy
-cần cấu hình secret, TLS/reverse proxy, quyền PostGIS, backup/restore DB **và ảnh**,
-volume ảnh bền vững, giới hạn upload Nginx phù hợp và chính sách tài khoản ngoài demo.
+## 5. Vấn đề dễ thấy và bàn giao Phase 2
 
-## API và tài liệu báo cáo
+| Hiện trạng đã thấy | Điều nhóm tiếp nhận cần kiểm chứng/cải tiến |
+| --- | --- |
+| Compose gốc chỉ mount DB; ảnh nằm trong backend container. | Metadata có thể còn nhưng mất file khi thay container. Có [override review](docker-compose.review.yml); cần cấu hình storage bền, quyền ghi và diễn tập backup/restore. |
+| Nginx trả 413 với PNG hợp lệ khoảng 3 MiB trong lần review. | Đồng bộ giới hạn proxy với luật 5 MiB/ảnh và multipart 6MB; kiểm thử qua cả SPA → Nginx → backend. |
+| Build có map chunk khoảng 1 MB; audit từng báo `undici` high. | Đo tải trang, chạy lại audit và đánh giá dependency path trước khi cập nhật; không suy từ cảnh báo thành kết luận khai thác. |
+| JWT chưa refresh/revoke; tài khoản bootstrap demo; chưa có bằng chứng HA/cloud. | Làm rõ nhu cầu vận hành, quản trị tài khoản và bảo mật trước khi triển khai ngoài local. |
+| D3 có baseline local; raw kết quả bị ignore, Kaggle server chưa xác nhận. | Bàn giao manifest/raw/seed/cấu hình máy, tái đo cùng workload và profiling trước khi chọn cache, queue hay microservices. |
 
-[Dữ liệu mẫu và hướng dẫn review sản phẩm](docs/PRODUCT_REVIEW.md): bộ tình huống
-cho cả hai citizen/authority, ảnh minh chứng và cách chạy môi trường review local.
-
-[**OpenAPI 3.0.3 — 20 operations**](docs/openapi.yaml) mô tả endpoint thực tế, DTO,
-validation, response, lỗi và quyền. Dán file vào Swagger Editor hoặc import bằng công
-cụ OpenAPI 3.x; Swagger runtime dùng `/v3/api-docs` (có thể khác ở mức mô tả lỗi/ví dụ).
-Validator: `python docs/api/validate_openapi.py` với dependencies ghi trong file.
-
-- [Kịch bản nói 6 phút + 10 câu hỏi](docs/PHASE1_PRESENTATION.md);
-[demo thao tác 8–10 phút](docs/qa/phase1-demo-script.md).
-- [Báo cáo rà soát/đóng góp/hạn chế](docs/PHASE1_REVIEW.md),
-[progress](docs/phase1-progress.md), [ADRs](docs/adr/).
-- [Catalog duy nhất để chọn task](docs/PHASE1_PLAN.md),
-[module contracts](docs/architecture/phase1-module-contracts.md), [quy tắc phát triển](CONTRIBUTING.md),
+Nhóm nhận đọc README → [API](docs/openapi.yaml) → [contracts/ADRs](docs/architecture/phase1-module-contracts.md)
+→ [evidence/hạn chế](docs/PHASE1_REVIEW.md), tự chạy stack và checks. Giữ các ràng buộc
+nghiệp vụ, module boundaries và migration đã phát hành. Đổi kiến trúc cần số liệu
+before/after và ADR; các nhận xét trên là findings bàn giao, không thay
+[catalog triển khai](docs/PHASE1_PLAN.md), [quy tắc phát triển](CONTRIBUTING.md) và
 [bối cảnh dài hạn](GDRN_PROJECT_CONTEXT.md).
