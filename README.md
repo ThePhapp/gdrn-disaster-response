@@ -62,10 +62,18 @@ Xem [C4](docs/architecture/architecture-overview.md), [contracts](docs/architect
 ## 3. Đặc tả và preview API
 
 [**docs/openapi.yaml**](docs/openapi.yaml) là OpenAPI **3.0.3**, đủ **20 operations/14 paths**,
-request/response, ví dụ, mã lỗi, Bearer authentication và quyền. Gồm Identity (2),
-Disaster (4), Reporting (5), Rescue (4), Dashboard (1) và Evidence (4). Request tạo
-báo cáo bắt đầu ở `POST /api/reports`; phân công ở `POST /api/rescue-missions`.
-Đường dẫn, DTO, query filters và lỗi chi tiết nằm trong YAML để tránh lặp đặc tả.
+request/response, ví dụ, mã lỗi, Bearer authentication và quyền.
+
+| Nhóm | API thực tế |
+| --- | --- |
+| Identity (2) | POST `/api/auth/login`; GET `/api/auth/me` |
+| Disaster (4) | GET/POST `/api/disasters`; GET/PATCH `/api/disasters/{id}` |
+| Reporting (5) | POST/GET `/api/reports`; GET/DELETE `/api/reports/{id}`; PATCH `/api/reports/{id}/verification` |
+| Rescue (4) | GET `/api/rescue-teams`; POST/GET `/api/rescue-missions`; PATCH `/api/rescue-missions/{id}/status` |
+| Dashboard (1) | GET `/api/dashboard` |
+| Evidence (4) | POST/GET `/api/reports/{id}/attachments`; GET `/api/reports/{id}/attachments/{attachmentId}/content`; DELETE `/api/reports/{id}/attachments/{attachmentId}` |
+
+DTO, query filters và lỗi chi tiết nằm trong YAML.
 
 **Preview không cần backend:** mở [Swagger Editor](https://editor.swagger.io/), import
 file `docs/openapi.yaml` hoặc dán toàn bộ YAML vào editor để xem request/response.
