@@ -1,5 +1,18 @@
 # Tiến độ Pha 1
 
+**Rà soát tài liệu báo cáo — 28/10/2026, nền `main 2ddf9d0`:** nhánh
+`docs/phase1-review-handoff`, chỉ sửa tài liệu/validator. README, OpenAPI runtime
+20 operations và kịch bản nói 6 phút được đối chiếu code; không thay catalog hoặc
+quyết định kiến trúc. Backend clean verify **130 PASS, 0 skip**, frontend **93 PASS**
++ typecheck/build, Compose cô lập build/up/smoke PASS, browser **18 PASS/5 map skip**.
+Nginx upload đã tái hiện lỗi `413` cho ảnh hợp lệ ~3 MiB, Compose thiếu volume ảnh,
+npm audit báo 1 dependency high. Không kết luận production/Kaggle/remote CI đã đạt.
+Xem [biên bản mới](PHASE1_REVIEW.md) cho lệnh, Git authors và hiệu đính audit cũ.
+Các đoạn dưới là evidence lịch sử tại nhánh/commit đã ghi; C3/A3 đã nằm trong main
+qua các merge đến `2ddf9d0`. Notebook D3 hiện có là
+`benchmark/kaggle_cpu_preflight.ipynb`; không dùng đường dẫn notebook cũ bên dưới
+như bằng chứng file hoặc Kaggle completion.
+
 **A3 kiểm toán cuối & bàn giao Pha 1 — 28/10/2026:** trên nhánh `feat/a3-final-audit`
 (tách từ `feat/c3-architecture-docs` @ `07cd20e`, kế thừa `main` @ `935e9ea`), đã thực
 hiện kiểm toán độc lập toàn diện theo đúng đặc tả `A3`:

@@ -1,0 +1,4331 @@
+# Reviewed runtime snapshot; see docs/PHASE1_REVIEW.md for provenance and limits.
+openapi: 3.0.3
+info:
+  title: GDRN Phase 1 API
+  version: 1.0.0
+  description: 'Implemented business API at main 2ddf9d0 (2026-10-28): E01-E20. Reviewed against controllers, parsers,
+    DTOs and security configuration. Public login; all other operations require a Bearer JWT. JWT HS256 TTL 900
+    seconds, no refresh. Errors use the project ApiError JSON object, not RFC 7807. Role metadata is documented
+    by x-roles; bearerAuth has no OAuth scopes. Health and Swagger infrastructure URLs are described in README and
+    are outside this business specification. The original P00 design remains in docs/api/phase1-contract.yaml. Attachment
+    success requires a proxy accepting the upload size; current Nginx config may reject larger bodies with 413 before
+    the API.'
+servers:
+- url: /
+  description: Same-origin API via Vite/Nginx; also works on backend Swagger
+- url: http://127.0.0.1:8080
+  description: Default direct backend; override APP_PORT as configured
+security:
+- bearerAuth: []
+tags:
+- name: Identity
+  description: Login and current user
+- name: Disaster
+  description: Disaster lifecycle
+- name: Reporting
+  description: Reports, verification, withdrawal and spatial filters
+- name: Rescue
+  description: Team availability, assignment and mission progress
+- name: Dashboard
+  description: Authority read-only global statistics
+- name: Evidence
+  description: Private report images, authorized metadata and binary content
+paths:
+  /api/auth/login:
+    post:
+      operationId: E01
+      summary: E01 POST /api/auth/login
+      tags:
+      - Identity
+      description: 'Email normalized as EmailAddress; invalid password, unknown user or inactive MVP role: identical
+        401 INVALID_CREDENTIALS. TTL 900 seconds, no refresh. Response Cache-Control: no-store.'
+      x-owner: Person 1
+      x-task: P01
+      x-roles:
+      - PUBLIC
+      x-consumers:
+      - S01
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityLoginResponse'
+              example:
+                accessToken: <issued-jwt-not-a-real-token>
+                tokenType: Bearer
+                expiresIn: 900
+                expiresAt: '2026-10-08T03:15:00Z'
+                user:
+                  id: 00000000-0000-4000-8000-000000000001
+                  email: citizen.one@example.test
+                  role: CITIZEN
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/auth/login
+                fieldErrors:
+                - field: body
+                  message: Invalid request shape.
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '401':
+          description: INVALID_CREDENTIALS
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 401
+                code: INVALID_CREDENTIALS
+                message: Request could not be completed.
+                path: /api/auth/login
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '415':
+          description: UNSUPPORTED_MEDIA_TYPE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 415
+                code: UNSUPPORTED_MEDIA_TYPE
+                message: Request could not be completed.
+                path: /api/auth/login
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '500':
+          description: INTERNAL_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 500
+                code: INTERNAL_ERROR
+                message: Request could not be completed.
+                path: /api/auth/login
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentityLoginRequest'
+            example:
+              email: citizen.one@example.test
+              password: <from-demo-environment>
+  /api/auth/me:
+    get:
+      operationId: E02
+      summary: E02 GET /api/auth/me
+      tags:
+      - Identity
+      description: 'Principal only; response Cache-Control: no-store. Unsupported authenticated role: 403.'
+      x-owner: Person 1
+      x-task: P01
+      x-roles:
+      - CITIZEN
+      - AUTHORITY
+      x-consumers:
+      - S01
+      - S02
+      - S03
+      - S04
+      - S05
+      - S06
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityUser'
+              example:
+                id: 00000000-0000-4000-8000-000000000001
+                email: citizen.one@example.test
+                role: CITIZEN
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/auth/me
+                fieldErrors:
+                - field: body
+                  message: Invalid request shape.
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/auth/me
+                fieldErrors: []
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+                enum:
+                - Bearer
+              description: Bearer challenge.
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 403
+                code: FORBIDDEN
+                message: Request could not be completed.
+                path: /api/auth/me
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '500':
+          description: INTERNAL_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 500
+                code: INTERNAL_ERROR
+                message: Request could not be completed.
+                path: /api/auth/me
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      security:
+      - bearerAuth: []
+  /api/disasters:
+    get:
+      operationId: E03
+      summary: E03 GET /api/disasters
+      security:
+      - bearerAuth: []
+      tags:
+      - Disaster
+      description: See phase1-contract.md for shared semantics.
+      x-owner: Person 3
+      x-task: C1
+      x-roles:
+      - CITIZEN
+      - AUTHORITY
+      x-consumers:
+      - S04
+      - S05
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterDisasterPage'
+              example:
+                items:
+                - id: 00000000-0000-4000-8000-000000000004
+                  name: Hanoi flood exercise
+                  type: FLOOD
+                  severity: HIGH
+                  description: Training scenario only
+                  latitude: 21.028
+                  longitude: 105.834
+                  status: ACTIVE
+                  version: 0
+                  createdAt: '2026-10-08T03:00:00Z'
+                  updatedAt: '2026-10-08T03:00:00Z'
+                page: 0
+                size: 20
+                totalElements: 1
+                totalPages: 1
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/disasters
+                fieldErrors:
+                - field: body
+                  message: Invalid request shape.
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/disasters
+                fieldErrors: []
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+                enum:
+                - Bearer
+              description: Bearer challenge.
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 403
+                code: FORBIDDEN
+                message: Request could not be completed.
+                path: /api/disasters
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '500':
+          description: INTERNAL_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 500
+                code: INTERNAL_ERROR
+                message: Request could not be completed.
+                path: /api/disasters
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 1000000
+          default: 0
+        description: page
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        description: size
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - createdAt,desc
+          - createdAt,asc
+          default: createdAt,desc
+        description: One sort only. Always append id ASC as tie-breaker. Mission createdAt sort means assignedAt.
+      - name: status
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/DisasterDisasterStatus'
+        description: status
+      - name: type
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/DisasterDisasterType'
+        description: type
+    post:
+      operationId: E05
+      summary: E05 POST /api/disasters
+      security:
+      - bearerAuth: []
+      tags:
+      - Disaster
+      description: Creates ACTIVE, version 0. No uniqueness rule on name.
+      x-owner: Person 3
+      x-task: C1
+      x-roles:
+      - AUTHORITY
+      x-consumers:
+      - S05
+      responses:
+        '201':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterDisaster'
+              example:
+                id: 00000000-0000-4000-8000-000000000004
+                name: Hanoi flood exercise
+                type: FLOOD
+                severity: HIGH
+                description: Training scenario only
+                latitude: 21.028
+                longitude: 105.834
+                status: ACTIVE
+                version: 0
+                createdAt: '2026-10-08T03:00:00Z'
+                updatedAt: '2026-10-08T03:00:00Z'
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/disasters
+                fieldErrors:
+                - field: body
+                  message: Invalid request shape.
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/disasters
+                fieldErrors: []
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+                enum:
+                - Bearer
+              description: Bearer challenge.
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 403
+                code: FORBIDDEN
+                message: Request could not be completed.
+                path: /api/disasters
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '415':
+          description: UNSUPPORTED_MEDIA_TYPE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 415
+                code: UNSUPPORTED_MEDIA_TYPE
+                message: Request could not be completed.
+                path: /api/disasters
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '500':
+          description: INTERNAL_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 500
+                code: INTERNAL_ERROR
+                message: Request could not be completed.
+                path: /api/disasters
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DisasterCreateDisasterRequest'
+            example:
+              name: Hanoi flood exercise
+              type: FLOOD
+              severity: HIGH
+              description: Training scenario only
+              latitude: 21.028
+              longitude: 105.834
+  /api/disasters/{id}:
+    get:
+      operationId: E04
+      summary: E04 GET /api/disasters/{id}
+      security:
+      - bearerAuth: []
+      tags:
+      - Disaster
+      description: See phase1-contract.md for shared semantics.
+      x-owner: Person 3
+      x-task: C1
+      x-roles:
+      - CITIZEN
+      - AUTHORITY
+      x-consumers:
+      - S04
+      - S05
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterDisaster'
+              example:
+                id: 00000000-0000-4000-8000-000000000004
+                name: Hanoi flood exercise
+                type: FLOOD
+                severity: HIGH
+                description: Training scenario only
+                latitude: 21.028
+                longitude: 105.834
+                status: ACTIVE
+                version: 0
+                createdAt: '2026-10-08T03:00:00Z'
+                updatedAt: '2026-10-08T03:00:00Z'
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/disasters/00000000-0000-4000-8000-000000000005
+                fieldErrors:
+                - field: body
+                  message: Invalid request shape.
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/disasters/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+                enum:
+                - Bearer
+              description: Bearer challenge.
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 403
+                code: FORBIDDEN
+                message: Request could not be completed.
+                path: /api/disasters/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '404':
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 404
+                code: NOT_FOUND
+                message: Request could not be completed.
+                path: /api/disasters/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '500':
+          description: INTERNAL_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 500
+                code: INTERNAL_ERROR
+                message: Request could not be completed.
+                path: /api/disasters/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/DisasterId'
+        description: Resource UUID
+    patch:
+      operationId: E06
+      summary: E06 PATCH /api/disasters/{id}
+      security:
+      - bearerAuth: []
+      tags:
+      - Disaster
+      description: Atomic expectedVersion check, increment version exactly once on success. RESOLVED immutable;
+        no reopen. No Rescue query on resolve.
+      x-owner: Person 3
+      x-task: C1
+      x-roles:
+      - AUTHORITY
+      x-consumers:
+      - S05
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterDisaster'
+              example:
+                id: 00000000-0000-4000-8000-000000000004
+                name: Hanoi flood exercise
+                type: FLOOD
+                severity: HIGH
+                description: Training scenario only
+                latitude: 21.028
+                longitude: 105.834
+                status: RESOLVED
+                version: 1
+                createdAt: '2026-10-08T03:00:00Z'
+                updatedAt: '2026-10-08T03:01:00Z'
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/disasters/00000000-0000-4000-8000-000000000005
+                fieldErrors:
+                - field: body
+                  message: Invalid request shape.
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/disasters/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+                enum:
+                - Bearer
+              description: Bearer challenge.
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 403
+                code: FORBIDDEN
+                message: Request could not be completed.
+                path: /api/disasters/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '404':
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 404
+                code: NOT_FOUND
+                message: Request could not be completed.
+                path: /api/disasters/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '409':
+          description: STALE_VERSION / INVALID_TRANSITION
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 409
+                code: STALE_VERSION
+                message: Request could not be completed.
+                path: /api/disasters/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '415':
+          description: UNSUPPORTED_MEDIA_TYPE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 415
+                code: UNSUPPORTED_MEDIA_TYPE
+                message: Request could not be completed.
+                path: /api/disasters/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '500':
+          description: INTERNAL_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisasterError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 500
+                code: INTERNAL_ERROR
+                message: Request could not be completed.
+                path: /api/disasters/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/DisasterId'
+        description: Resource UUID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DisasterUpdateDisasterRequest'
+            example:
+              expectedVersion: 0
+              status: RESOLVED
+  /api/reports:
+    post:
+      operationId: E07
+      summary: E07 POST /api/reports
+      tags:
+      - Reporting
+      description: PENDING. reporterId from authenticated principal, not client. No automatic disaster link.
+      x-owner: Person 2
+      x-task: B1
+      x-roles:
+      - CITIZEN
+      x-consumers:
+      - S02
+      responses:
+        '201':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingReport'
+              example:
+                id: 00000000-0000-4000-8000-000000000005
+                reporterId: 00000000-0000-4000-8000-000000000001
+                type: FLOOD
+                description: Water rising near the entrance
+                latitude: 21.028
+                longitude: 105.834
+                status: PENDING
+                createdAt: '2026-10-08T03:00:00Z'
+                updatedAt: '2026-10-08T03:00:00Z'
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/reports
+                fieldErrors:
+                - field: body
+                  message: Invalid request shape.
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/reports
+                fieldErrors: []
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+                enum:
+                - Bearer
+              description: Bearer challenge.
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 403
+                code: FORBIDDEN
+                message: Request could not be completed.
+                path: /api/reports
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '415':
+          description: UNSUPPORTED_MEDIA_TYPE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 415
+                code: UNSUPPORTED_MEDIA_TYPE
+                message: Request could not be completed.
+                path: /api/reports
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '500':
+          description: INTERNAL_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 500
+                code: INTERNAL_ERROR
+                message: Request could not be completed.
+                path: /api/reports
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportingCreateReportRequest'
+            example:
+              type: FLOOD
+              description: Water rising near the entrance
+              latitude: 21.028
+              longitude: 105.834
+      security:
+      - bearerAuth: []
+    get:
+      operationId: E08
+      summary: E08 GET /api/reports
+      tags:
+      - Reporting
+      description: CITIZEN automatically restricted to own nondeleted reports; AUTHORITY all nondeleted reports.
+        AND filters. Unknown disasterId gives empty page. Ownership before count/pagination; no reporterId parameter.
+      x-owner: Person 2
+      x-task: B1/B2
+      x-roles:
+      - CITIZEN
+      - AUTHORITY
+      x-consumers:
+      - S03
+      - S04
+      - S06
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingReportPage'
+              example:
+                items:
+                - id: 00000000-0000-4000-8000-000000000005
+                  reporterId: 00000000-0000-4000-8000-000000000001
+                  type: FLOOD
+                  description: Water rising near the entrance
+                  latitude: 21.028
+                  longitude: 105.834
+                  status: PENDING
+                  createdAt: '2026-10-08T03:00:00Z'
+                  updatedAt: '2026-10-08T03:00:00Z'
+                page: 0
+                size: 20
+                totalElements: 1
+                totalPages: 1
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/reports
+                fieldErrors:
+                - field: body
+                  message: Invalid request shape.
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/reports
+                fieldErrors: []
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+                enum:
+                - Bearer
+              description: Bearer challenge.
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 403
+                code: FORBIDDEN
+                message: Request could not be completed.
+                path: /api/reports
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '500':
+          description: INTERNAL_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 500
+                code: INTERNAL_ERROR
+                message: Request could not be completed.
+                path: /api/reports
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 1000000
+          default: 0
+        description: page
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        description: size
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - createdAt,desc
+          - createdAt,asc
+          default: createdAt,desc
+        description: One sort only. Always append id ASC as tie-breaker. Mission createdAt sort means assignedAt.
+      - name: status
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ReportingReportStatus'
+        description: status
+      - name: type
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ReportingDisasterType'
+        description: type
+      - name: disasterId
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ReportingId'
+        description: disasterId
+      - name: lat
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ReportingLatitude'
+        description: All of lat/lon/radiusMeters required together; otherwise 400.
+      - name: lon
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ReportingLongitude'
+        description: All of lat/lon/radiusMeters required together.
+      - name: radiusMeters
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100000
+        description: Meters, inclusive distance <= radiusMeters, WGS84 geography; spatial filtering in database
+          before pagination.
+      security:
+      - bearerAuth: []
+  /api/reports/{id}/attachments:
+    post:
+      operationId: E17
+      summary: Attach a private evidence image
+      description: CITIZEN owner only, while the report is PENDING. The file is stored outside the public web root.
+        JPEG/PNG only; adapter checks actual image format. Maximum 5 MiB (5242880 bytes) per image and 5 images
+        per report. Missing file => 400 ATTACHMENT_FILE_REQUIRED; oversized => 413 ATTACHMENT_TOO_LARGE; invalid
+        format => 415 ATTACHMENT_UNSUPPORTED_FORMAT. Inaccessible report => 404. Read-only authorities cannot upload.
+        Current Nginx proxy body limit is a deployment caveat.
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/ReportingReportId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: JPEG or PNG image, 1..5242880 bytes; multipart part name must be file.
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingReportAttachment'
+              example: &id001
+                id: 00000000-0000-4000-8000-000000000017
+                reportId: 00000000-0000-4000-8000-000000000007
+                originalFilename: evidence.png
+                mediaType: image/png
+                sizeBytes: 1024
+                createdAt: '2026-10-28T09:00:00Z'
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          $ref: '#/components/responses/ReportingAttachmentValidation'
+        '403':
+          $ref: '#/components/responses/ReportingForbidden'
+        '404':
+          $ref: '#/components/responses/ReportingNotFound'
+        '409':
+          $ref: '#/components/responses/ReportingAttachmentConflict'
+        '413':
+          $ref: '#/components/responses/ReportingAttachmentTooLarge'
+        '415':
+          $ref: '#/components/responses/ReportingAttachmentFormat'
+        '500':
+          $ref: '#/components/responses/ReportingAttachmentStorage'
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-28T09:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/reports/{id}/attachments
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      tags:
+      - Evidence
+      x-roles:
+      - CITIZEN
+    get:
+      operationId: E18
+      summary: List visible evidence images
+      description: The report owner and AUTHORITY may list metadata. Content is never exposed as a public URL.
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/ReportingReportId'
+      responses:
+        '200':
+          description: Visible attachment metadata.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportingReportAttachment'
+                maxItems: 5
+              example:
+              - *id001
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '404':
+          $ref: '#/components/responses/ReportingNotFound'
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-28T09:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/reports/{id}/attachments
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-28T09:00:00Z'
+                status: 403
+                code: FORBIDDEN
+                message: Request could not be completed.
+                path: /api/reports/{id}/attachments
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-28T09:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/reports/{id}/attachments
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '500':
+          description: ATTACHMENT_STORAGE_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-28T09:00:00Z'
+                status: 500
+                code: ATTACHMENT_STORAGE_ERROR
+                message: Request could not be completed.
+                path: /api/reports/{id}/attachments
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      tags:
+      - Evidence
+      x-roles:
+      - CITIZEN
+      - AUTHORITY
+  /api/reports/{id}/attachments/{attachmentId}:
+    delete:
+      operationId: E20
+      summary: Delete an owned evidence image
+      description: CITIZEN owner only, while the report is PENDING. The row is hidden before physical deletion to
+        avoid accidental re-access on storage errors. Only the owner may delete. A report that is no longer PENDING
+        returns 409 ATTACHMENT_REPORT_NOT_PENDING.
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/ReportingReportId'
+      - $ref: '#/components/parameters/ReportingAttachmentId'
+      responses:
+        '204':
+          description: Deleted.
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          $ref: '#/components/responses/ReportingForbidden'
+        '404':
+          $ref: '#/components/responses/ReportingNotFound'
+        '409':
+          $ref: '#/components/responses/ReportingAttachmentConflict'
+        '500':
+          $ref: '#/components/responses/ReportingAttachmentStorage'
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-28T09:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/reports/{id}/attachments/{attachmentId}
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-28T09:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/reports/{id}/attachments/{attachmentId}
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      tags:
+      - Evidence
+      x-roles:
+      - CITIZEN
+  /api/reports/{id}/attachments/{attachmentId}/content:
+    get:
+      operationId: E19
+      summary: Download visible evidence content
+      description: Authenticated private stream. The endpoint performs report ownership/authority and attachment
+        checks before opening the file; no public or signed bypass URL is issued.
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/ReportingReportId'
+      - $ref: '#/components/parameters/ReportingAttachmentId'
+      responses:
+        '200':
+          description: JPEG or PNG bytes.
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+            Content-Disposition:
+              schema:
+                type: string
+              description: Inline filename encoded by Spring ContentDisposition.
+            Content-Length:
+              schema:
+                type: integer
+                format: int64
+                minimum: 1
+              description: Image size in bytes.
+        '404':
+          $ref: '#/components/responses/ReportingNotFound'
+        '500':
+          $ref: '#/components/responses/ReportingAttachmentStorage'
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-28T09:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/reports/{id}/attachments/{attachmentId}/content
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-28T09:00:00Z'
+                status: 403
+                code: FORBIDDEN
+                message: Request could not be completed.
+                path: /api/reports/{id}/attachments/{attachmentId}/content
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-28T09:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/reports/{id}/attachments/{attachmentId}/content
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      tags:
+      - Evidence
+      x-roles:
+      - CITIZEN
+      - AUTHORITY
+  /api/reports/{id}:
+    get:
+      operationId: E09
+      summary: E09 GET /api/reports/{id}
+      tags:
+      - Reporting
+      description: CITIZEN owner only; other owner, missing or withdrawn => identical 404. Never calls Rescue; progress
+        via E14?reportId=...
+      x-owner: Person 2
+      x-task: B1
+      x-roles:
+      - CITIZEN
+      - AUTHORITY
+      x-consumers:
+      - S03
+      - S04
+      - S06
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingReport'
+              example:
+                id: 00000000-0000-4000-8000-000000000005
+                reporterId: 00000000-0000-4000-8000-000000000001
+                type: FLOOD
+                description: Water rising near the entrance
+                latitude: 21.028
+                longitude: 105.834
+                status: PENDING
+                createdAt: '2026-10-08T03:00:00Z'
+                updatedAt: '2026-10-08T03:00:00Z'
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005
+                fieldErrors:
+                - field: body
+                  message: Invalid request shape.
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+                enum:
+                - Bearer
+              description: Bearer challenge.
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 403
+                code: FORBIDDEN
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '404':
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 404
+                code: NOT_FOUND
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '500':
+          description: INTERNAL_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 500
+                code: INTERNAL_ERROR
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/ReportingId'
+        description: Resource UUID
+      security:
+      - bearerAuth: []
+    delete:
+      operationId: E11
+      summary: E11 DELETE /api/reports/{id}
+      tags:
+      - Reporting
+      description: Owner + PENDING only. Soft delete, not a report status. Already deleted/missing/other owner at
+        initial read =>404. After observing PENDING, losing atomic write to concurrent verification/withdraw =>409
+        INVALID_TRANSITION. No request body.
+      x-owner: Person 2
+      x-task: B2
+      x-roles:
+      - CITIZEN
+      x-consumers:
+      - S03
+      responses:
+        '204':
+          description: Success; no response body.
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005
+                fieldErrors:
+                - field: body
+                  message: Invalid request shape.
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+                enum:
+                - Bearer
+              description: Bearer challenge.
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 403
+                code: FORBIDDEN
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '404':
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 404
+                code: NOT_FOUND
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '409':
+          description: INVALID_TRANSITION
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 409
+                code: INVALID_TRANSITION
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '500':
+          description: INTERNAL_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 500
+                code: INTERNAL_ERROR
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/ReportingId'
+        description: Resource UUID
+      security:
+      - bearerAuth: []
+  /api/reports/{id}/verification:
+    patch:
+      operationId: E10
+      summary: E10 PATCH /api/reports/{id}/verification
+      tags:
+      - Reporting
+      description: PENDING only. VERIFIED requires existing ACTIVE disaster at business check; REJECTED requires
+        reason, forbids disasterId. No type-match rule. Deleted at initial read =>404; after observing PENDING,
+        losing atomic write to concurrent withdraw/verification =>409 INVALID_TRANSITION.
+      x-owner: Person 2
+      x-task: B2
+      x-roles:
+      - AUTHORITY
+      x-consumers:
+      - S04
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingReport'
+              example:
+                id: 00000000-0000-4000-8000-000000000005
+                reporterId: 00000000-0000-4000-8000-000000000001
+                type: FLOOD
+                description: Water rising near the entrance
+                latitude: 21.028
+                longitude: 105.834
+                status: VERIFIED
+                createdAt: '2026-10-08T03:00:00Z'
+                updatedAt: '2026-10-08T03:01:00Z'
+                disasterId: 00000000-0000-4000-8000-000000000004
+                verifiedAt: '2026-10-08T03:01:00Z'
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005/verification
+                fieldErrors:
+                - field: body
+                  message: Invalid request shape.
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005/verification
+                fieldErrors: []
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+                enum:
+                - Bearer
+              description: Bearer challenge.
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 403
+                code: FORBIDDEN
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005/verification
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '404':
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 404
+                code: NOT_FOUND
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005/verification
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '409':
+          description: INVALID_TRANSITION / DISASTER_NOT_ACTIVE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 409
+                code: INVALID_TRANSITION
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005/verification
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '415':
+          description: UNSUPPORTED_MEDIA_TYPE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 415
+                code: UNSUPPORTED_MEDIA_TYPE
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005/verification
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '500':
+          description: INTERNAL_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 500
+                code: INTERNAL_ERROR
+                message: Request could not be completed.
+                path: /api/reports/00000000-0000-4000-8000-000000000005/verification
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/ReportingId'
+        description: Resource UUID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportingVerificationRequest'
+            example:
+              status: VERIFIED
+              disasterId: 00000000-0000-4000-8000-000000000004
+      security:
+      - bearerAuth: []
+  /api/rescue-teams:
+    get:
+      operationId: E12
+      summary: E12 GET /api/rescue-teams
+      security:
+      - bearerAuth: []
+      tags:
+      - Rescue
+      description: Derived availability at read time only; assignment rechecks database invariant.
+      x-owner: Person 4
+      x-task: D1
+      x-roles:
+      - AUTHORITY
+      x-consumers:
+      - S06
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueRescueTeamPage'
+              example:
+                items:
+                - id: 00000000-0000-4000-8000-000000000006
+                  name: Demo team 1
+                  availability: AVAILABLE
+                page: 0
+                size: 20
+                totalElements: 1
+                totalPages: 1
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/rescue-teams
+                fieldErrors:
+                - field: body
+                  message: Invalid request shape.
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/rescue-teams
+                fieldErrors: []
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+                enum:
+                - Bearer
+              description: Bearer challenge.
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 403
+                code: FORBIDDEN
+                message: Request could not be completed.
+                path: /api/rescue-teams
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '500':
+          description: INTERNAL_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 500
+                code: INTERNAL_ERROR
+                message: Request could not be completed.
+                path: /api/rescue-teams
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 1000000
+          default: 0
+        description: page
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        description: size
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - name,asc
+          - name,desc
+          default: name,asc
+        description: One sort only. Always append id ASC as tie-breaker.
+      - name: availability
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - AVAILABLE
+          - BUSY
+        description: availability
+  /api/rescue-missions:
+    post:
+      operationId: E13
+      summary: E13 POST /api/rescue-missions
+      security:
+      - bearerAuth: []
+      tags:
+      - Rescue
+      description: Require nondeleted VERIFIED report, associated ACTIVE disaster at business check, existing team,
+        no prior mission for report, no active mission for team. Atomic DB invariants; no cancel or reassign.
+      x-owner: Person 4
+      x-task: D1
+      x-roles:
+      - AUTHORITY
+      x-consumers:
+      - S06
+      responses:
+        '201':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueMission'
+              example:
+                id: 00000000-0000-4000-8000-000000000007
+                reportId: 00000000-0000-4000-8000-000000000005
+                teamId: 00000000-0000-4000-8000-000000000006
+                status: ASSIGNED
+                assignedAt: '2026-10-08T03:00:00Z'
+                updatedAt: '2026-10-08T03:00:00Z'
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/rescue-missions
+                fieldErrors:
+                - field: body
+                  message: Invalid request shape.
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/rescue-missions
+                fieldErrors: []
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+                enum:
+                - Bearer
+              description: Bearer challenge.
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 403
+                code: FORBIDDEN
+                message: Request could not be completed.
+                path: /api/rescue-missions
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '404':
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 404
+                code: NOT_FOUND
+                message: Request could not be completed.
+                path: /api/rescue-missions
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '409':
+          description: REPORT_NOT_VERIFIED / DISASTER_NOT_ACTIVE / REPORT_ALREADY_ASSIGNED / TEAM_BUSY
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 409
+                code: REPORT_NOT_VERIFIED
+                message: Request could not be completed.
+                path: /api/rescue-missions
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '415':
+          description: UNSUPPORTED_MEDIA_TYPE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 415
+                code: UNSUPPORTED_MEDIA_TYPE
+                message: Request could not be completed.
+                path: /api/rescue-missions
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '500':
+          description: INTERNAL_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 500
+                code: INTERNAL_ERROR
+                message: Request could not be completed.
+                path: /api/rescue-missions
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RescueCreateMissionRequest'
+            example:
+              reportId: 00000000-0000-4000-8000-000000000005
+              teamId: 00000000-0000-4000-8000-000000000006
+    get:
+      operationId: E14
+      summary: E14 GET /api/rescue-missions
+      security:
+      - bearerAuth: []
+      tags:
+      - Rescue
+      description: Validate report visibility through Reporting before applying mission filters. Citizen can only
+        query their own reportId, never all missions. Visible report with no missions or unmatched filters =>200
+        empty page. Authority may omit reportId. Unknown teamId filter =>empty page. Batch lookup for page report
+        data; no N+1.
+      x-owner: Person 4
+      x-task: D1
+      x-roles:
+      - CITIZEN
+      - AUTHORITY
+      x-consumers:
+      - S03
+      - S06
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueMissionPage'
+              example:
+                items:
+                - id: 00000000-0000-4000-8000-000000000007
+                  reportId: 00000000-0000-4000-8000-000000000005
+                  teamId: 00000000-0000-4000-8000-000000000006
+                  status: ASSIGNED
+                  assignedAt: '2026-10-08T03:00:00Z'
+                  updatedAt: '2026-10-08T03:00:00Z'
+                page: 0
+                size: 20
+                totalElements: 1
+                totalPages: 1
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/rescue-missions
+                fieldErrors:
+                - field: body
+                  message: Invalid request shape.
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/rescue-missions
+                fieldErrors: []
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+                enum:
+                - Bearer
+              description: Bearer challenge.
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 403
+                code: FORBIDDEN
+                message: Request could not be completed.
+                path: /api/rescue-missions
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '404':
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 404
+                code: NOT_FOUND
+                message: Request could not be completed.
+                path: /api/rescue-missions
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '500':
+          description: INTERNAL_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 500
+                code: INTERNAL_ERROR
+                message: Request could not be completed.
+                path: /api/rescue-missions
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 1000000
+          default: 0
+        description: page
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        description: size
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - createdAt,desc
+          - createdAt,asc
+          default: createdAt,desc
+        description: One sort only. Always append id ASC as tie-breaker. Mission createdAt sort means assignedAt.
+      - name: reportId
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/RescueId'
+        description: Optional for AUTHORITY; required for CITIZEN (missing =>400). Supplied missing/deleted/other-owner
+          report =>404 even if no mission exists.
+      - name: status
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/RescueMissionStatus'
+        description: status
+      - name: teamId
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/RescueId'
+        description: teamId
+  /api/rescue-missions/{id}/status:
+    patch:
+      operationId: E15
+      summary: E15 PATCH /api/rescue-missions/{id}/status
+      security:
+      - bearerAuth: []
+      tags:
+      - Rescue
+      description: ASSIGNED -> IN_PROGRESS -> COMPLETED only; repeated or skipped transition =>409. Atomic compare-state
+        update; existing missions may complete after disaster resolved.
+      x-owner: Person 4
+      x-task: D1
+      x-roles:
+      - AUTHORITY
+      x-consumers:
+      - S06
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueMission'
+              example:
+                id: 00000000-0000-4000-8000-000000000007
+                reportId: 00000000-0000-4000-8000-000000000005
+                teamId: 00000000-0000-4000-8000-000000000006
+                status: IN_PROGRESS
+                assignedAt: '2026-10-08T03:00:00Z'
+                updatedAt: '2026-10-08T03:02:00Z'
+                startedAt: '2026-10-08T03:02:00Z'
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/rescue-missions/00000000-0000-4000-8000-000000000005/status
+                fieldErrors:
+                - field: body
+                  message: Invalid request shape.
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/rescue-missions/00000000-0000-4000-8000-000000000005/status
+                fieldErrors: []
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+                enum:
+                - Bearer
+              description: Bearer challenge.
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 403
+                code: FORBIDDEN
+                message: Request could not be completed.
+                path: /api/rescue-missions/00000000-0000-4000-8000-000000000005/status
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '404':
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 404
+                code: NOT_FOUND
+                message: Request could not be completed.
+                path: /api/rescue-missions/00000000-0000-4000-8000-000000000005/status
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '409':
+          description: INVALID_TRANSITION
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 409
+                code: INVALID_TRANSITION
+                message: Request could not be completed.
+                path: /api/rescue-missions/00000000-0000-4000-8000-000000000005/status
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '415':
+          description: UNSUPPORTED_MEDIA_TYPE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 415
+                code: UNSUPPORTED_MEDIA_TYPE
+                message: Request could not be completed.
+                path: /api/rescue-missions/00000000-0000-4000-8000-000000000005/status
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '500':
+          description: INTERNAL_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueError'
+              example:
+                timestamp: '2026-10-08T03:00:00Z'
+                status: 500
+                code: INTERNAL_ERROR
+                message: Request could not be completed.
+                path: /api/rescue-missions/00000000-0000-4000-8000-000000000005/status
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/RescueId'
+        description: Resource UUID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RescueUpdateMissionStatusRequest'
+            example:
+              status: IN_PROGRESS
+  /api/dashboard:
+    get:
+      operationId: E16
+      summary: Read dashboard statistics
+      description: AUTHORITY only. Supply both from/to (YYYY-MM-DD, years 0001-9999, from <= to), or neither. Both
+        calendar days are inclusive in Asia/Ho_Chi_Minh. Without dates, from/to in the response are null. Reports
+        are filtered by created_at, withdrawn reports excluded; missions by assigned_at. Status counts reflect current
+        state of that cohort, not historical transitions. Teams always reflect all current teams regardless of date
+        filter. One read-only REPEATABLE READ snapshot. Unknown/repeated/empty query keys, invalid dates or request
+        body return 400.
+      parameters:
+      - name: from
+        in: query
+        required: false
+        description: Inclusive from date; requires the other date. Omit both for all time.
+        schema:
+          type: string
+          format: date
+          pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+        example: '2026-10-01'
+      - name: to
+        in: query
+        required: false
+        description: Inclusive to date; requires the other date. Omit both for all time.
+        schema:
+          type: string
+          format: date
+          pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+        example: '2026-10-28'
+      responses:
+        '200':
+          description: Current counts, including zero for empty cohorts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummary'
+              example:
+                from: '2026-10-01'
+                to: '2026-10-28'
+                timeZone: Asia/Ho_Chi_Minh
+                asOf: '2026-10-28T09:00:00Z'
+                reports:
+                  pending: 12
+                  verified: 9
+                  rejected: 3
+                missions:
+                  assigned: 2
+                  inProgress: 3
+                  completed: 4
+                teams:
+                  available: 5
+                  busy: 5
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '401':
+          description: UNAUTHENTICATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityError'
+              example:
+                timestamp: '2026-10-28T09:00:00Z'
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request could not be completed.
+                path: /api/dashboard
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '403':
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityError'
+              example:
+                timestamp: '2026-10-28T09:00:00Z'
+                status: 403
+                code: FORBIDDEN
+                message: Request could not be completed.
+                path: /api/dashboard
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '400':
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityError'
+              example:
+                timestamp: '2026-10-28T09:00:00Z'
+                status: 400
+                code: VALIDATION_ERROR
+                message: Request could not be completed.
+                path: /api/dashboard
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+        '500':
+          description: INTERNAL_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityError'
+              example:
+                timestamp: '2026-10-28T09:00:00Z'
+                status: 500
+                code: INTERNAL_ERROR
+                message: Request could not be completed.
+                path: /api/dashboard
+                fieldErrors: []
+          headers:
+            Cache-Control:
+              description: Do not cache user data.
+              schema:
+                type: string
+                enum:
+                - no-store
+      tags:
+      - Dashboard
+      x-roles:
+      - AUTHORITY
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    IdentityId:
+      type: string
+      format: uuid
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      description: Canonical lowercase UUID; server-generated for new resources.
+    IdentityTimestamp:
+      type: string
+      format: date-time
+      pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?Z$
+      description: ISO-8601 UTC, Z suffix, up to nanoseconds.
+    IdentityEmail:
+      type: string
+      minLength: 3
+      maxLength: 254
+      pattern: ^[^\s@]+@[^\s@]+\.[^\s@]+$
+      description: Trim and lowercase with Locale.ROOT before validation, matching existing EmailAddress. Length
+        applies after normalization.
+    IdentityUser:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/IdentityId'
+        email:
+          $ref: '#/components/schemas/IdentityEmail'
+        role:
+          type: string
+          enum:
+          - CITIZEN
+          - AUTHORITY
+      required:
+      - id
+      - email
+      - role
+      example:
+        id: 00000000-0000-4000-8000-000000000001
+        email: citizen.one@example.test
+        role: CITIZEN
+    IdentityLoginRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          $ref: '#/components/schemas/IdentityEmail'
+        password:
+          type: string
+          minLength: 1
+          maxLength: 128
+          writeOnly: true
+          description: Do not trim/normalize. Also at most 72 UTF-8 bytes for BCrypt compatibility. Never log.
+      required:
+      - email
+      - password
+      example:
+        email: citizen.one@example.test
+        password: <from-demo-environment>
+    IdentityLoginResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        accessToken:
+          type: string
+          minLength: 1
+          maxLength: 4096
+        tokenType:
+          type: string
+          enum:
+          - Bearer
+        expiresIn:
+          type: integer
+          enum:
+          - 900
+        expiresAt:
+          $ref: '#/components/schemas/IdentityTimestamp'
+        user:
+          $ref: '#/components/schemas/IdentityUser'
+      required:
+      - accessToken
+      - tokenType
+      - expiresIn
+      - expiresAt
+      - user
+      example:
+        accessToken: <issued-jwt-not-a-real-token>
+        tokenType: Bearer
+        expiresIn: 900
+        expiresAt: '2026-10-08T03:15:00Z'
+        user:
+          id: 00000000-0000-4000-8000-000000000001
+          email: citizen.one@example.test
+          role: CITIZEN
+    IdentityFieldError:
+      type: object
+      additionalProperties: false
+      properties:
+        field:
+          type: string
+          minLength: 1
+          maxLength: 100
+        message:
+          type: string
+          minLength: 1
+          maxLength: 500
+      required:
+      - field
+      - message
+      description: field is body/query field name, id, or body for malformed JSON. Never include rejected values.
+    IdentityError:
+      type: object
+      additionalProperties: false
+      properties:
+        timestamp:
+          $ref: '#/components/schemas/IdentityTimestamp'
+        status:
+          type: integer
+          enum:
+          - 400
+          - 401
+          - 403
+          - 404
+          - 409
+          - 415
+          - 500
+        code:
+          type: string
+          enum:
+          - VALIDATION_ERROR
+          - UNAUTHENTICATED
+          - INVALID_CREDENTIALS
+          - FORBIDDEN
+          - NOT_FOUND
+          - INVALID_TRANSITION
+          - STALE_VERSION
+          - DISASTER_NOT_ACTIVE
+          - REPORT_NOT_VERIFIED
+          - REPORT_ALREADY_ASSIGNED
+          - TEAM_BUSY
+          - UNSUPPORTED_MEDIA_TYPE
+          - INTERNAL_ERROR
+        message:
+          type: string
+          minLength: 1
+          maxLength: 500
+        path:
+          type: string
+          minLength: 1
+          maxLength: 2048
+        fieldErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentityFieldError'
+          maxItems: 100
+      required:
+      - timestamp
+      - status
+      - code
+      - message
+      - path
+      - fieldErrors
+      description: fieldErrors always present; [] except validation errors. path excludes query string. No stack
+        trace, credentials or token.
+      example:
+        timestamp: '2026-10-08T03:00:00Z'
+        status: 409
+        code: TEAM_BUSY
+        message: Team already has an active mission.
+        path: /api/rescue-missions
+        fieldErrors: []
+    DisasterCreateDisasterRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          $ref: '#/components/schemas/DisasterName'
+        type:
+          $ref: '#/components/schemas/DisasterDisasterType'
+        severity:
+          $ref: '#/components/schemas/DisasterSeverity'
+        description:
+          $ref: '#/components/schemas/DisasterDescription'
+        latitude:
+          $ref: '#/components/schemas/DisasterLatitude'
+        longitude:
+          $ref: '#/components/schemas/DisasterLongitude'
+      required:
+      - name
+      - type
+      - severity
+      - description
+      - latitude
+      - longitude
+      example:
+        name: Hanoi flood exercise
+        type: FLOOD
+        severity: HIGH
+        description: Training scenario only
+        latitude: 21.028
+        longitude: 105.834
+    DisasterDescription:
+      type: string
+      minLength: 1
+      maxLength: 2000
+      pattern: \S
+      description: Trim outer whitespace; plain text, no HTML rendering.
+    DisasterDisaster:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/DisasterId'
+        name:
+          $ref: '#/components/schemas/DisasterName'
+        type:
+          $ref: '#/components/schemas/DisasterDisasterType'
+        severity:
+          $ref: '#/components/schemas/DisasterSeverity'
+        description:
+          $ref: '#/components/schemas/DisasterDescription'
+        latitude:
+          $ref: '#/components/schemas/DisasterLatitude'
+        longitude:
+          $ref: '#/components/schemas/DisasterLongitude'
+        status:
+          $ref: '#/components/schemas/DisasterDisasterStatus'
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+          maximum: 9007199254740991
+        createdAt:
+          $ref: '#/components/schemas/DisasterTimestamp'
+        updatedAt:
+          $ref: '#/components/schemas/DisasterTimestamp'
+      required:
+      - id
+      - name
+      - type
+      - severity
+      - description
+      - latitude
+      - longitude
+      - status
+      - version
+      - createdAt
+      - updatedAt
+      example:
+        id: 00000000-0000-4000-8000-000000000004
+        name: Hanoi flood exercise
+        type: FLOOD
+        severity: HIGH
+        description: Training scenario only
+        latitude: 21.028
+        longitude: 105.834
+        status: ACTIVE
+        version: 0
+        createdAt: '2026-10-08T03:00:00Z'
+        updatedAt: '2026-10-08T03:00:00Z'
+    DisasterDisasterPage:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DisasterDisaster'
+          maxItems: 100
+        page:
+          type: integer
+          minimum: 0
+          maximum: 1000000
+        size:
+          type: integer
+          minimum: 1
+          maximum: 100
+        totalElements:
+          type: integer
+          format: int64
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+      required:
+      - items
+      - page
+      - size
+      - totalElements
+      - totalPages
+      description: Own PageResponse, never Spring Page. Counts after authorization and all filters, before pagination.
+        totalPages=ceil(totalElements/size); empty total is 0 pages; page beyond end returns empty items, 200.
+      example:
+        items:
+        - id: 00000000-0000-4000-8000-000000000004
+          name: Hanoi flood exercise
+          type: FLOOD
+          severity: HIGH
+          description: Training scenario only
+          latitude: 21.028
+          longitude: 105.834
+          status: ACTIVE
+          version: 0
+          createdAt: '2026-10-08T03:00:00Z'
+          updatedAt: '2026-10-08T03:00:00Z'
+        page: 0
+        size: 20
+        totalElements: 1
+        totalPages: 1
+    DisasterDisasterStatus:
+      type: string
+      enum:
+      - ACTIVE
+      - RESOLVED
+    DisasterDisasterType:
+      type: string
+      enum:
+      - EARTHQUAKE
+      - FLOOD
+      - TYPHOON
+      - WILDFIRE
+      - TSUNAMI
+    DisasterError:
+      type: object
+      additionalProperties: false
+      properties:
+        timestamp:
+          $ref: '#/components/schemas/DisasterTimestamp'
+        status:
+          type: integer
+          enum:
+          - 400
+          - 401
+          - 403
+          - 404
+          - 409
+          - 415
+          - 500
+        code:
+          type: string
+          enum:
+          - VALIDATION_ERROR
+          - UNAUTHENTICATED
+          - INVALID_CREDENTIALS
+          - FORBIDDEN
+          - NOT_FOUND
+          - INVALID_TRANSITION
+          - STALE_VERSION
+          - DISASTER_NOT_ACTIVE
+          - REPORT_NOT_VERIFIED
+          - REPORT_ALREADY_ASSIGNED
+          - TEAM_BUSY
+          - UNSUPPORTED_MEDIA_TYPE
+          - INTERNAL_ERROR
+        message:
+          type: string
+          minLength: 1
+          maxLength: 500
+        path:
+          type: string
+          minLength: 1
+          maxLength: 2048
+        fieldErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/DisasterFieldError'
+          maxItems: 100
+      required:
+      - timestamp
+      - status
+      - code
+      - message
+      - path
+      - fieldErrors
+      description: fieldErrors always present; [] except validation errors. path excludes query string. No stack
+        trace, credentials or token.
+      example:
+        timestamp: '2026-10-08T03:00:00Z'
+        status: 409
+        code: TEAM_BUSY
+        message: Team already has an active mission.
+        path: /api/rescue-missions
+        fieldErrors: []
+    DisasterFieldError:
+      type: object
+      additionalProperties: false
+      properties:
+        field:
+          type: string
+          minLength: 1
+          maxLength: 100
+        message:
+          type: string
+          minLength: 1
+          maxLength: 500
+      required:
+      - field
+      - message
+      description: field is body/query field name, id, or body for malformed JSON. Never include rejected values.
+    DisasterId:
+      type: string
+      format: uuid
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      description: Canonical lowercase UUID; server-generated for new resources.
+    DisasterLatitude:
+      type: number
+      format: double
+      minimum: -90
+      maximum: 90
+    DisasterLongitude:
+      type: number
+      format: double
+      minimum: -180
+      maximum: 180
+    DisasterName:
+      type: string
+      minLength: 1
+      maxLength: 120
+      pattern: \S
+      description: Trim outer whitespace; must contain a non-whitespace character.
+    DisasterSeverity:
+      type: string
+      enum:
+      - LOW
+      - MODERATE
+      - HIGH
+      - CRITICAL
+    DisasterTimestamp:
+      type: string
+      format: date-time
+      pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?Z$
+      description: ISO-8601 UTC, Z suffix, up to nanoseconds.
+    DisasterUpdateDisasterRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        expectedVersion:
+          type: integer
+          format: int64
+          minimum: 0
+          maximum: 9007199254740991
+        name:
+          $ref: '#/components/schemas/DisasterName'
+        type:
+          $ref: '#/components/schemas/DisasterDisasterType'
+        severity:
+          $ref: '#/components/schemas/DisasterSeverity'
+        description:
+          $ref: '#/components/schemas/DisasterDescription'
+        latitude:
+          $ref: '#/components/schemas/DisasterLatitude'
+        longitude:
+          $ref: '#/components/schemas/DisasterLongitude'
+        status:
+          $ref: '#/components/schemas/DisasterDisasterStatus'
+      required:
+      - expectedVersion
+      minProperties: 2
+      description: At least one editable field plus expectedVersion. Omitted fields unchanged, null forbidden. ACTIVE
+        may be edited or moved to RESOLVED; RESOLVED is immutable. Explicit ACTIVE->ACTIVE or RESOLVED->RESOLVED
+        is 409; omit status for edits.
+      example:
+        expectedVersion: 0
+        status: RESOLVED
+    ReportingReportAttachment:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/ReportingId'
+        reportId:
+          $ref: '#/components/schemas/ReportingId'
+        originalFilename:
+          type: string
+          minLength: 1
+          maxLength: 255
+        mediaType:
+          type: string
+          enum:
+          - image/jpeg
+          - image/png
+        sizeBytes:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 5242880
+        createdAt:
+          $ref: '#/components/schemas/ReportingTimestamp'
+      required:
+      - id
+      - reportId
+      - originalFilename
+      - mediaType
+      - sizeBytes
+      - createdAt
+      example: *id001
+    ReportingCreateReportRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          $ref: '#/components/schemas/ReportingDisasterType'
+        description:
+          $ref: '#/components/schemas/ReportingDescription'
+        latitude:
+          $ref: '#/components/schemas/ReportingLatitude'
+        longitude:
+          $ref: '#/components/schemas/ReportingLongitude'
+      required:
+      - type
+      - description
+      - latitude
+      - longitude
+      example:
+        type: FLOOD
+        description: Water rising near the entrance
+        latitude: 21.028
+        longitude: 105.834
+    ReportingDescription:
+      type: string
+      minLength: 1
+      maxLength: 2000
+      pattern: \S
+      description: Trim outer whitespace; plain text, no HTML rendering.
+    ReportingDisasterType:
+      type: string
+      enum:
+      - EARTHQUAKE
+      - FLOOD
+      - TYPHOON
+      - WILDFIRE
+      - TSUNAMI
+    ReportingError:
+      type: object
+      additionalProperties: false
+      properties:
+        timestamp:
+          $ref: '#/components/schemas/ReportingTimestamp'
+        status:
+          type: integer
+          enum:
+          - 400
+          - 401
+          - 403
+          - 404
+          - 409
+          - 415
+          - 500
+          - 413
+        code:
+          type: string
+          enum:
+          - VALIDATION_ERROR
+          - UNAUTHENTICATED
+          - INVALID_CREDENTIALS
+          - FORBIDDEN
+          - NOT_FOUND
+          - INVALID_TRANSITION
+          - STALE_VERSION
+          - DISASTER_NOT_ACTIVE
+          - REPORT_NOT_VERIFIED
+          - REPORT_ALREADY_ASSIGNED
+          - TEAM_BUSY
+          - UNSUPPORTED_MEDIA_TYPE
+          - INTERNAL_ERROR
+          - ATTACHMENT_FILE_REQUIRED
+          - ATTACHMENT_EMPTY
+          - ATTACHMENT_TOO_LARGE
+          - ATTACHMENT_UNSUPPORTED_FORMAT
+          - ATTACHMENT_LIMIT_REACHED
+          - ATTACHMENT_REPORT_NOT_PENDING
+          - ATTACHMENT_STORAGE_ERROR
+        message:
+          type: string
+          minLength: 1
+          maxLength: 500
+        path:
+          type: string
+          minLength: 1
+          maxLength: 2048
+        fieldErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportingFieldError'
+          maxItems: 100
+      required:
+      - timestamp
+      - status
+      - code
+      - message
+      - path
+      - fieldErrors
+      description: fieldErrors always present; [] except validation errors. path excludes query string. No stack
+        trace, credentials or token.
+      example:
+        timestamp: '2026-10-08T03:00:00Z'
+        status: 409
+        code: TEAM_BUSY
+        message: Team already has an active mission.
+        path: /api/rescue-missions
+        fieldErrors: []
+    ReportingFieldError:
+      type: object
+      additionalProperties: false
+      properties:
+        field:
+          type: string
+          minLength: 1
+          maxLength: 100
+        message:
+          type: string
+          minLength: 1
+          maxLength: 500
+      required:
+      - field
+      - message
+      description: field is body/query field name, id, or body for malformed JSON. Never include rejected values.
+    ReportingId:
+      type: string
+      format: uuid
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      description: Canonical lowercase UUID; server-generated for new resources.
+    ReportingLatitude:
+      type: number
+      format: double
+      minimum: -90
+      maximum: 90
+    ReportingLongitude:
+      type: number
+      format: double
+      minimum: -180
+      maximum: 180
+    ReportingRejectReportRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+          - REJECTED
+        rejectionReason:
+          type: string
+          minLength: 1
+          maxLength: 500
+          pattern: \S
+          description: Trim outer whitespace; nonblank.
+      required:
+      - status
+      - rejectionReason
+      example:
+        status: REJECTED
+        rejectionReason: Insufficient location details
+    ReportingReport:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/ReportingId'
+        reporterId:
+          $ref: '#/components/schemas/ReportingId'
+        type:
+          $ref: '#/components/schemas/ReportingDisasterType'
+        description:
+          $ref: '#/components/schemas/ReportingDescription'
+        latitude:
+          $ref: '#/components/schemas/ReportingLatitude'
+        longitude:
+          $ref: '#/components/schemas/ReportingLongitude'
+        status:
+          $ref: '#/components/schemas/ReportingReportStatus'
+        disasterId:
+          $ref: '#/components/schemas/ReportingId'
+        rejectionReason:
+          type: string
+          minLength: 1
+          maxLength: 500
+          pattern: \S
+        verifiedAt:
+          $ref: '#/components/schemas/ReportingTimestamp'
+        rejectedAt:
+          $ref: '#/components/schemas/ReportingTimestamp'
+        createdAt:
+          $ref: '#/components/schemas/ReportingTimestamp'
+        updatedAt:
+          $ref: '#/components/schemas/ReportingTimestamp'
+      required:
+      - id
+      - reporterId
+      - type
+      - description
+      - latitude
+      - longitude
+      - status
+      - createdAt
+      - updatedAt
+      description: 'PENDING: no disasterId/rejectionReason/verifiedAt/rejectedAt. VERIFIED: disasterId and verifiedAt
+        required, rejection fields absent. REJECTED: rejectionReason and rejectedAt required, verification fields
+        absent. No mission data. Withdrawn reports never returned.'
+      oneOf:
+      - properties:
+          status:
+            type: string
+            enum:
+            - PENDING
+        not:
+          anyOf:
+          - required:
+            - disasterId
+          - required:
+            - verifiedAt
+          - required:
+            - rejectionReason
+          - required:
+            - rejectedAt
+      - properties:
+          status:
+            type: string
+            enum:
+            - VERIFIED
+        required:
+        - disasterId
+        - verifiedAt
+        not:
+          anyOf:
+          - required:
+            - rejectionReason
+          - required:
+            - rejectedAt
+      - properties:
+          status:
+            type: string
+            enum:
+            - REJECTED
+        required:
+        - rejectionReason
+        - rejectedAt
+        not:
+          anyOf:
+          - required:
+            - disasterId
+          - required:
+            - verifiedAt
+      example:
+        id: 00000000-0000-4000-8000-000000000005
+        reporterId: 00000000-0000-4000-8000-000000000001
+        type: FLOOD
+        description: Water rising near the entrance
+        latitude: 21.028
+        longitude: 105.834
+        status: PENDING
+        createdAt: '2026-10-08T03:00:00Z'
+        updatedAt: '2026-10-08T03:00:00Z'
+    ReportingReportPage:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportingReport'
+          maxItems: 100
+        page:
+          type: integer
+          minimum: 0
+          maximum: 1000000
+        size:
+          type: integer
+          minimum: 1
+          maximum: 100
+        totalElements:
+          type: integer
+          format: int64
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+      required:
+      - items
+      - page
+      - size
+      - totalElements
+      - totalPages
+      description: Own PageResponse, never Spring Page. Counts after authorization and all filters, before pagination.
+        totalPages=ceil(totalElements/size); empty total is 0 pages; page beyond end returns empty items, 200.
+      example:
+        items:
+        - id: 00000000-0000-4000-8000-000000000005
+          reporterId: 00000000-0000-4000-8000-000000000001
+          type: FLOOD
+          description: Water rising near the entrance
+          latitude: 21.028
+          longitude: 105.834
+          status: PENDING
+          createdAt: '2026-10-08T03:00:00Z'
+          updatedAt: '2026-10-08T03:00:00Z'
+        page: 0
+        size: 20
+        totalElements: 1
+        totalPages: 1
+    ReportingReportStatus:
+      type: string
+      enum:
+      - PENDING
+      - VERIFIED
+      - REJECTED
+    ReportingTimestamp:
+      type: string
+      format: date-time
+      pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?Z$
+      description: ISO-8601 UTC, Z suffix, up to nanoseconds.
+    ReportingVerificationRequest:
+      oneOf:
+      - $ref: '#/components/schemas/ReportingVerifyReportRequest'
+      - $ref: '#/components/schemas/ReportingRejectReportRequest'
+      example:
+        status: VERIFIED
+        disasterId: 00000000-0000-4000-8000-000000000004
+    ReportingVerifyReportRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+          - VERIFIED
+        disasterId:
+          $ref: '#/components/schemas/ReportingId'
+      required:
+      - status
+      - disasterId
+      example:
+        status: VERIFIED
+        disasterId: 00000000-0000-4000-8000-000000000004
+    RescueId:
+      type: string
+      format: uuid
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      description: Canonical lowercase UUID with hyphens.
+    RescueName:
+      type: string
+      minLength: 1
+      maxLength: 120
+      description: Unicode text trimmed at ends, not blank.
+    RescueTimestamp:
+      type: string
+      format: date-time
+      description: ISO-8601 UTC timestamp.
+    RescueMissionStatus:
+      type: string
+      enum:
+      - ASSIGNED
+      - IN_PROGRESS
+      - COMPLETED
+      description: ASSIGNED -> IN_PROGRESS -> COMPLETED
+    RescueRescueTeam:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/RescueId'
+        name:
+          $ref: '#/components/schemas/RescueName'
+        availability:
+          type: string
+          enum:
+          - AVAILABLE
+          - BUSY
+      required:
+      - id
+      - name
+      - availability
+      description: Availability is derived from active missions, not independently writable.
+      example:
+        id: 00000000-0000-4000-8000-000000000006
+        name: Demo team 1
+        availability: AVAILABLE
+    RescueRescueTeamPage:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RescueRescueTeam'
+          maxItems: 100
+        page:
+          type: integer
+          minimum: 0
+          maximum: 1000000
+        size:
+          type: integer
+          minimum: 1
+          maximum: 100
+        totalElements:
+          type: integer
+          format: int64
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+      required:
+      - items
+      - page
+      - size
+      - totalElements
+      - totalPages
+    RescueCreateMissionRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        reportId:
+          $ref: '#/components/schemas/RescueId'
+        teamId:
+          $ref: '#/components/schemas/RescueId'
+      required:
+      - reportId
+      - teamId
+      example:
+        reportId: 00000000-0000-4000-8000-000000000005
+        teamId: 00000000-0000-4000-8000-000000000006
+    RescueUpdateMissionStatusRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+          - ASSIGNED
+          - IN_PROGRESS
+          - COMPLETED
+      required:
+      - status
+      example:
+        status: IN_PROGRESS
+    RescueMission:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/RescueId'
+        reportId:
+          $ref: '#/components/schemas/RescueId'
+        teamId:
+          $ref: '#/components/schemas/RescueId'
+        status:
+          $ref: '#/components/schemas/RescueMissionStatus'
+        assignedAt:
+          $ref: '#/components/schemas/RescueTimestamp'
+        startedAt:
+          $ref: '#/components/schemas/RescueTimestamp'
+        completedAt:
+          $ref: '#/components/schemas/RescueTimestamp'
+        updatedAt:
+          $ref: '#/components/schemas/RescueTimestamp'
+      required:
+      - id
+      - reportId
+      - teamId
+      - status
+      - assignedAt
+      - updatedAt
+      description: 'ASSIGNED: startedAt/completedAt absent. IN_PROGRESS: startedAt required, completedAt absent.
+        COMPLETED: startedAt and completedAt required.'
+    RescueMissionPage:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RescueMission'
+          maxItems: 100
+        page:
+          type: integer
+          minimum: 0
+          maximum: 1000000
+        size:
+          type: integer
+          minimum: 1
+          maximum: 100
+        totalElements:
+          type: integer
+          format: int64
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+      required:
+      - items
+      - page
+      - size
+      - totalElements
+      - totalPages
+    RescueError:
+      type: object
+      additionalProperties: false
+      properties:
+        timestamp:
+          $ref: '#/components/schemas/RescueTimestamp'
+        status:
+          type: integer
+        code:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+            required:
+            - field
+            - message
+      required:
+      - timestamp
+      - status
+      - code
+      - message
+      - path
+      - fieldErrors
+    DashboardSummary:
+      type: object
+      additionalProperties: false
+      required:
+      - from
+      - to
+      - timeZone
+      - asOf
+      - reports
+      - missions
+      - teams
+      properties:
+        from:
+          type: string
+          format: date
+          nullable: true
+        to:
+          type: string
+          format: date
+          nullable: true
+        timeZone:
+          type: string
+          enum:
+          - Asia/Ho_Chi_Minh
+        asOf:
+          type: string
+          format: date-time
+        reports:
+          type: object
+          additionalProperties: false
+          required:
+          - pending
+          - verified
+          - rejected
+          properties:
+            pending:
+              type: integer
+              format: int64
+              minimum: 0
+            verified:
+              type: integer
+              format: int64
+              minimum: 0
+            rejected:
+              type: integer
+              format: int64
+              minimum: 0
+        missions:
+          type: object
+          additionalProperties: false
+          required:
+          - assigned
+          - inProgress
+          - completed
+          properties:
+            assigned:
+              type: integer
+              format: int64
+              minimum: 0
+            inProgress:
+              type: integer
+              format: int64
+              minimum: 0
+            completed:
+              type: integer
+              format: int64
+              minimum: 0
+        teams:
+          type: object
+          additionalProperties: false
+          required:
+          - available
+          - busy
+          properties:
+            available:
+              type: integer
+              format: int64
+              minimum: 0
+            busy:
+              type: integer
+              format: int64
+              minimum: 0
+  parameters:
+    ReportingReportId:
+      name: id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/ReportingId'
+    ReportingAttachmentId:
+      name: attachmentId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/ReportingId'
+  responses:
+    ReportingAttachmentValidation:
+      description: Missing or invalid image file.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReportingError'
+    ReportingForbidden:
+      description: Access denied.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReportingError'
+    ReportingNotFound:
+      description: Report or attachment not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReportingError'
+    ReportingAttachmentConflict:
+      description: Attachment limit reached or report is no longer editable.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReportingError'
+    ReportingAttachmentTooLarge:
+      description: Image exceeds 5 MiB.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReportingError'
+    ReportingAttachmentFormat:
+      description: Only JPEG and PNG images are accepted.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReportingError'
+    ReportingAttachmentStorage:
+      description: Private storage operation failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReportingError'

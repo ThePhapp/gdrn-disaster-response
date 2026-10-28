@@ -1,5 +1,12 @@
 # Báo Cáo Kiểm Toán Độc Lập Cuối Cùng và Nghiệm Thu Pha 1 (Phase 1 Final Independent Audit — Task A3)
 
+> **Hiệu đính sau đối chiếu code — 28/10/2026, `main 2ddf9d0`:** báo cáo dưới đây
+> giữ evidence lịch sử A3. Các mô tả test class, concurrency, CI, Kaggle và benchmark
+> có điểm chưa khớp code. Dùng [biên bản rà soát](../PHASE1_REVIEW.md) cho kết luận
+> hiện tại: 3 CI jobs; UNIQUE `report_id` + partial unique active `team_id`;
+> 409 `INVALID_TRANSITION` cho race Reporting; Kaggle server chưa xác nhận;
+> bổ sung rủi ro volume ảnh, proxy upload 413 và dependency audit.
+
 > - **Mã công việc:** `A3` — Audit cuối và bàn giao Pha 1
 > - **Người thực hiện:** Người 1 (`System Lead`)
 > - **Nhánh kiểm toán:** `feat/a3-final-audit` (tách từ `feat/c3-architecture-docs` @ `07cd20e`; nhánh `main` hiện tại @ `935e9ea`)
