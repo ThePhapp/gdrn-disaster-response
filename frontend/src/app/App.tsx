@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
-import { Link, NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import { useEffect, type ReactNode } from 'react'
+import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { LoginPage } from '../auth/LoginPage'
 import { session, useSession, type Role } from '../auth/session'
 import { EmptyState, ErrorMessage } from '../shared/components'
@@ -15,11 +15,15 @@ export function RoleGuard({ roles, children }: { roles: readonly Role[]; childre
 export function App() {
   const { user, generation } = useSession()
   const { t } = useI18n()
+  const { pathname } = useLocation()
   const routeLabel = (path: string) => path === '/operations/dashboard' ? t('nav.dashboard')
     : path === '/operations/disasters' ? t('nav.disasters')
     : path === '/operations/reports' ? t('nav.reports')
       : path === '/reports/new' ? t('nav.createReport')
         : path === '/my-reports' ? t('nav.myReports') : t('nav.rescue')
+  const pageTitle = pathname === '/login' ? t('login.formLabel')
+    : featureRoutes.some(route => route.path === pathname) ? routeLabel(pathname) : t('app.notFound')
+  useEffect(() => { document.title = `GDRN — ${pageTitle}` }, [pageTitle])
   return <><a className="skip-link" href="#main">{t('app.skip')}</a>
     <header className={`app-header${user?.role === 'AUTHORITY' ? ' app-header--authority' : ''}`}><Link className="brand" to={user ? landingPath(user.role) : '/login'}><span className="brand-mark" aria-hidden="true">G</span><span className="brand-name">GDRN<span className="brand-caption">Crisis Command</span></span></Link>
       <div className="app-header__right">{user ? <nav className="app-nav" aria-label={t('app.nav')}><span className="app-role">{user.role === 'CITIZEN' ? t('app.citizen') : t('app.authority')}</span>{featureRoutes.filter(route => route.roles.includes(user.role)).map(route => <NavLink key={route.path} to={route.path}>{routeLabel(route.path)}</NavLink>)}
