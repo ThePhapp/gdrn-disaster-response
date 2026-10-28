@@ -1,9 +1,5 @@
 # Global Disaster Response Network (GDRN)
 
-**Hệ thống Điều phối và Ứng phó Thảm họa Toàn cầu** - mô phỏng học thuật về tiếp nhận
-báo cáo sự cố và điều phối cứu hộ. README là tài liệu vào dự án cho nhóm nhận
-Phase 2; [kịch bản nói 6 phút](docs/PHASE1_PRESENTATION.md) dùng cho buổi báo cáo 5-7 phút.
-
 ## 1. Bài toán và nghiệp vụ
 
 Thông tin sự cố trao đổi rời rạc khiến người dân khó theo dõi yêu cầu, điều phối viên
@@ -138,11 +134,3 @@ nghiệp vụ, module boundaries và migration đã phát hành. Đổi kiến t
 before/after và ADR; các nhận xét trên là findings bàn giao, không thay
 [catalog triển khai](docs/PHASE1_PLAN.md), [quy tắc phát triển](CONTRIBUTING.md) và
 [bối cảnh dài hạn](GDRN_PROJECT_CONTEXT.md).
-
-## 6. Khung trình bày 5-7 phút
-
-**0:00-1:00:** bài toán/người dùng; **1:00-2:30:** luồng nghiệp vụ/quy tắc;
-**2:30-4:00:** mã nguồn/framework/yêu cầu kỹ thuật; **4:00-5:00:** build/deploy/API;
-**5:00-6:00:** vấn đề hiện có và bàn giao Phase 2. Dùng
-[kịch bản 6 phút](docs/PHASE1_PRESENTATION.md); thời lượng cần tập thử, không tính Q&A
-và [demo thao tác dài](docs/qa/phase1-demo-script.md) vào 5-7 phút này.
