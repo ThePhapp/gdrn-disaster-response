@@ -102,6 +102,7 @@ describe('ReportingCitizenPage', () => {
     mocks.attachmentContent.mockResolvedValue(new Blob())
     mocks.uploadAttachment.mockResolvedValue(undefined)
     mocks.deleteAttachment.mockResolvedValue(undefined)
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:evidence'), revokeObjectURL: vi.fn() }))
   })
 
   it('loads the citizen report list and shows status', async () => {
@@ -172,6 +173,78 @@ describe('ReportingCitizenPage', () => {
     expect(mocks.navigate).toHaveBeenCalledWith('/my-reports', {
       state: { selectedReportId: report.id },
     })
+  })
+
+  it('uploads selected evidence only after creating the report and waits before navigating', async () => {
+    const user = userEvent.setup()
+    let finish!: () => void
+    mocks.uploadAttachment.mockImplementationOnce(() => new Promise<void>(resolve => { finish = resolve }))
+    renderAt('/reports/new')
+    const file = new File(['image'], 'flood.png', { type: 'image/png' })
+    await user.upload(screen.getByLabelText('Thêm ảnh minh chứng'), file)
+    expect(screen.getByRole('img', { name: 'flood.png' })).toBeVisible()
+    expect(mocks.uploadAttachment).not.toHaveBeenCalled()
+    await user.type(screen.getByLabelText('Mô tả tình huống'), report.description)
+    await user.click(screen.getByRole('button', { name: 'Chọn vị trí báo cáo' }))
+    await user.click(screen.getByRole('button', { name: 'Gửi báo cáo' }))
+    await waitFor(() => expect(mocks.uploadAttachment).toHaveBeenCalledWith(report.id, file))
+    expect(screen.getByRole('button', { name: 'Đang tải ảnh lên…' })).toBeDisabled()
+    expect(screen.getByLabelText('Thêm ảnh minh chứng')).toBeDisabled()
+    expect(mocks.navigate).not.toHaveBeenCalled()
+    await act(async () => finish())
+    expect(mocks.navigate).toHaveBeenCalledWith('/my-reports', { state: { selectedReportId: report.id } })
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:evidence')
+  })
+
+  it('retries only remaining evidence after a partial failure without creating another report', async () => {
+    const user = userEvent.setup()
+    mocks.uploadAttachment.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('network')).mockResolvedValueOnce(undefined)
+    renderAt('/reports/new')
+    const first = new File(['first'], 'first.jpg', { type: 'image/jpeg' })
+    const second = new File(['second'], 'second.png', { type: 'image/png' })
+    await user.upload(screen.getByLabelText('Thêm ảnh minh chứng'), [first, second])
+    await user.type(screen.getByLabelText('Mô tả tình huống'), report.description)
+    await user.click(screen.getByRole('button', { name: 'Chọn vị trí báo cáo' }))
+    await user.click(screen.getByRole('button', { name: 'Gửi báo cáo' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Báo cáo đã được tạo')
+    expect(screen.queryByRole('img', { name: 'first.jpg' })).not.toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'second.png' })).toBeVisible()
+    expect(screen.getByLabelText('Mô tả tình huống')).toBeDisabled()
+    expect(mocks.navigate).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: 'Thử tải lại ảnh' }))
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalled())
+    expect(mocks.create).toHaveBeenCalledTimes(1)
+    expect(mocks.uploadAttachment.mock.calls.map(([, file]) => file)).toEqual([first, second, second])
+  })
+
+  it('preserves selected evidence when report creation fails and allows removing it', async () => {
+    const user = userEvent.setup()
+    mocks.create.mockRejectedValueOnce(new Error('network'))
+    renderAt('/reports/new')
+    await user.upload(screen.getByLabelText('Thêm ảnh minh chứng'), new File(['image'], 'keep.png', { type: 'image/png' }))
+    await user.type(screen.getByLabelText('Mô tả tình huống'), report.description)
+    await user.click(screen.getByRole('button', { name: 'Chọn vị trí báo cáo' }))
+    await user.click(screen.getByRole('button', { name: 'Gửi báo cáo' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Không thể kết nối')
+    expect(screen.getByRole('img', { name: 'keep.png' })).toBeVisible()
+    expect(mocks.uploadAttachment).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: 'Bỏ ảnh keep.png' }))
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  })
+
+  it('rejects unsupported, oversized and excess evidence before upload', async () => {
+    const user = userEvent.setup({ applyAccept: false })
+    renderAt('/reports/new')
+    const input = screen.getByLabelText('Thêm ảnh minh chứng')
+    await user.upload(input, new File(['text'], 'wrong.txt', { type: 'text/plain' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('Chỉ hỗ trợ ảnh JPEG và PNG.')
+    const oversized = new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'large.png', { type: 'image/png' })
+    await user.upload(input, oversized)
+    expect(screen.getByRole('alert')).toHaveTextContent('Ảnh phải có dung lượng tối đa 5 MiB.')
+    await user.upload(input, Array.from({ length: 6 }, (_, index) => new File(['image'], `${index}.png`, { type: 'image/png' })))
+    expect(screen.getByRole('alert')).toHaveTextContent('Mỗi báo cáo có tối đa 5 ảnh.')
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+    expect(mocks.uploadAttachment).not.toHaveBeenCalled()
   })
 
   it('keeps blank coordinates unselected and submits an exact zero map selection', async () => {
