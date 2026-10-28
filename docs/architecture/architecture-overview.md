@@ -337,7 +337,14 @@ flowchart TD
 2. **Giả thuyết 2 — Caching và Read Replica cho truy vấn không gian (Redis & PostgreSQL Replica):**
    - *Bằng chứng từ D3:* Khi tải đọc tăng lên 100 VU, CPU của container Database tăng vọt lên mức trung bình 194.88% và đỉnh 333.07% do các hàm tính toán không gian trắc địa `ST_DWithin` và phân trang danh sách.
    - *Đề xuất Pha 2:* Tích hợp bộ nhớ đệm phân tán Redis cho dữ liệu báo cáo đã thẩm định hoặc thiết lập PostgreSQL Read Replica để tách riêng lưu lượng đọc/ghi.
-3. **Các thành phần tiếp tục là Non-Goals cho đến khi có ADR mới:**
+3. **Tiêu chí Kích hoạt & Đánh giá Read Replica và L2 Cache (Evaluation Criteria):**
+   - *Ngưỡng kích hoạt PostGIS Read Replica:* Chỉ kích hoạt khi CPU database duy trì vượt 75% trong kịch bản tải đọc hỗn hợp hoặc số lượng concurrent viewers vượt 500 VUs liên tục trong > 10 phút.
+   - *Cơ chế Caching không gian:* Do đặc thù dữ liệu không gian biến động theo bán kính tọa độ (`ST_DWithin`), việc cache kết quả truy vấn thô dễ dẫn đến Cache Thundering Herd hoặc Stale Spatial Data. Pha 2 sẽ ưu tiên GeoHash-based tiling cache hoặc invalidate theo bounding box thay vì full-table cache.
+   - *Tài liệu tham chiếu chi tiết:*
+     - [phase2-async-ingestion-rfc.md](phase2-async-ingestion-rfc.md): Thiết kế tiếp nhận ghi bất đồng bộ.
+     - [phase2-storage-migration-plan.md](phase2-storage-migration-plan.md): Lộ trình chuyển đổi sang S3-compatible Object Storage.
+
+4. **Các thành phần tiếp tục là Non-Goals cho đến khi có ADR mới:**
    - Không chuyển đổi sang Microservices nếu Modular Monolith vẫn đáp ứng tốt thông lượng (hiện đạt gần 2,000 req/s trên 1 máy đơn).
    - Không triển khai API Gateway hay Service Discovery khi hệ thống chỉ có một tiến trình deploy duy nhất.
    - Không áp dụng giao dịch phân tán (2PC / Saga).
