@@ -3,7 +3,6 @@
 > **Cập nhật:** 27/10/2026  
 > **Nhánh:** `feat/c3-architecture-docs` | **Commit cơ sở:** `c99ebd5`  
 > **Vai trò phân tích & xây dựng:** Business Analyst (BA), Software QA Tester & Chuyên gia trình bày sản phẩm phần mềm.  
-> **Mục tiêu tài liệu:** Cung cấp kịch bản thuyết trình và demo thực chiến trong **5 – 7 phút (mục tiêu chuẩn: 6 phút / 360 giây)** trên đúng **6 màn hình nghiệp vụ thực tế**, tích hợp đầy đủ bảng ma trận đối chiếu 22 tiêu chí rubric môn học theo [Mục 27 GDRN_CODEX_PROJECT_CONTEXT.md](../../GDRN_CODEX_PROJECT_CONTEXT.md#L1143-L1165) và kế hoạch [Task C3 PROMPTS_PHA_1_4_NGUOI.md](../PROMPTS_PHA_1_4_NGUOI.md#L903-L930).
 
 ---
 

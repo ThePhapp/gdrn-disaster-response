@@ -6,7 +6,6 @@ The original bootstrap had no business features; current slices are documented i
 `docs/phase1-progress.md` and must be checked against code. Long-term context examples
 are not evidence of implementation; use current contracts and runtime documentation.
 
-Use `docs/PROMPTS_PHA_1_4_NGUOI.md` as the only implementation plan and task catalog.
 Contracts/ADRs define technical requirements; progress/handoffs record evidence,
 not alternative task plans. Inspect current code before inferring completion.
 

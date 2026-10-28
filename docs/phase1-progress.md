@@ -76,8 +76,6 @@ picker/preview vị trí và regression trong working tree, chờ review/commit/
 113 backend tests pass; smoke C2→D1 qua API thật pass. [Handoff D2](handoffs/D2.md)
 ghi 41 frontend tests, 1 browser E2E và 113 backend tests pass sau review.
 
-**UI bản đồ: UI01-A bổ sung đã merge PR #16 tại `df4777f`.** Phạm vi/prompt duy nhất nằm tại
-[UI vị trí sau C2/D1](PROMPTS_PHA_1_4_NGUOI.md#ui-vi-tri-sau-c2-d1).
 Baseline UI01-A/UI01-C1/C2 đã merge. Shared `LocationMap`, MapLibre/MapTiler config public và
 consumer tối thiểu tại form S05 đã có trên main. Picker/preview UI01-C1/C2 cũng đã
 merge PR #17; B3 bổ sung vị trí đã có code/evidence nhưng chưa merge. UI01-B/X1/X2
@@ -100,13 +98,11 @@ Nhánh UI01-C1 từ B2 `2814b4f` đã cải tạo S05 và đã merge vào main t
 [handoff UI01-C1](handoffs/UI01-C1.md).
 Nhánh D1 đã merge vào main tại `e380d68`; nhánh D2 merge main qua `5ebfc9b`,
 S06 đã nối runtime E12–E15 và browser flow pass; xem [handoff D2](handoffs/D2.md).
-Xem [P00 handoff](handoffs/P00.md) và [kế hoạch/dependencies](PROMPTS_PHA_1_4_NGUOI.md).
 
 **Bổ sung 09/10/2026 — F00 nền tảng chạy được:** hoàn tất readiness/liveness,
 script local, Compose smoke và full verification trên nhánh `feat/runnable-foundation`.
 Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền tảng đã merge qua
 `853a532`; các nhãn F00–F04 không phải task mới trong kế hoạch. Chỉ dùng 16 task lõi + 3 checkpoint UI ở
-[kế hoạch duy nhất](PROMPTS_PHA_1_4_NGUOI.md) để giao việc tiếp.
 
 | Task | Owner | Prerequisite đã merge | Trạng thái | Evidence / phần còn lại |
 | --- | --- | --- | --- | --- |
@@ -136,7 +132,6 @@ luồng tích hợp trên nhánh riêng, không được suy ra chứng nhận W
 A2 đã ghép browser CI trên nhánh X2; local Compose + Vite đang chạy không đồng nghĩa
 remote GitHub Actions đã được xác nhận. X1/X2 đủ acceptance trong phạm vi checklist
 đã ghi; A3 vẫn giữ gate riêng.
-Chỉ thực hiện prompt được giao; bảng này không tự giao hoặc khởi chạy task tiếp theo.
 
 **Cập nhật A1 trên nhánh `feat/a1-security-audit`:** audit sau B2/D1 đã hoàn tất.
 Security allowlist, OpenAPI Bearer metadata, default-deny path regression và frontend

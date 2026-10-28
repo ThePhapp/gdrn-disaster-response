@@ -18,8 +18,6 @@ Ngày chốt thiết kế: 08/10/2026. Đây là baseline đích; trạng thái 
 bắt buộc. Nếu cần đổi, cập nhật cả YAML, tài liệu và handoff, để producer/consumer
 review trước khi merge. Không tự đổi tên trường để ghép UI.
 
-Nguồn scope: [kế hoạch](../PROMPTS_PHA_1_4_NGUOI.md),
-[quy tắc chung](../PROMPTS_PHA_1_4_NGUOI.md#quy-tắc-chung-áp-dụng-cho-mọi-prompt),
 [contracts module và sổ migration](../architecture/phase1-module-contracts.md),
 [ADR 005](../adr/005-phase1-mvp-auth-frontend.md).
 P00 giữ nguyên User, EmailAddress, Role và tests. Chỉ CITIZEN/AUTHORITY hoạt động;
@@ -74,7 +72,6 @@ Luôn thêm `id ASC` khi bằng nhau. Không sort theo trường tùy ý, không
 | E14 | reportId, status, teamId | reportId thiếu thực thể/đã rút/khác owner =>404; teamId không tồn tại =>200 rỗng |
 
 E08 chỉ nhận đủ cả lat/lon/radiusMeters hoặc không nhận cả ba; bán kính integer 1–100000
-mét, biên `distance <= radiusMeters`. Tên wire là `radiusMeters` như prompt B2/C2;
 `radius` trong kế hoạch là cách gọi khái niệm, không phải alias query được chấp nhận.
 PostGIS geography/SRID 4326, lọc tại DB trước page/
 count; không lọc Java hay dùng độ thay mét. Không filter reporterId. Citizen luôn

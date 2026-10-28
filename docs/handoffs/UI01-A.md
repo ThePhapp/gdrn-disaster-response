@@ -10,14 +10,12 @@ Trạng thái/dependency mới nhất ở [progress](../phase1-progress.md).
 Phiên UI01-A không chạy UI01-C1/UI01-B.
 Không thay API, domain, migration, dependency, auth client hay convention đăng ký route.
 
-Nguồn yêu cầu: [kế hoạch duy nhất](../PROMPTS_PHA_1_4_NGUOI.md),
 [design system](../design/GDRN_UI_DESIGN_SYSTEM.md), [P00](../api/phase1-contract.md),
 [P01](P01.md), [C1](C1.md). Design system là quy chuẩn UI, không phải kiến trúc mới.
 
 ## Baseline và audit trước sửa
 
 `git status`, `git diff`, lịch sử và source thực tế xác nhận E01–E09/S01/S05 đã có.
-Trước task đã có thay đổi chưa commit trong README, catalog prompt, progress và
 `docs/design/` chưa được track. Đã giữ các thay đổi đó; task chỉ cập nhật thêm trạng thái
 UI01-A trong progress. Khi review cần phân biệt phần tài liệu có sẵn với diff UI01-A.
 

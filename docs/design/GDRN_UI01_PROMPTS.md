@@ -1,19 +1,14 @@
-# PHỤ LỤC PROMPT UI01 SAU P00, P01, C1, B1
 
 **Ngôn ngữ:** Tiếng Việt. **Phạm vi:** cải tạo frontend theo
 `docs/design/GDRN_UI_DESIGN_SYSTEM.md`.
 
-File này là **phụ lục prompt thực thi** được catalog chính tại
-`docs/PROMPTS_PHA_1_4_NGUOI.md` viện dẫn. Nó không phải kế hoạch/task catalog thứ hai,
 không thay đổi 15 endpoint, 6 màn hình, owner hoặc dependency nghiệp vụ đã chốt.
 
-Tra [progress](../phase1-progress.md) trước khi copy prompt. Khối UI01-A được giữ để
 truy nguyên yêu cầu; không chạy lại nếu nhánh đã chứa implementation hoàn tất.
 
 **Điều kiện bắt đầu:** P00, P01, C1 và B1 đã merge vào nhánh tích hợp (nếu mới hoàn thành trên nhánh riêng, phải review/merge trước). Đặt file design system vào đúng `docs/design/GDRN_UI_DESIGN_SYSTEM.md` và commit để mọi nhánh cùng đọc được.
 
 **Cách dùng:** kiểm tra UI task tương ứng trong catalog chính rồi copy nguyên một khối
-prompt vào coding agent trên nhánh của owner. Đọc diff/tests và review trước khi merge;
 không chạy các khối liên tục trong cùng một phiên. UI01-A xong và merge rồi mới chạy
 UI01-C1 hoặc triển khai UI mới. UI01-B chỉ làm khi đủ 6 màn hình và là gate trước X1.
 
@@ -22,7 +17,6 @@ UI01-C1 hoặc triển khai UI mới. UI01-B chỉ làm khi đủ 6 màn hình v
 ```text
 Thực hiện task UI01-A cho GDRN trên code hiện tại, sau khi P00, P01, C1, B1 đã merge.
 Đọc toàn bộ AGENTS.md áp dụng, kế hoạch và mục Quy tắc chung tại
-docs/PROMPTS_PHA_1_4_NGUOI.md, hợp đồng P00,
 docs/design/GDRN_UI_DESIGN_SYSTEM.md, handoff P01/C1 và code thật.
 Kiểm tra git status, git diff, commit nền, cấu trúc frontend/router/components trước khi sửa.
 
@@ -86,11 +80,9 @@ kiểm tra bảo toàn nghiệp vụ và blockers. Cập nhật tiến độ. Kh
 ## Hướng dẫn bổ sung cho B3, C2, D2
 
 ```text
-Khi thực hiện task B3/C2/D2 theo prompt trong catalog chính, đọc thêm
 `docs/design/GDRN_UI_DESIGN_SYSTEM.md` và `docs/handoffs/UI01-A.md`.
 Xây màn hình mới theo đúng design tokens, shared components và phân biệt
 Citizen/Authority của GDRN Crisis Command. Giữ nguyên API, role, route,
-file ownership, acceptance và dependency của prompt gốc.
 Chỉ thêm map chọn/xem điểm và vòng radius theo mục UI vị trí 14/10 trong catalog;
 không thêm map tổng hợp/dashboard/số liệu giả chỉ để tăng độ đẹp. Không tự sửa theme,
 router hoặc feature người khác. Nếu phát hiện thiếu shared component, gửi
@@ -123,7 +115,6 @@ Không tự push/merge/deploy hoặc bắt đầu Pha 2.
 
 ```text
 Tiếp tục UI01-<ID> từ code và nhánh hiện tại. Đọc AGENTS.md,
-docs/design/GDRN_UI_DESIGN_SYSTEM.md, đúng prompt UI01-<ID> và
 handoff docs/handoffs/UI01-<ID>.md nếu có. Kiểm tra git diff và dependency
 đã merge. Không regenerate frontend, không ghi đè thay đổi chưa commit,
 không chạy sang task khác. Hoàn thiện các tiêu chí chưa đạt, chạy test thật,
