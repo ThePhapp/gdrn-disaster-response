@@ -93,7 +93,10 @@ cũng cần đồng bộ với mức 5 MiB của backend. Dependency audit còn 
 high cần được đánh giá; bản đồ có chunk lớn và cần theo dõi khi tối ưu tải trang.
 
 Về chức năng, chưa có refresh token, quản trị tài khoản hay cơ chế vận hành nhiều
-instance. Benchmark D3 có kết quả local, còn server trên Kaggle chưa được xác nhận.
+instance. Benchmark D3 có kết quả local và notebook chạy tải CPU đầy đủ
+(Java/PostGIS/k6, reset/seed, raw và báo cáo); phiên chạy Kaggle chưa được xác nhận.
+Lượt local ngày 30/10/2026 đã chạy 16 tổ hợp, 575.066 request nghiệp vụ, 0% lỗi;
+bảng số liệu, cấu hình và giới hạn được ghi trong mục kiểm thử tải của README.
 Dữ liệu benchmark thô nằm ngoài Git nên cần bàn giao riêng để tái lập số đo.
 
 Nhóm nhận Phase 2 nên bắt đầu từ README, contract, ADR và biên bản kiểm chứng, chạy

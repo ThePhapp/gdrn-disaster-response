@@ -43,7 +43,7 @@ src/test/                 # domain, orchestration, architecture, integration
 frontend/src/             # app, auth, features theo nghiệp vụ, shared
 frontend/e2e/             # kiểm thử trình duyệt
 scripts/                  # setup, build/start/stop, browser regression
-benchmark/                # k6, dữ liệu/runner, notebook preflight
+benchmark/                # k6, dữ liệu/runner, notebook chạy tải Kaggle CPU
 ```
 
 Theo DDD/Hexagonal, domain là Java thuần; controller xử lý HTTP, application điều
@@ -126,7 +126,94 @@ ghi rõ revision và giới hạn, không coi số cũ là kiểm chứng cho m�
 secret riêng, TLS/reverse proxy, quyền PostGIS và backup/restore cả DB lẫn ảnh.
 Hướng dẫn chi tiết: [runbook](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md), [review/demo data](docs/PRODUCT_REVIEW.md).
 
-## 5. Vấn đề dễ thấy và bàn giao Phase 2
+## 5. Kiểm thử tải CPU
+
+Bộ kiểm thử dùng **k6** cho E07 tạo báo cáo và E08 đọc báo cáo: `write`,
+`read-page`, `read-radius`, `mixed` (20% ghi, 60% đọc trang, 20% đọc bán kính).
+Đây là tải API với tài khoản citizen; chưa đo UI, upload ảnh, dashboard hoặc luồng authority.
+DB benchmark riêng được reset giữa các lần chạy. Dữ liệu đọc gồm 1.000 báo cáo,
+seed `20261024`, 70% tọa độ trong cụm gần tâm và 30% phân bố rộng.
+
+### Lượt kiểm thử local mới — 30/10/2026
+
+Đã chạy **16/16 tổ hợp**, mỗi tổ hợp **1 lần**: 4 workload × 1/10/50/100 VUs. Ubuntu 24.04 trong Docker Desktop, AMD Ryzen 7 6800H with Radeon Graphics, 16 CPU logic, RAM VM 6.62 GiB; Java 21, PostgreSQL 16.15/PostGIS 3.4.2, k6 1.6.1. Backend/DB/k6 dùng chung VM; backend giới hạn heap 1 GiB. Đây là **local Linux CPU, chưa phải Kaggle**.
+
+Mỗi lượt: **5s warm-up + 15s giữ tải + 5s ramp-down**. Reset DB trước mỗi lượt; write bắt đầu rỗng, các workload còn lại seed 1.000 báo cáo. Bảng gồm toàn bộ cửa sổ chạy, loại request login; lỗi tính cả HTTP status và body check.
+
+| Workload | VUs | Request/s | TB (ms) | p50 (ms) | p95 (ms) | p99 (ms) | Lỗi |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| write | 1 | 131.85 | 5.57 | 4.12 | 8.54 | 13.35 | 0.00% |
+| read-page | 1 | 133.58 | 5.39 | 5.14 | 7.48 | 9.49 | 0.00% |
+| read-radius | 1 | 96.97 | 7.64 | 7.26 | 10.28 | 12.70 | 0.00% |
+| mixed | 1 | 158.61 | 4.53 | 3.52 | 9.51 | 12.38 | 0.00% |
+| write | 10 | 2156.13 | 3.40 | 3.19 | 4.76 | 6.69 | 0.00% |
+| read-page | 10 | 1830.62 | 3.81 | 3.67 | 5.42 | 7.22 | 0.00% |
+| read-radius | 10 | 838.19 | 8.93 | 8.60 | 12.35 | 16.15 | 0.00% |
+| mixed | 10 | 839.14 | 8.89 | 5.02 | 29.99 | 39.58 | 0.00% |
+| write | 50 | 3317.85 | 11.69 | 11.53 | 25.37 | 37.70 | 0.00% |
+| read-page | 50 | 2637.27 | 14.31 | 12.70 | 33.98 | 47.30 | 0.00% |
+| read-radius | 50 | 1133.20 | 34.54 | 38.31 | 71.32 | 93.93 | 0.00% |
+| mixed | 50 | 1103.01 | 35.50 | 33.74 | 83.17 | 116.48 | 0.00% |
+| write | 100 | 3483.39 | 22.57 | 23.29 | 51.71 | 75.64 | 0.00% |
+| read-page | 100 | 2748.57 | 28.22 | 23.51 | 77.08 | 112.54 | 0.00% |
+| read-radius | 100 | 1116.21 | 70.76 | 79.50 | 160.76 | 225.85 | 0.00% |
+| mixed | 100 | 1172.43 | 67.47 | 68.43 | 159.46 | 217.92 | 0.00% |
+
+Với đọc trang, tăng từ 10 lên 100 VUs cho thông lượng tăng **1.50 lần**, trong khi p95 tăng **14.22 lần**. Cần profiling và chạy lặp để xác định nguyên nhân độ trễ, trước khi đề xuất cache hoặc thay đổi kiến trúc.
+
+Tổng **575.066 request nghiệp vụ**, tất cả ngưỡng lỗi <1% đều đạt. Đã kiểm tra checksum và tính lại số request, trung bình, p50/p95/p99 từ raw. CPU host cao nhất trong các mẫu: **84.3%**; RSS backend cao nhất: **656.0 MiB**.
+
+**Giới hạn:** thời gian ngắn và chỉ một lần lặp, có dịch vụ nền trên Docker Desktop; chưa đủ để kết luận năng lực tối đa hoặc xác định bottleneck. Không so trực tiếp với baseline cũ vì khác runtime, topology và cách tổng hợp. Notebook Kaggle mặc định chạy ba lần mỗi tổ hợp để có thêm bằng chứng.
+
+Bằng chứng tổng hợp: [JSON kết quả và cấu hình](docs/benchmark/cpu-local-2026-10-30.json). Raw, seed, logs, resource samples và report nằm tại `benchmark/results/20261030T143435156579Z/` (bị ignore bởi Git); gói bàn giao local là `benchmark/results/cpu-local-2026-10-30.zip`.
+
+### Baseline local đã ghi nhận ngày 24/10/2026
+
+Nguồn: [biên bản D3](docs/handoffs/D3.md). Đây là số đo lịch sử trên Windows/
+Docker Desktop, Intel i5-12500H, 16 logical processors, RAM 15,7 GiB; **không phải
+kết quả Kaggle hoặc lần chạy lại trên revision hiện tại**. Raw của lần đo này
+được lưu ngoài Git, hiện không có trong checkout để kiểm tra lại.
+
+| Workload | Dữ liệu ban đầu | VUs | Request/s | TB (ms) | p50 (ms) | p95 (ms) | p99 (ms) | Lỗi |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| E07 ghi | 0 | 1 | 164,57 | 3,81 | 3,67 | 4,98 | 5,82 | 0% |
+| E08 đọc trang — smoke | 100 | 1 | 137,71 | 5,00 | 4,73 | 6,73 | 10,85 | 0% |
+| E08 đọc bán kính — smoke | 100 | 1 | 156,06 | 4,31 | 4,10 | 5,85 | 7,78 | 0% |
+| E08 đọc trang | 1.000 | 10 | 928,17 | 7,23 | 6,49 | 12,58 | 17,55 | 0% |
+| E08 đọc trang | 1.000 | 50 | 1.439,13 | 18,93 | 17,35 | 36,35 | 48,63 | 0% |
+| E08 đọc trang | 1.000 | 100 | 1.996,98 | 34,93 | 30,19 | 78,70 | 105,28 | 0% |
+
+**Cách đọc:** VUs là số người dùng ảo đồng thời; request/s là thông lượng;
+p95/p99 là thời gian mà 95%/99% request hoàn thành trong ngưỡng đó. Khi tải đọc
+tăng từ 10 lên 100 VUs, thông lượng tăng khoảng 2,15 lần nhưng p95 tăng khoảng
+6,26 lần. Chưa thể xác định bottleneck chỉ từ bảng này; cần đối chiếu CPU/RAM,
+query và chạy lặp. Lần 50 VUs có một iteration bị ngắt lúc ramp-down, dù HTTP
+và checks không lỗi. Không suy diễn 0% lỗi thành khả năng chịu tải vô hạn.
+
+### Chạy trên Kaggle CPU
+
+[Notebook Kaggle](benchmark/kaggle_cpu_preflight.ipynb) đã có luồng chạy thật:
+cài Java 21/PostGIS/k6, build backend, khởi tạo DB và tài khoản riêng, chạy tải,
+thu CPU/RAM rồi xuất báo cáo. Tên file `preflight` được giữ để không gãy liên kết.
+
+1. Chạy `python benchmark/package_cpu_source.py` tại root repo.
+2. Upload `benchmark/results/gdrn-cpu-source.zip` thành **private Kaggle Dataset**.
+3. Import notebook, thêm Dataset bằng **Add Input**, chọn **Accelerator: None**,
+   bật **Internet**, rồi **Run All**.
+4. Tải `gdrn-cpu-results.zip` từ Output; xem `REPORT.md`, `results.json` và
+   `manifest.json`. Chỉ xác nhận chạy hoàn tất khi manifest ghi `completed`.
+
+Mặc định chạy 4 workload × 4 mức 1/10/50/100 VUs × 3 lần. Mỗi lần gồm 10 giây
+warm-up, 30 giây giữ tải, 10 giây ramp-down; dừng khi k6 lỗi/ngưỡng lỗi ≥1%.
+Thống kê mới loại request login, nhưng bao gồm cả warm-up/ramp-down.
+CPU/RAM được lấy mỗi giây; backend, DB và k6 dùng chung máy nên cần ghi rõ
+topology khi so sánh. Lưu raw nén, seed, cấu hình, phiên bản và checksum cùng bảng.
+
+**Trạng thái Kaggle:** luồng thực thi đã được triển khai; chưa có kết quả phiên
+Kaggle xác thực trong workspace. Không sử dụng bảng local để thay cho số đo Kaggle.
+Chi tiết cấu hình và artifacts: [benchmark/README.md](benchmark/README.md).
+
+## 6. Vấn đề dễ thấy và bàn giao Phase 2
 
 | Hiện trạng đã thấy | Điều nhóm tiếp nhận cần kiểm chứng/cải tiến |
 | --- | --- |
@@ -134,7 +221,7 @@ Hướng dẫn chi tiết: [runbook](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md), [review
 | Nginx trả 413 với PNG hợp lệ khoảng 3 MiB trong lần review. | Đồng bộ giới hạn proxy với luật 5 MiB/ảnh và multipart 6MB; kiểm thử qua cả SPA → Nginx → backend. |
 | Build có map chunk khoảng 1 MB; audit từng báo `undici` high. | Đo tải trang, chạy lại audit và đánh giá dependency path trước khi cập nhật; không suy từ cảnh báo thành kết luận khai thác. |
 | JWT chưa refresh/revoke; tài khoản bootstrap demo; chưa có bằng chứng HA/cloud. | Làm rõ nhu cầu vận hành, quản trị tài khoản và bảo mật trước khi triển khai ngoài local. |
-| D3 có baseline local; raw kết quả bị ignore, Kaggle server chưa xác nhận. | Bàn giao manifest/raw/seed/cấu hình máy, tái đo cùng workload và profiling trước khi chọn cache, queue hay microservices. |
+| D3 đã đo 16 tổ hợp CPU local, có bảng/raw/manifest; chưa có kết quả phiên Kaggle. | Bàn giao manifest/raw/seed/cấu hình máy, tái đo cùng workload và profiling trước khi chọn cache, queue hay microservices. |
 
 Nhóm nhận đọc README → [API](docs/openapi.yaml) → [contracts/ADRs](docs/architecture/phase1-module-contracts.md)
 → [evidence/hạn chế](docs/PHASE1_REVIEW.md), tự chạy stack và checks. Giữ các ràng buộc
