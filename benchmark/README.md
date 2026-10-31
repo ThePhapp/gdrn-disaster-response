@@ -5,6 +5,17 @@ exist in the current application: E07 report creation and E08 report listing wit
 pagination or a radius filter. It does not add a seed endpoint, Redis, a broker,
 or a performance-oriented application code path.
 
+## Full server-on-Kaggle CPU
+
+For automated private Kaggle jobs running Java 21, native PostgreSQL 16/PostGIS
+and k6 together, without Docker or an external server, see
+[Kaggle CPU setup and API runner](../docs/benchmark/KAGGLE_CPU.md).
+The API execution template is `kaggle_server_cpu.ipynb`, prepared by
+`kaggle_api.py`. The existing Dataset-upload CPU workflow below is preserved.
+The full API matrix was executed on Kaggle CPU on 2026-10-30/31 (private notebook
+version 4): 48/48 runs passed. The linked guide records the exact source, artifacts
+and limits. Version 3 remains the three-workload smoke evidence.
+
 ## Kaggle CPU: complete execution workflow
 
 `kaggle_cpu_preflight.ipynb` now runs the application, a dedicated PostGIS cluster

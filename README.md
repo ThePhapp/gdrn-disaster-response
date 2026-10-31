@@ -209,11 +209,28 @@ Thống kê mới loại request login, nhưng bao gồm cả warm-up/ramp-down.
 CPU/RAM được lấy mỗi giây; backend, DB và k6 dùng chung máy nên cần ghi rõ
 topology khi so sánh. Lưu raw nén, seed, cấu hình, phiên bản và checksum cùng bảng.
 
-**Trạng thái Kaggle:** luồng thực thi đã được triển khai; chưa có kết quả phiên
-Kaggle xác thực trong workspace. Không sử dụng bảng local để thay cho số đo Kaggle.
+### Kết quả full trên Kaggle — 30–31/10/2026
+
+[Kaggle job version 4](https://www.kaggle.com/code/thphap/gdrn-d3-server-cpu) đã
+chạy đủ **48/48 lượt**: 4 workload × 1/10/50/100 VUs × 3 repetitions. Bảng dưới
+là trung bình của 3 repetitions trong mỗi ô; throughput là request nghiệp vụ/giây,
+p95 là độ trễ endpoint.
+
+| Workload | 1 VU | 10 VU | 50 VU | 100 VU |
+| --- | ---: | ---: | ---: | ---: |
+| write | 211.58 req/s · 4.66 ms | 1,388.13 · 7.90 ms | 1,666.58 · 59.49 ms | 1,732.34 · 126.40 ms |
+| read-page | 265.97 req/s · 3.76 ms | 993.64 · 13.08 ms | 1,103.59 · 95.44 ms | 1,064.69 · 223.38 ms |
+| read-radius | 124.29 req/s · 6.63 ms | 353.07 · 34.84 ms | 372.29 · 245.73 ms | 374.24 · 514.22 ms |
+| mixed | 177.20 req/s · 10.88 ms | 427.61 · 69.65 ms | 446.36 · 252.47 ms | 447.03 · 521.66 ms |
+
+Tổng cộng có **1.675.588 request**, error rate nghiệp vụ **0%**, cleanup hoàn tất
+và 315/315 artifact SHA-256 khớp. `read-page` bắt đầu plateau ở 50–100 VUs;
+`read-radius` và `mixed` tăng latency rõ rệt ở 100 VUs do backend, PostGIS và k6
+dùng chung CPU Kaggle. [Báo cáo và manifest đã lưu trong Git](docs/benchmark/evidence/kaggle-full-v4/REPORT.md).
+
 Chi tiết cấu hình và artifacts: [benchmark/README.md](benchmark/README.md).
 
-## 6. Vấn đề dễ thấy và bàn giao Phase 2
+## 6. Vấn đề dễ thấy và bàn giao
 
 | Hiện trạng đã thấy | Điều nhóm tiếp nhận cần kiểm chứng/cải tiến |
 | --- | --- |
@@ -221,7 +238,7 @@ Chi tiết cấu hình và artifacts: [benchmark/README.md](benchmark/README.md)
 | Nginx trả 413 với PNG hợp lệ khoảng 3 MiB trong lần review. | Đồng bộ giới hạn proxy với luật 5 MiB/ảnh và multipart 6MB; kiểm thử qua cả SPA → Nginx → backend. |
 | Build có map chunk khoảng 1 MB; audit từng báo `undici` high. | Đo tải trang, chạy lại audit và đánh giá dependency path trước khi cập nhật; không suy từ cảnh báo thành kết luận khai thác. |
 | JWT chưa refresh/revoke; tài khoản bootstrap demo; chưa có bằng chứng HA/cloud. | Làm rõ nhu cầu vận hành, quản trị tài khoản và bảo mật trước khi triển khai ngoài local. |
-| D3 đã đo 16 tổ hợp CPU local, có bảng/raw/manifest; chưa có kết quả phiên Kaggle. | Bàn giao manifest/raw/seed/cấu hình máy, tái đo cùng workload và profiling trước khi chọn cache, queue hay microservices. |
+| D3 đã đo 16 tổ hợp CPU local và full 48 lượt trên Kaggle, có bảng/manifest/checksum. | Dùng profiling và workload lặp lại để xác định bottleneck trước khi chọn cache, queue hay microservices. |
 
 Nhóm nhận đọc README → [API](docs/openapi.yaml) → [contracts/ADRs](docs/architecture/phase1-module-contracts.md)
 → [evidence/hạn chế](docs/PHASE1_REVIEW.md), tự chạy stack và checks. Giữ các ràng buộc
