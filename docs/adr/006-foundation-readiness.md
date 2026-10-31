@@ -1,39 +1,19 @@
-# ADR 006: Database-aware readiness for the foundation
+# ADR 006: Kiểm tra mức sẵn sàng có xét cơ sở dữ liệu
 
-- Status: Accepted
-- Date: 2026-10-09
-- Scope: Technical runtime foundation; no business API or infrastructure addition.
+- Trạng thái: Đã chấp thuận.
+- Phạm vi: Nền tảng vận hành kỹ thuật; không bổ sung API nghiệp vụ hay hạ tầng.
 
-## Context
+## Bối cảnh
+Compose chỉ được báo ứng dụng sẵn sàng khi có thể nhận yêu cầu và dùng cơ sở dữ liệu. JVM còn chạy chưa đủ chứng minh điều đó. Ngược lại, mất kết nối dữ liệu tạm thời không nên khiến kiểm tra tiến trình còn sống thất bại.
 
-Compose must report the backend healthy only when it can accept requests and use
-its database. A live JVM alone cannot demonstrate this. Conversely, a temporary
-database outage should not make the application's liveness fail.
+## Quyết định
+Dùng các phép kiểm tra Spring Boot Actuator trong mọi môi trường. `/actuator/health/liveness` chỉ gồm `livenessState`; `/actuator/health/readiness` gồm `readinessState` và `db`. Docker dùng mức sẵn sàng để `docker compose up --wait` chờ ứng dụng sẵn sàng dùng PostgreSQL. Flyway và kiểm tra JPA vẫn chạy lúc khởi động; không cần bộ điều khiển nghiệp vụ hay chỉ báo sức khỏe riêng.
 
-## Decision
+Chỉ công khai GET tới đường dẫn sức khỏe tổng hợp và đúng hai đường dẫn trên, bên cạnh Swagger/OpenAPI hiện có. Ẩn chi tiết; chặn đường dẫn thành phần trực tiếp và phương thức ghi. Không thêm chính sách tự khởi động lại khi mất cơ sở dữ liệu hay nền tảng điều phối mới.
 
-Use the existing Spring Boot Actuator availability probes in every environment.
-`/actuator/health/liveness` includes only `livenessState`.
-`/actuator/health/readiness` includes `readinessState` and `db`.
-The Docker image healthcheck uses readiness, so `docker compose up --wait` waits
-for an application ready to use PostgreSQL. Flyway and JPA validation still execute
-during startup. No custom business controller or health indicator is needed.
+## Hệ quả và kiểm chứng
+Mất cơ sở dữ liệu khiến mức sẵn sàng trả HTTP 503 trong khi trạng thái còn sống vẫn là HTTP 200. Chủ động từ chối lưu lượng cũng trả mức sẵn sàng 503 dù còn kết nối dữ liệu. Khôi phục trả mức sẵn sàng về 200. Kiểm thử chỉ tạm dừng/tiếp tục PostGIS Testcontainer riêng; thời gian chờ kết nối ngắn chỉ áp dụng cho kiểm thử, không dừng cơ sở dữ liệu của lập trình viên hay xóa dữ liệu.
 
-Expose public GET access only to the aggregate health and these two exact probe
-paths, alongside existing Swagger/OpenAPI routes. Hide health details; deny direct
-component paths and write methods. There is no automatic restart policy tied to
-database failure, and no orchestration platform is introduced.
+Chỉ báo `db` kiểm tra kết nối, không kiểm tra mọi bất biến nghiệp vụ hoặc độ đúng truy vấn PostGIS; kiểm thử chuyển đổi lược đồ/không gian đảm nhiệm phần đó. Phép kiểm tra công khai chỉ lộ trạng thái, không lộ kết nối hoặc thông tin xác thực.
 
-## Consequences and verification
-
-Database failure yields readiness HTTP 503 while liveness remains HTTP 200.
-Explicit refusal of traffic yields readiness 503 even if the DB is reachable.
-Recovery returns readiness to 200. Tests pause/unpause only their isolated PostGIS
-Testcontainer to exercise a real database outage; short connection/socket timeouts
-are test-only. These tests do not stop the developer's database or delete data.
-
-The DB health indicator checks connectivity, not all future business invariants or
-PostGIS query correctness; migration/spatial integration tests cover the foundation.
-The public probes expose status without connection details or credentials.
-
-Reference: [Spring Boot 3.5 health groups and availability probes](https://docs.spring.io/spring-boot/3.5/reference/actuator/endpoints.html).
+Tham khảo: [Nhóm sức khỏe và phép kiểm tra tính sẵn sàng Spring Boot 3.5](https://docs.spring.io/spring-boot/3.5/reference/actuator/endpoints.html).

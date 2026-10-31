@@ -1,60 +1,40 @@
-# Report evidence attachments — handoff
+# Bàn giao ảnh minh chứng báo cáo
 
-## Scope
+## Phạm vi
 
-Branch: `feat/report-evidence-attachments`, created from `main` on 23/10/2026.
+Nhánh `feat/report-evidence-attachments`, tạo từ `main`.
 
-The reporting module now supports private evidence images for reports:
+Reporting hỗ trợ ảnh minh chứng riêng tư:
 
-- CITIZEN owner can upload and delete while the report is `PENDING`.
-- The owner and `AUTHORITY` can list and download visible evidence.
-- JPEG/PNG only, 5 MiB per image, five images per report.
-- Metadata is in Flyway V7; binary content uses a filesystem storage port rooted
-  at `REPORT_ATTACHMENT_STORAGE_ROOT`, outside the frontend static root.
-- Content is streamed through an authenticated endpoint after application
-  ownership checks. No public or signed bypass URL is returned.
-- Delete hides the metadata before physical deletion, and upload failures clean
-  up the staged file when persistence cannot reserve a slot.
+- Chủ báo cáo CITIZEN được tải lên/xóa khi báo cáo `PENDING`.
+- Chủ báo cáo và `AUTHORITY` được liệt kê/tải ảnh hiển thị.
+- Chỉ JPEG/PNG, 5 MiB mỗi ảnh, năm ảnh mỗi báo cáo.
+- Siêu dữ liệu thuộc Flyway V7; nội dung dùng cổng lưu tệp tại `REPORT_ATTACHMENT_STORAGE_ROOT`, ngoài gốc tệp tĩnh giao diện.
+- Nội dung truyền qua API có xác thực sau kiểm tra quyền sở hữu; không trả URL công khai hoặc ký sẵn để bỏ qua quyền.
+- Xóa ẩn siêu dữ liệu trước khi xóa vật lý. Tải lên thất bại sẽ dọn tệp tạm khi lưu trữ không thể giữ chỗ cho ảnh.
 
-## Contract
+## Hợp đồng
 
-- `E17 POST /api/reports/{id}/attachments` — owner CITIZEN, pending report.
-- `E18 GET /api/reports/{id}/attachments` — owner or AUTHORITY.
-- `E19 GET /api/reports/{id}/attachments/{attachmentId}/content` — owner or AUTHORITY.
-- `E20 DELETE /api/reports/{id}/attachments/{attachmentId}` — owner CITIZEN, pending report.
+- `E17 POST /api/reports/{id}/attachments`: chủ CITIZEN, báo cáo đang chờ.
+- `E18 GET /api/reports/{id}/attachments`: chủ hoặc AUTHORITY.
+- `E19 GET /api/reports/{id}/attachments/{attachmentId}/content`: chủ hoặc AUTHORITY.
+- `E20 DELETE /api/reports/{id}/attachments/{attachmentId}`: chủ CITIZEN, báo cáo đang chờ.
 
-See [reporting OpenAPI](../../src/main/resources/openapi/reporting.json),
-[ADR 010](../adr/010-report-evidence-private-storage.md), and
-[migration ledger](../architecture/phase1-module-contracts.md).
+Xem [OpenAPI Reporting](../../src/main/resources/openapi/reporting.json), [ADR 010](../adr/010-report-evidence-private-storage.md) và [sổ chuyển đổi lược đồ](../architecture/phase1-module-contracts.md).
 
-## Validation
+## Kiểm chứng
 
-- `mvn test`: PASS, 73 unit/domain/architecture tests.
-- `npm run typecheck`: PASS.
-- `npm test`: PASS, 20 files / 93 tests.
-- `npm run build`: PASS.
-- `mvn clean verify`: unit phase PASS; integration phase NOT RUN because
-  Testcontainers could not find a valid Docker daemon (`dockerDesktopLinuxEngine`
-  returned an internal server error). No integration result is claimed.
+- `mvn test`: đạt, 73 kiểm thử đơn vị/miền/kiến trúc.
+- `npm run typecheck`: đạt.
+- `npm test`: đạt, 20 tệp / 93 kiểm thử.
+- `npm run build`: đạt.
+- `mvn clean verify`: phần đơn vị đạt; phần tích hợp chưa chạy vì Testcontainers không tìm được Docker daemon hợp lệ (`dockerDesktopLinuxEngine` trả lỗi máy chủ nội bộ). Không khẳng định kết quả tích hợp ở lượt này.
 
-## Create report evidence — 28/10/2026
+## Ảnh minh chứng khi tạo báo cáo
 
-- `/reports/new` now accepts optional JPEG/PNG evidence before submission, with
-  multiple selection, local previews, removal and the existing five-image/5 MiB limits.
-- Submission creates the report through E07, then uploads selected files through
-  E17. Navigation waits for all uploads. After a partial failure, the saved report
-  and remaining files stay in the form; retry sends only the remaining files.
-  Report fields lock after creation, and the citizen can open the saved report.
-- No backend contract, domain rule, schema or module boundary changed.
-- Validation: focused reporting UI suite PASS (20 tests); frontend typecheck/build
-  PASS; `mvnw.cmd clean verify` PASS (73 unit/architecture, 57 integration, no skips).
-- Real Chromium + local backend: two PNGs, simulated failure on the second upload,
-  retry, private image reads PASS. Observed one create request and three upload
-  attempts. Test images were deleted and the test report withdrawn afterward.
-- Visual inspection and the UI skill probe ran at 375/1280px, including keyboard
-  and hover checks. Selected previews fit without horizontal page overflow.
-  Probe P1–P3 flag the existing mobile header wrapping; all navigation remains
-  visible. P4 flags the existing language switcher hover treatment. These concern
-  the shared header and do not require changes for this upload control. Other
-  probe notices concern existing card borders, coordinate columns and focus styles.
-  Missing local map configuration used the existing manual-coordinate fallback.
+- `/reports/new` cho chọn JPEG/PNG tùy chọn trước khi gửi, chọn nhiều ảnh, xem trước/xóa cục bộ và giữ giới hạn năm ảnh/5 MiB.
+- Gửi sẽ tạo báo cáo qua E07 rồi tải ảnh qua E17; chỉ chuyển trang sau khi tải xong. Nếu lỗi một phần, giữ báo cáo đã lưu và ảnh còn lại trong biểu mẫu; thử lại chỉ gửi ảnh còn lại. Khóa trường báo cáo sau khi tạo; người dân có thể mở báo cáo đã lưu.
+- Giữ hợp đồng ứng dụng, quy tắc miền, lược đồ và ranh giới mô-đun.
+- Bộ kiểm thử giao diện Reporting đạt 20 ca; kiểm tra kiểu/biên dịch giao diện đạt; `mvnw.cmd clean verify` đạt 73 đơn vị/kiến trúc, 57 tích hợp, không bỏ qua.
+- Chromium và ứng dụng thật: hai PNG, mô phỏng lỗi ảnh thứ hai, thử lại và đọc ảnh riêng tư đều đạt. Ghi nhận một yêu cầu tạo và ba lần tải ảnh. Đã xóa ảnh thử và rút báo cáo sau đó.
+- Rà soát hình ảnh và công cụ kiểm tra giao diện tại 375/1280px, gồm bàn phím/di chuột. Ảnh xem trước vừa khung, không tràn ngang. P1–P3 ghi nhận phần đầu trang di động xuống dòng có sẵn; điều hướng vẫn hiện đầy đủ. P4 ghi nhận hiệu ứng di chuột bộ đổi ngôn ngữ có sẵn. Các điểm này thuộc đầu trang chung, không yêu cầu đổi nút tải ảnh. Ghi chú khác liên quan viền thẻ, cột tọa độ và kiểu tiêu điểm có sẵn. Thiếu cấu hình bản đồ cục bộ thì dùng nhập tọa độ thủ công hiện có.

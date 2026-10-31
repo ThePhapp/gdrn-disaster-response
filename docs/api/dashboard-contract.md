@@ -1,18 +1,12 @@
-# DS1 — Dashboard statistics contract
+# DS1 — Hợp đồng bảng thống kê
 
-Scope authorized by user on 18/10/2026; see DS1 in the single task catalog.
-Extension to the E01–E15/S01–S06 baseline: E16, screen S07.
+Phạm vi đã được người dùng cho phép; xem DS1 trong danh mục công việc duy nhất. Mở rộng nền E01–E15/S01–S06 bằng E16 và màn hình S07.
 
 ## HTTP
 
-`GET /api/dashboard?from=2026-10-01&to=2026-10-18`, AUTHORITY only. No body.
-Both dates must be supplied together or both omitted (all time). Strict YYYY-MM-DD,
-years 0001–9999, from <= to. Dates include both calendar days in
-`Asia/Ho_Chi_Minh`; SQL uses start inclusive / next-day start exclusive.
-Unknown/repeated/empty query parameters or body => 400 VALIDATION_ERROR.
-No/invalid/expired bearer => 401; citizen/unsupported role => 403. Other methods
-and unknown dashboard subpaths remain denied. All responses use no-store and the
-existing error shape. Storage failures => 500 INTERNAL_ERROR, never zero counts.
+`GET /api/dashboard?from=2026-10-01&to=2026-10-18`, chỉ AUTHORITY, không có thân yêu cầu. Phải gửi cả hai ngày hoặc bỏ cả hai (toàn thời gian). Định dạng nghiêm ngặt YYYY-MM-DD, năm 0001–9999, from <= to. Tính cả hai ngày theo `Asia/Ho_Chi_Minh`; SQL bao đầu ngày bắt đầu, loại đầu ngày kế sau ngày kết thúc.
+
+Tham số lạ/lặp/rỗng hoặc có thân yêu cầu trả 400 VALIDATION_ERROR. Bearer thiếu/sai/hết hạn trả 401; người dân/vai trò chưa hỗ trợ trả 403. Chặn phương thức khác và đường dẫn con lạ. Phản hồi dùng no-store và cấu trúc lỗi hiện có. Lỗi lưu trữ trả 500 INTERNAL_ERROR, không trả số đếm 0 giả.
 
 ```json
 {
@@ -26,39 +20,16 @@ existing error shape. Storage failures => 500 INTERNAL_ERROR, never zero counts.
 }
 ```
 
-Without dates, `from`/`to` are null. Counts are nonnegative Java longs/JSON numbers.
-Reports: current status, filtered by creation time, withdrawn excluded. Missions:
-current status, filtered by assignment time. Active missions = assigned + inProgress.
-This is a current-state view of a cohort, not a historical status snapshot or a count
-of transitions within the interval. Team counts always cover all current teams;
-busy iff any ASSIGNED/IN_PROGRESS mission exists, even outside the date range.
-Empty cohorts return zeros, while teams still reflect current capacity.
+Nếu không lọc ngày, `from`/`to` là null. Số đếm là long Java/số JSON không âm. Báo cáo tính trạng thái hiện tại, lọc theo thời gian tạo, loại đã rút. Nhiệm vụ tính trạng thái hiện tại, lọc theo thời gian phân công; hoạt động = assigned + inProgress. Đây là trạng thái hiện tại của nhóm dữ liệu được chọn, không phải ảnh chụp lịch sử hay số lần chuyển trạng thái trong khoảng. Đội luôn tính toàn bộ hiện tại; có nhiệm vụ ASSIGNED/IN_PROGRESS thì bận, kể cả ngoài khoảng ngày. Nhóm dữ liệu rỗng trả 0, nhưng số đội vẫn phản ánh năng lực hiện tại.
 
-## Published module contracts
+## Hợp đồng mô-đun công khai
 
-Provider `reporting.application.contract.ReportStatisticsQuery`:
-`Counts summarize(Instant fromInclusive, Instant toExclusive)`, record Counts
-(pending, verified, rejected). Rescue publishes `RescueStatisticsQuery` with the
-same window arguments and Counts(assigned, inProgress, completed, availableTeams,
-busyTeams). Window is either two nulls (unbounded) or two ordered nonnull instants;
-invalid windows throw IllegalArgumentException. Counts exclude pagination and
-contain no IDs, report text, user data or persistence types.
+`reporting.application.contract.ReportStatisticsQuery` cung cấp `Counts summarize(Instant fromInclusive, Instant toExclusive)`, với Counts(pending, verified, rejected). Rescue công bố `RescueStatisticsQuery` với cùng tham số khoảng và Counts(assigned, inProgress, completed, availableTeams, busyTeams). Khoảng là hai null (không giới hạn) hoặc hai thời điểm khác null đúng thứ tự; sai thì ném IllegalArgumentException. Số đếm không phân trang, không chứa ID, nội dung báo cáo, dữ liệu người dùng hay kiểu lưu trữ.
 
-Dashboard application depends only on its own `DashboardStatistics` port. Its
-infrastructure maps provider contracts, under one read-only REPEATABLE READ
-transaction on the existing datasource. All SQL remains in the owning provider;
-no cross-module SQL or provider internal class imports. The response uses one
-database snapshot; asOf is the read timestamp taken after the first provider query
-establishes that snapshot, not a promise of live updates or historical reconstruction.
-No write/domain aggregate/schema/migration is required for this read use case.
+Tầng ứng dụng Dashboard chỉ phụ thuộc cổng `DashboardStatistics` riêng. Hạ tầng ánh xạ hợp đồng bên cung cấp trong cùng giao dịch chỉ đọc REPEATABLE READ trên nguồn dữ liệu hiện có. SQL nằm ở mô-đun sở hữu; không SQL xuyên mô-đun hoặc nhập lớp nội bộ bên cung cấp. Phản hồi dùng một ảnh chụp dữ liệu; asOf là thời điểm đọc sau truy vấn đầu tiên xác lập ảnh chụp, không cam kết cập nhật trực tiếp hay tái dựng lịch sử. Ca đọc này không cần ghi, thực thể miền, lược đồ hay bản chuyển đổi mới.
 
-## UI
+## Giao diện
 
-AUTHORITY navigation includes Dashboard. After login, AUTHORITY lands at
-`/operations/dashboard`; CITIZEN continues to land at `/my-reports`.
-S07 has report total, active missions, available teams, two date inputs, Apply,
-Clear, Refresh, report and mission breakdowns. Dates are drafts until Apply; Clear
-returns to all time. Applied range/timezone and team-current-state caveat stay
-visible. Loading/error/zero data, retry, 403 and late responses are handled without
-showing old statistics under a new range. Logout unmounts and aborts the request.
-English/Vietnamese, keyboard labels, 360/768/1280px; no chart library needed.
+Điều hướng AUTHORITY có bảng thống kê; sau đăng nhập vào `/operations/dashboard`. CITIZEN vẫn vào `/my-reports`. S07 có tổng báo cáo, nhiệm vụ hoạt động, đội rảnh, hai ô ngày, nút áp dụng/xóa lọc/làm mới và phân rã báo cáo/nhiệm vụ. Ngày chỉ áp dụng khi bấm nút; xóa lọc về toàn thời gian. Luôn hiển thị khoảng/múi giờ đã áp dụng và lưu ý số đội là hiện tại.
+
+Xử lý đang tải/lỗi/rỗng, thử lại, 403 và phản hồi muộn; không hiển thị số cũ dưới khoảng mới. Đăng xuất tháo màn hình và hủy yêu cầu. Hỗ trợ tiếng Anh/Việt, nhãn bàn phím, kích thước 360/768/1280px; không cần thư viện biểu đồ.
