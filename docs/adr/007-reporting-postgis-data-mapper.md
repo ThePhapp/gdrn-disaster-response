@@ -1,49 +1,21 @@
-# ADR 007: Reporting PostGIS data mapper
+# ADR 007: Ánh xạ dữ liệu PostGIS cho Reporting
 
-## Status
+## Trạng thái
+Đã triển khai khi tích hợp B1/C1. V4 theo sau V3 của C1; cấu hình bảo mật tập trung mở E07–E09.
 
-Implemented during B1/C1 integration. V4 follows C1 V3; centralized security exposes E07–E09.
+## Bối cảnh
+E07 tạo báo cáo PENDING từ người dân đã xác thực; E08/E09 đọc theo quyền sở hữu. B2 sẽ bổ sung xác minh, rút báo cáo và lọc bán kính. Reporting cần điểm WGS84, nhưng B1 không phụ trách thư viện cấp gốc hay bảo mật tập trung.
 
-## Context
+## Quyết định
+Dùng mô hình Java thuần Report/Coordinates và cổng ứng dụng ReportStore. JdbcReportStore ánh xạ dữ liệu tường minh bằng Spring JDBC hiện có; không thêm Hibernate Spatial hoặc thư viện cấp gốc. SQL, ResultSet và PostGIS chỉ nằm trong hạ tầng. DTO HTTP và mô hình miền không chứa kiểu lưu trữ. Giữ ánh xạ JPA của Identity.
 
-E07 creates a PENDING report from an authenticated citizen. E08/E09 read it under
-ownership rules. B2 will add verification, withdrawal and radius filtering. Reporting
-needs a WGS84 point now, but B1 does not own root dependencies or centralized security.
+Lưu `geography(Point,4326)`, kinh độ là X, vĩ độ là Y theo [hợp đồng PostGIS 3.5](https://www.postgis.net/docs/manual-3.5/ST_MakePoint.html). Tham chiếu UUID đơn, không có khóa ngoại, phép nối hay truy cập kho dữ liệu xuyên mô-đun. Lược đồ B1 chỉ cho phép PENDING và disaster_id chưa liên kết; điều kiện disasterId vì thế không khớp dòng B1 nào.
 
-## Decision
+Đếm và lấy danh sách trong cùng giao dịch chỉ đọc REPEATABLE READ tại bộ chuyển đổi. Cổng ứng dụng bảo đảm ảnh chụp dữ liệu nhất quán trong một yêu cầu. [Mức cô lập PostgreSQL](https://www.postgresql.org/docs/16/transaction-iso.html) hỗ trợ điều này mà không khóa bên ghi; kiểm thử chèn đồng thời xác minh hành vi. Sắp xếp luôn bổ sung id ASC; không bảo đảm cùng ảnh chụp qua nhiều yêu cầu HTTP. Tạo báo cáo dùng một INSERT nguyên tử. Thời gian UTC được cắt tới micro giây trước khi chèn để kết quả tạo/đọc khớp độ chính xác PostgreSQL.
 
-Use a plain Java Report/Coordinates model and a ReportStore application port.
-JdbcReportStore is an explicit data mapper using the existing Spring JDBC dependency;
-no new Hibernate Spatial/root dependency is needed. SQL, ResultSet and PostGIS stay
-inside infrastructure. HTTP DTOs and domain models contain no persistence types.
-Identity's existing JPA mapping remains unchanged.
+## Hệ quả
+Flyway V4 tạo lược đồ Reporting sau V3 Disaster. Kiểm thử chạy bản chuyển đổi thật và JWT tập trung; nâng V3→V4 giữ dữ liệu cũ. OpenAPI khi chạy công bố phần Reporting đã triển khai, chưa gồm bộ lọc không gian B2.
 
-Persist `geography(Point,4326)` using longitude as X, latitude as Y; see the
-[PostGIS 3.5 constructor contract](https://www.postgis.net/docs/manual-3.5/ST_MakePoint.html).
-Use scalar UUID references with no cross-module FK, join or repository access.
-The B1 schema permits PENDING only and unlinked disaster_id; that column supports the
-contract's disasterId predicate, which correctly matches no B1 rows.
+B2 phải mở rộng khôi phục mô hình/ánh xạ DTO cho VERIFIED/REJECTED, thêm bản chuyển đổi cho trạng thái, xác minh và rút báo cáo, thay ràng buộc chỉ PENDING. Mọi truy vấn thường phải loại dòng đã rút; ghi chuyển trạng thái phải nguyên tử; thêm chỉ mục không gian cùng truy vấn bán kính thực tế. B1 không đưa vào lệnh B2 hay phần hiện thực ReportingQuery công khai.
 
-List count and items execute under one read-only REPEATABLE READ transaction in the
-adapter. The application port promises a consistent request snapshot. PostgreSQL's
-[isolation semantics](https://www.postgresql.org/docs/16/transaction-iso.html) support
-this without locking writers; a real concurrent insert test verifies the behavior.
-Sort always adds id ASC. There is no snapshot guarantee across multiple HTTP requests.
-Create is one atomic SQL insert. Timestamp generation is UTC, truncated to microseconds
-before insert so creation and subsequent reads agree with PostgreSQL precision.
-
-## Consequences
-
-Flyway V4 creates the Reporting schema after V3 Disaster. Tests run production
-migrations and centralized JWT security; upgrade V3→V4 preserves existing rows.
-Runtime OpenAPI publishes the implemented Reporting slice, excluding B2 spatial filters.
-
-B2 must extend the domain reconstitution/DTO mapper for VERIFIED/REJECTED, allocate
-a new migration for state/verification/withdrawal data and replace the PENDING-only
-constraints. It must filter withdrawn rows in every normal query, implement atomic
-transition writes and add the spatial index with the actual radius query. No B2
-command or published ReportingQuery implementation is introduced by B1.
-
-JDBC means explicit mapping/SQL maintenance and explicit transaction configuration.
-Using Hibernate Spatial remains an option if a later use case justifies it; no
-second persistence representation is introduced merely to satisfy an ORM convention.
+JDBC đòi hỏi bảo trì SQL/ánh xạ và cấu hình giao dịch tường minh. Hibernate Spatial vẫn là lựa chọn khi ca sử dụng sau này cần; không tạo mô hình lưu trữ thứ hai chỉ để theo quy ước ORM.

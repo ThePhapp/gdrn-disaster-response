@@ -1,25 +1,18 @@
-# ADR 004: Plan for Internal Domain Events
+# ADR 004: Dự kiến sử dụng sự kiện nghiệp vụ nội bộ
 
-## Status
-Proposed
+## Trạng thái
+Đề xuất.
 
-## Context
-Future workflows may require reactions across modules without direct implementation
-dependencies. No current business slice establishes event or delivery requirements.
+## Bối cảnh
+Luồng tương lai có thể cần phản ứng giữa các mô-đun mà không phụ thuộc trực tiếp vào phần hiện thực của nhau. Hiện chưa có ca nghiệp vụ xác lập yêu cầu sự kiện hoặc bảo đảm chuyển giao.
 
-## Decision
-When justified by a real use case, evaluate in-process domain/application events.
-Keep domain event types framework-independent. Before adopting an implementation,
-decide and test dispatch ownership, synchronous/asynchronous execution, transaction
-timing, handler failure behavior and delivery guarantees. No event implementation or
-external broker is created during bootstrap.
+## Quyết định
+Khi có ca sử dụng thực tế, đánh giá sự kiện miền/ứng dụng trong cùng tiến trình. Kiểu sự kiện miền phải độc lập với thư viện. Trước khi áp dụng, xác định và kiểm thử trách nhiệm phát sự kiện, thực thi đồng bộ/bất đồng bộ, thời điểm giao dịch, xử lý lỗi và mức bảo đảm chuyển giao. Không tạo cơ chế sự kiện hay hệ thống môi giới bên ngoài ở giai đoạn khởi tạo.
 
-## Alternatives Considered
-- Explicit synchronous application contracts: appropriate when a caller needs a result.
-- Spring in-process event publication in an outer adapter: candidate, not selected yet.
-- External broker: deferred to evidence-based Phase 2 work.
+## Phương án đã cân nhắc
+- Hợp đồng ứng dụng đồng bộ tường minh: phù hợp khi bên gọi cần kết quả.
+- Phát sự kiện nội bộ Spring ở bộ chuyển đổi tầng ngoài: phương án dự kiến, chưa chọn.
+- Hệ thống môi giới bên ngoài: để Pha 2 đánh giá dựa trên bằng chứng.
 
-## Consequences
-No speculative event API or delivery guarantee constrains future features. In-process
-events alone do not provide durable delivery across crashes. Accept or supersede this
-ADR when the first actual event use case determines the required semantics.
+## Hệ quả
+Không áp đặt API sự kiện hay bảo đảm chuyển giao mang tính dự đoán lên tính năng tương lai. Sự kiện nội bộ tự nó không bảo đảm chuyển giao bền vững khi tiến trình lỗi. Chấp thuận hoặc thay thế ADR này khi ca sự kiện đầu tiên xác định được ngữ nghĩa cần thiết.

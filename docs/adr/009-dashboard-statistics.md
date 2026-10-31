@@ -1,44 +1,18 @@
-# ADR 009 — Read-only dashboard through published aggregate contracts
+# ADR 009: Bảng thống kê chỉ đọc qua hợp đồng tổng hợp công khai
 
-Date: 18/10/2026. Status: Accepted; implemented and merged via PR #29 (`392714e`).
-Status verified against Git history at `main 2ddf9d0`, 28/10/2026; decision unchanged.
+Trạng thái: Đã chấp thuận, triển khai và hợp nhất qua PR #29 (`392714e`). Đã đối chiếu lịch sử Git tại `main 2ddf9d0`; quyết định giữ nguyên.
 
-## Context
+## Bối cảnh
+Người dùng cho phép mở rộng MVP 15 thao tác đã đóng băng: đếm báo cáo theo trạng thái, nhiệm vụ hoạt động, đội rảnh và lọc ngày. API danh sách có phân trang nên không thể dùng làm tổng toàn hệ thống. Reporting không được phụ thuộc Rescue; bộ điều khiển không điều phối lưu trữ xuyên mô-đun.
 
-The user authorized an extension to the frozen 15-operation MVP: report status
-counts, active missions, available rescue teams and a date filter. Existing list
-APIs paginate and must not be used as a source for global totals. Reporting cannot
-depend on Rescue, and a controller must not orchestrate cross-module persistence.
+## Quyết định
+Thêm mô-đun `dashboard` nhỏ cho ca đọc thực tế, không tạo thực thể miền giả. Dịch vụ ứng dụng Java thuần kiểm tra vai trò/ngày và dùng cổng do bên sử dụng sở hữu. Hạ tầng gọi hợp đồng tổng hợp Reporting/Rescue; bộ chuyển đổi JDBC của từng bên quản lý SQL trên bảng riêng. Bộ chuyển đổi Dashboard gói các lần đọc trong giao dịch chỉ đọc REPEATABLE READ trên nguồn dữ liệu hiện có. Kiểm thử đồng thời ghi hoàn thành nhiệm vụ giữa hai truy vấn, xác minh phản hồi vẫn dùng ảnh chụp cũ và lần gọi sau có số mới.
 
-## Decision
+Ngày tính cả hai đầu theo `Asia/Ho_Chi_Minh`, chuyển thành khoảng thời điểm bao đầu, loại cuối. Báo cáo loại dòng đã rút và lọc theo thời gian tạo; nhiệm vụ lọc theo thời gian phân công nhưng phản ánh trạng thái hiện tại. Số đội luôn tính toàn bộ đội và mọi nhiệm vụ đang hoạt động, kể cả ngoài khoảng ngày, để không nhận nhầm đội đang bận thành rảnh.
 
-Add a small `dashboard` module for the real read use case, without artificial domain
-entities. Its plain Java application service validates role/date semantics and uses
-a consumer-owned port. Infrastructure calls Reporting/Rescue aggregate contracts;
-each provider's JDBC adapter owns SQL over its own tables. The Dashboard adapter
-wraps these reads in one read-only REPEATABLE READ transaction on the existing
-datasource. A concurrency integration test commits a mission completion between
-provider queries and verifies the old snapshot followed by fresh counts next call.
+E16 `GET /api/dashboard` chỉ dành cho AUTHORITY; chặn vai trò và phương thức khác. Dùng lại bộ gọi API có xác thực, no-store, DTO lỗi và bảo vệ theo vai trò. Không thay lược đồ, thêm bản chuyển đổi, sự kiện, bộ nhớ đệm hay hạ tầng. Danh mục công việc ghi nhận ngoại lệ phạm vi do người dùng cho phép.
 
-Dates are inclusive `Asia/Ho_Chi_Minh` calendar dates, translated to a half-open
-instant window. Report counts exclude withdrawn rows and filter by creation time;
-mission counts filter by assignment time and reflect current status. Team capacity
-always covers all teams, using all active missions, regardless of date range. This
-avoids calling a team available merely because its assignment predates the cohort.
+## Hệ quả và phương án khác
+Bảng thống kê nhất quán trong một yêu cầu nhưng cần làm mới để cập nhật. Không tái dựng trạng thái hoặc năng lực quá khứ; thống kê lịch sử thật cần yêu cầu và dữ liệu bổ sung. Truy vấn tổng hợp quét các dòng phù hợp; lựa chọn chỉ mục/tối ưu phải dựa trên đo lường.
 
-Expose E16 `GET /api/dashboard` to AUTHORITY only; other roles and HTTP methods
-remain denied. Shared authenticated client/no-store, existing error DTO and role
-guard are reused. No schema changes, migration, events, cache or new infrastructure.
-The single task catalog records this explicit user-authorized scope exception.
-
-## Consequences and alternatives
-
-The dashboard is consistent within a request but becomes stale until refresh. It
-does not reconstruct past status or capacity; a true historical dashboard requires
-additional requirements and history data. Aggregate queries scan matching rows;
-index/tuning decisions require measurement rather than an added speculative index.
-
-Rejected: totals from one list page (incomplete), browser fetching every page
-(expensive and inconsistent), SQL joins across modules (ownership violation),
-placing orchestration in `shared` or Reporting (wrong responsibility/dependency),
-and asynchronous materialized counters (unnecessary consistency/infrastructure cost).
+Loại bỏ các phương án: tính tổng từ một trang (thiếu), trình duyệt tải hết trang (tốn kém và thiếu nhất quán), nối SQL xuyên mô-đun (vi phạm quyền sở hữu), điều phối trong `shared` hoặc Reporting (sai trách nhiệm/phụ thuộc), bộ đếm vật hóa bất đồng bộ (thêm chi phí nhất quán/hạ tầng không cần thiết).

@@ -1,48 +1,20 @@
-# ADR 008: Reporting atomic decisions and published query
+# ADR 008: Quyết định nguyên tử và hợp đồng truy vấn Reporting
 
-## Status
+## Trạng thái
+Đã triển khai trên nhánh B2 từ main `ca3751d`; chờ rà soát/hợp nhất. Mở rộng ADR 007, giữ hợp đồng truyền dữ liệu P00.
 
-Implemented on the B2 branch from main `ca3751d`; pending review/merge.
-Extends ADR 007 without changing the P00 wire contract.
+## Quyết định
+Report quản lý vòng đời một chiều PENDING → VERIFIED/REJECTED. Rút báo cáo giữ PENDING và ghi withdrawn_at; mọi truy vấn đơn/lô/danh sách hiển thị đều loại dòng đã rút. Version là nội bộ, không xuất hiện trong yêu cầu hoặc phản hồi E10/E11.
 
-## Decision
+Mỗi lệnh xác thực quyền, đọc báo cáo hiển thị rồi kiểm tra PENDING. Xác minh đọc ảnh chụp Disaster mới qua cổng DisasterLookup của Reporting và DisasterQueryAdapter ở tầng ngoài. Bộ chuyển đổi chỉ nhập hợp đồng Disaster công khai và ánh xạ enum sang kiểu Reporting.
 
-Report owns a one-way PENDING → VERIFIED/REJECTED lifecycle. Withdrawal keeps the
-PENDING status and records withdrawn_at; all visible single/batch/list queries exclude
-withdrawn rows. Version is internal and is never an E10/E11 request or response field.
+Lần ghi duy nhất là SQL UPDATE nguyên tử với điều kiện id, phiên bản đã đọc, PENDING và withdrawn_at IS NULL. Một dòng bị tác động nghĩa là quyết định được ghi và phiên bản tăng; không dòng nào tương ứng INVALID_TRANSITION (409). Không giữ khóa đọc trong lúc tra cứu Disaster. Báo cáo thiếu/đã rút trả 404 ngay lần đọc đầu; khác chủ sở hữu cũng trả 404 trước khi kiểm tra trạng thái. Giữ ngữ nghĩa thử lại và tranh chấp của P00. Kết thúc thảm họa sau bước đọc điều kiện không chặn ghi xác minh; không có giao dịch, khóa, khóa ngoại xuyên mô-đun hay cam kết ACTIVE tại lúc ghi.
 
-Each command first authorizes the actor and reads the visible report, then checks
-PENDING. Verification checks a fresh Disaster snapshot through Reporting's
-DisasterLookup port and its outer DisasterQueryAdapter. The adapter imports only
-the published Disaster contract and explicitly maps enums into Reporting types.
+V5 mở rộng V4 với siêu dữ liệu, phiên bản, ràng buộc vòng đời và chỉ mục GiST một phần trên tọa độ của báo cáo chưa rút. E08 dùng ST_DWithin trên WGS84 geography với mét nguyên, trước phân trang/đếm. Đếm và lấy danh sách tiếp tục dùng giao dịch chỉ đọc REPEATABLE READ. Chỉ mục khớp biểu thức truy vấn và điều kiện hiển thị; EXPLAIN kiểm tra khả năng sử dụng, không chứng minh tăng hiệu năng.
 
-The only write is an atomic SQL UPDATE conditional on id, observed version, PENDING
-and withdrawn_at IS NULL. One affected row commits the decision and increments
-version; zero rows maps to INVALID_TRANSITION (409). No read lock is held across the
-Disaster lookup. Missing/withdrawn on the initial read maps to 404; other ownership
-also maps to 404 before state checks. This preserves P00 retry and race semantics.
-Resolving a disaster after the eligibility read does not block verification's commit;
-there is no cross-module transaction, lock, foreign key or ACTIVE-at-commit promise.
+ReportingQuery đọc báo cáo theo một lô, gom ID thảm họa VERIFIED không trùng và gọi tối đa một truy vấn Disaster theo lô qua cổng. Trả ảnh chụp P00 bất biến, bỏ báo cáo thiếu/đã rút và báo lỗi nếu tham chiếu VERIFIED bị thiếu. Không trả đối tượng lưu trữ hay dấu xóa. Bên sử dụng chịu trách nhiệm phân quyền; bên cung cấp nội bộ tin cậy không lọc theo người gọi.
 
-V5 extends V4 with metadata/version/lifecycle constraints and a partial GiST index
-on geography for non-withdrawn reports. E08 uses ST_DWithin with WGS84 geography and
-integer meters, before pagination/count. Count and items keep the existing read-only
-REPEATABLE READ transaction. The index matches the query expression and visibility
-predicate; its availability is tested with EXPLAIN, not claimed as a benchmark gain.
+## Bằng chứng và hệ quả
+Kiểm thử Java thuần bao phủ vòng đời và điều phối qua cổng giả lập. Kiểm thử PostGIS bao phủ HTTP/bảo mật thực, nâng V4→V5, biên bán kính, quyền sở hữu, ảnh chụp truy vấn và các lệnh tranh chấp được đồng bộ bằng rào chắn. Kiểm thử riêng dùng chốt đồng bộ xác minh kết thúc thảm họa sau lần đọc điều kiện. Xem [bàn giao B2](../handoffs/B2.md).
 
-ReportingQuery performs one batch report query, gathers distinct VERIFIED disaster
-IDs and performs at most one Disaster batch lookup through the port. It returns
-immutable P00 snapshots, omits missing/withdrawn reports, and fails if a VERIFIED
-reference is missing. It does not return persistence objects, tombstones or deletion
-flags. Consumers own authorization; the trusted internal provider does not filter by actor.
-
-## Evidence and consequences
-
-Plain Java tests cover lifecycle and orchestration through mocked ports. PostGIS
-integration tests exercise production HTTP/security, V4→V5 upgrade, inclusive radius,
-ownership, query snapshots and barrier-controlled competing commands. A separate
-latch-controlled test covers resolve after eligibility read. See [B2 handoff](../handoffs/B2.md).
-
-No event bus, service split or additional infrastructure is required. Future code
-that introduces an outer transaction must re-evaluate isolation and query freshness;
-current commands perform a single atomic persistence write after eligibility checks.
+Không cần cơ chế sự kiện, tách dịch vụ hay hạ tầng mới. Nếu thêm giao dịch bao ngoài, phải đánh giá lại mức cô lập và độ mới của truy vấn; hiện mỗi lệnh chỉ ghi nguyên tử một lần sau kiểm tra điều kiện.

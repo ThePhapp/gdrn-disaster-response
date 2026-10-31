@@ -1,10 +1,8 @@
 openapi: 3.0.3
 info:
-  title: GDRN Phase 1 planned contract
+  title: "Hợp đồng dự kiến GDRN Pha 1"
   version: 1.0.0
-  description: 'P00 design only: exactly E01-E15, not runtime implementation. Normative behavior: phase1-contract.md;
-    module contracts and ADR 005. All errors use Error. Unknown/duplicate query keys, nulls and unknown
-    body fields rejected with 400.'
+  description: "Chỉ là thiết kế P00: đúng E01–E15, không phải hiện trạng triển khai. Hành vi chuẩn theo phase1-contract.md, hợp đồng mô-đun và ADR 005. Mọi lỗi dùng Error. Khóa truy vấn lạ/trùng, null và trường thân yêu cầu lạ bị từ chối với 400."
 servers:
 - url: /
 security:
@@ -23,8 +21,7 @@ paths:
       summary: E01 POST /api/auth/login
       tags:
       - P01
-      description: 'Email normalized as EmailAddress; invalid password, unknown user or inactive MVP role:
-        identical 401 INVALID_CREDENTIALS. TTL 900 seconds, no refresh. Response Cache-Control: no-store.'
+      description: "Chuẩn hóa email theo EmailAddress; sai mật khẩu, người dùng không tồn tại hoặc vai trò MVP không hoạt động đều trả 401 INVALID_CREDENTIALS. Tuổi thọ 900 giây, không làm mới. Phản hồi Cache-Control: no-store."
       x-owner: Person 1
       x-task: P01
       x-roles:
@@ -34,7 +31,7 @@ paths:
       x-status: planned
       responses:
         '200':
-          description: Success.
+          description: "Thành công."
           content:
             application/json:
               schema:
@@ -54,7 +51,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '400':
           description: VALIDATION_ERROR
           content:
@@ -76,7 +73,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '401':
           description: INVALID_CREDENTIALS
           content:
@@ -96,7 +93,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '415':
           description: UNSUPPORTED_MEDIA_TYPE
           content:
@@ -116,7 +113,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '500':
           description: INTERNAL_ERROR
           content:
@@ -136,7 +133,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
       security: []
       requestBody:
         required: true
@@ -153,8 +150,7 @@ paths:
       summary: E02 GET /api/auth/me
       tags:
       - P01
-      description: 'Principal only; response Cache-Control: no-store. Unsupported authenticated role:
-        403.'
+      description: "Chỉ lấy danh tính đã xác thực; phản hồi Cache-Control: no-store. Vai trò đã xác thực nhưng chưa hỗ trợ trả 403."
       x-owner: Person 1
       x-task: P01
       x-roles:
@@ -170,7 +166,7 @@ paths:
       x-status: planned
       responses:
         '200':
-          description: Success.
+          description: "Thành công."
           content:
             application/json:
               schema:
@@ -185,7 +181,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '400':
           description: VALIDATION_ERROR
           content:
@@ -207,7 +203,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '401':
           description: UNAUTHENTICATED
           content:
@@ -227,13 +223,13 @@ paths:
                 type: string
                 enum:
                 - Bearer
-              description: Bearer challenge.
+              description: "Yêu cầu xác thực Bearer."
             Cache-Control:
               schema:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '403':
           description: FORBIDDEN
           content:
@@ -253,7 +249,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '500':
           description: INTERNAL_ERROR
           content:
@@ -273,14 +269,14 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
   /api/disasters:
     get:
       operationId: E03
       summary: E03 GET /api/disasters
       tags:
       - C1
-      description: See phase1-contract.md for shared semantics.
+      description: "Xem ngữ nghĩa dùng chung tại phase1-contract.md."
       x-owner: Person 3
       x-task: C1
       x-roles:
@@ -292,7 +288,7 @@ paths:
       x-status: planned
       responses:
         '200':
-          description: Success.
+          description: "Thành công."
           content:
             application/json:
               schema:
@@ -303,7 +299,7 @@ paths:
                   name: Hanoi flood exercise
                   type: FLOOD
                   severity: HIGH
-                  description: Training scenario only
+                  description: "Chỉ dùng cho tình huống diễn tập"
                   latitude: 21.028
                   longitude: 105.834
                   status: ACTIVE
@@ -320,7 +316,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '400':
           description: VALIDATION_ERROR
           content:
@@ -342,7 +338,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '401':
           description: UNAUTHENTICATED
           content:
@@ -362,13 +358,13 @@ paths:
                 type: string
                 enum:
                 - Bearer
-              description: Bearer challenge.
+              description: "Yêu cầu xác thực Bearer."
             Cache-Control:
               schema:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '403':
           description: FORBIDDEN
           content:
@@ -388,7 +384,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '500':
           description: INTERNAL_ERROR
           content:
@@ -408,7 +404,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
       parameters:
       - name: page
         in: query
@@ -418,7 +414,7 @@ paths:
           minimum: 0
           maximum: 1000000
           default: 0
-        description: page
+        description: "Số trang"
       - name: size
         in: query
         required: false
@@ -427,7 +423,7 @@ paths:
           minimum: 1
           maximum: 100
           default: 20
-        description: size
+        description: "Kích thước trang"
       - name: sort
         in: query
         required: false
@@ -437,26 +433,25 @@ paths:
           - createdAt,desc
           - createdAt,asc
           default: createdAt,desc
-        description: One sort only. Always append id ASC as tie-breaker. Mission createdAt sort means
-          assignedAt.
+        description: "Chỉ một tiêu chí sắp xếp. Luôn thêm id ASC để phân định khi bằng nhau. Sắp xếp nhiệm vụ theo createdAt nghĩa là assignedAt."
       - name: status
         in: query
         required: false
         schema:
           $ref: '#/components/schemas/DisasterStatus'
-        description: status
+        description: "Trạng thái"
       - name: type
         in: query
         required: false
         schema:
           $ref: '#/components/schemas/DisasterType'
-        description: type
+        description: "Loại"
     post:
       operationId: E05
       summary: E05 POST /api/disasters
       tags:
       - C1
-      description: Creates ACTIVE, version 0. No uniqueness rule on name.
+      description: "Tạo trạng thái ACTIVE, version 0. Tên không có ràng buộc duy nhất."
       x-owner: Person 3
       x-task: C1
       x-roles:
@@ -466,7 +461,7 @@ paths:
       x-status: planned
       responses:
         '201':
-          description: Success.
+          description: "Thành công."
           content:
             application/json:
               schema:
@@ -476,7 +471,7 @@ paths:
                 name: Hanoi flood exercise
                 type: FLOOD
                 severity: HIGH
-                description: Training scenario only
+                description: "Chỉ dùng cho tình huống diễn tập"
                 latitude: 21.028
                 longitude: 105.834
                 status: ACTIVE
@@ -489,7 +484,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '400':
           description: VALIDATION_ERROR
           content:
@@ -511,7 +506,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '401':
           description: UNAUTHENTICATED
           content:
@@ -531,13 +526,13 @@ paths:
                 type: string
                 enum:
                 - Bearer
-              description: Bearer challenge.
+              description: "Yêu cầu xác thực Bearer."
             Cache-Control:
               schema:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '403':
           description: FORBIDDEN
           content:
@@ -557,7 +552,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '415':
           description: UNSUPPORTED_MEDIA_TYPE
           content:
@@ -577,7 +572,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '500':
           description: INTERNAL_ERROR
           content:
@@ -597,7 +592,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
       requestBody:
         required: true
         content:
@@ -608,7 +603,7 @@ paths:
               name: Hanoi flood exercise
               type: FLOOD
               severity: HIGH
-              description: Training scenario only
+              description: "Chỉ dùng cho tình huống diễn tập"
               latitude: 21.028
               longitude: 105.834
   /api/disasters/{id}:
@@ -617,7 +612,7 @@ paths:
       summary: E04 GET /api/disasters/{id}
       tags:
       - C1
-      description: See phase1-contract.md for shared semantics.
+      description: "Xem ngữ nghĩa dùng chung tại phase1-contract.md."
       x-owner: Person 3
       x-task: C1
       x-roles:
@@ -629,7 +624,7 @@ paths:
       x-status: planned
       responses:
         '200':
-          description: Success.
+          description: "Thành công."
           content:
             application/json:
               schema:
@@ -639,7 +634,7 @@ paths:
                 name: Hanoi flood exercise
                 type: FLOOD
                 severity: HIGH
-                description: Training scenario only
+                description: "Chỉ dùng cho tình huống diễn tập"
                 latitude: 21.028
                 longitude: 105.834
                 status: ACTIVE
@@ -652,7 +647,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '400':
           description: VALIDATION_ERROR
           content:
@@ -674,7 +669,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '401':
           description: UNAUTHENTICATED
           content:
@@ -694,13 +689,13 @@ paths:
                 type: string
                 enum:
                 - Bearer
-              description: Bearer challenge.
+              description: "Yêu cầu xác thực Bearer."
             Cache-Control:
               schema:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '403':
           description: FORBIDDEN
           content:
@@ -720,7 +715,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '404':
           description: NOT_FOUND
           content:
@@ -740,7 +735,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '500':
           description: INTERNAL_ERROR
           content:
@@ -760,21 +755,20 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
       parameters:
       - name: id
         in: path
         required: true
         schema:
           $ref: '#/components/schemas/Id'
-        description: Resource UUID
+        description: "UUID tài nguyên"
     patch:
       operationId: E06
       summary: E06 PATCH /api/disasters/{id}
       tags:
       - C1
-      description: Atomic expectedVersion check, increment version exactly once on success. RESOLVED immutable;
-        no reopen. No Rescue query on resolve.
+      description: "Kiểm tra expectedVersion nguyên tử; thành công tăng version đúng một lần. RESOLVED bất biến, không mở lại. Không truy vấn Rescue khi kết thúc thảm họa."
       x-owner: Person 3
       x-task: C1
       x-roles:
@@ -784,7 +778,7 @@ paths:
       x-status: planned
       responses:
         '200':
-          description: Success.
+          description: "Thành công."
           content:
             application/json:
               schema:
@@ -794,7 +788,7 @@ paths:
                 name: Hanoi flood exercise
                 type: FLOOD
                 severity: HIGH
-                description: Training scenario only
+                description: "Chỉ dùng cho tình huống diễn tập"
                 latitude: 21.028
                 longitude: 105.834
                 status: RESOLVED
@@ -807,7 +801,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '400':
           description: VALIDATION_ERROR
           content:
@@ -829,7 +823,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '401':
           description: UNAUTHENTICATED
           content:
@@ -849,13 +843,13 @@ paths:
                 type: string
                 enum:
                 - Bearer
-              description: Bearer challenge.
+              description: "Yêu cầu xác thực Bearer."
             Cache-Control:
               schema:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '403':
           description: FORBIDDEN
           content:
@@ -875,7 +869,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '404':
           description: NOT_FOUND
           content:
@@ -895,7 +889,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '409':
           description: STALE_VERSION / INVALID_TRANSITION
           content:
@@ -915,7 +909,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '415':
           description: UNSUPPORTED_MEDIA_TYPE
           content:
@@ -935,7 +929,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '500':
           description: INTERNAL_ERROR
           content:
@@ -955,14 +949,14 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
       parameters:
       - name: id
         in: path
         required: true
         schema:
           $ref: '#/components/schemas/Id'
-        description: Resource UUID
+        description: "UUID tài nguyên"
       requestBody:
         required: true
         content:
@@ -978,8 +972,7 @@ paths:
       summary: E07 POST /api/reports
       tags:
       - B1
-      description: PENDING. reporterId from authenticated principal, not client. No automatic disaster
-        link.
+      description: "Trạng thái PENDING. reporterId lấy từ danh tính đã xác thực, không từ máy khách. Không tự liên kết thảm họa."
       x-owner: Person 2
       x-task: B1
       x-roles:
@@ -989,7 +982,7 @@ paths:
       x-status: planned
       responses:
         '201':
-          description: Success.
+          description: "Thành công."
           content:
             application/json:
               schema:
@@ -998,7 +991,7 @@ paths:
                 id: 00000000-0000-4000-8000-000000000005
                 reporterId: 00000000-0000-4000-8000-000000000001
                 type: FLOOD
-                description: Water rising near the entrance
+                description: "Nước dâng gần lối vào"
                 latitude: 21.028
                 longitude: 105.834
                 status: PENDING
@@ -1010,7 +1003,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '400':
           description: VALIDATION_ERROR
           content:
@@ -1032,7 +1025,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '401':
           description: UNAUTHENTICATED
           content:
@@ -1052,13 +1045,13 @@ paths:
                 type: string
                 enum:
                 - Bearer
-              description: Bearer challenge.
+              description: "Yêu cầu xác thực Bearer."
             Cache-Control:
               schema:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '403':
           description: FORBIDDEN
           content:
@@ -1078,7 +1071,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '415':
           description: UNSUPPORTED_MEDIA_TYPE
           content:
@@ -1098,7 +1091,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '500':
           description: INTERNAL_ERROR
           content:
@@ -1118,7 +1111,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
       requestBody:
         required: true
         content:
@@ -1127,7 +1120,7 @@ paths:
               $ref: '#/components/schemas/CreateReportRequest'
             example:
               type: FLOOD
-              description: Water rising near the entrance
+              description: "Nước dâng gần lối vào"
               latitude: 21.028
               longitude: 105.834
     get:
@@ -1135,9 +1128,7 @@ paths:
       summary: E08 GET /api/reports
       tags:
       - B1/B2
-      description: CITIZEN automatically restricted to own nondeleted reports; AUTHORITY all nondeleted
-        reports. AND filters. Unknown disasterId gives empty page. Ownership before count/pagination;
-        no reporterId parameter.
+      description: "CITIZEN chỉ thấy báo cáo chưa xóa của mình; AUTHORITY thấy mọi báo cáo chưa xóa. Kết hợp bộ lọc bằng AND. disasterId không tồn tại trả trang rỗng. Kiểm tra quyền sở hữu trước đếm/phân trang; không có tham số reporterId."
       x-owner: Person 2
       x-task: B1/B2
       x-roles:
@@ -1150,7 +1141,7 @@ paths:
       x-status: planned
       responses:
         '200':
-          description: Success.
+          description: "Thành công."
           content:
             application/json:
               schema:
@@ -1160,7 +1151,7 @@ paths:
                 - id: 00000000-0000-4000-8000-000000000005
                   reporterId: 00000000-0000-4000-8000-000000000001
                   type: FLOOD
-                  description: Water rising near the entrance
+                  description: "Nước dâng gần lối vào"
                   latitude: 21.028
                   longitude: 105.834
                   status: PENDING
@@ -1176,7 +1167,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '400':
           description: VALIDATION_ERROR
           content:
@@ -1198,7 +1189,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '401':
           description: UNAUTHENTICATED
           content:
@@ -1218,13 +1209,13 @@ paths:
                 type: string
                 enum:
                 - Bearer
-              description: Bearer challenge.
+              description: "Yêu cầu xác thực Bearer."
             Cache-Control:
               schema:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '403':
           description: FORBIDDEN
           content:
@@ -1244,7 +1235,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '500':
           description: INTERNAL_ERROR
           content:
@@ -1264,7 +1255,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
       parameters:
       - name: page
         in: query
@@ -1274,7 +1265,7 @@ paths:
           minimum: 0
           maximum: 1000000
           default: 0
-        description: page
+        description: "Số trang"
       - name: size
         in: query
         required: false
@@ -1283,7 +1274,7 @@ paths:
           minimum: 1
           maximum: 100
           default: 20
-        description: size
+        description: "Kích thước trang"
       - name: sort
         in: query
         required: false
@@ -1293,38 +1284,37 @@ paths:
           - createdAt,desc
           - createdAt,asc
           default: createdAt,desc
-        description: One sort only. Always append id ASC as tie-breaker. Mission createdAt sort means
-          assignedAt.
+        description: "Chỉ một tiêu chí sắp xếp. Luôn thêm id ASC để phân định khi bằng nhau. Sắp xếp nhiệm vụ theo createdAt nghĩa là assignedAt."
       - name: status
         in: query
         required: false
         schema:
           $ref: '#/components/schemas/ReportStatus'
-        description: status
+        description: "Trạng thái"
       - name: type
         in: query
         required: false
         schema:
           $ref: '#/components/schemas/DisasterType'
-        description: type
+        description: "Loại"
       - name: disasterId
         in: query
         required: false
         schema:
           $ref: '#/components/schemas/Id'
-        description: disasterId
+        description: "ID thảm họa"
       - name: lat
         in: query
         required: false
         schema:
           $ref: '#/components/schemas/Latitude'
-        description: All of lat/lon/radiusMeters required together; otherwise 400.
+        description: "Phải gửi đồng thời lat/lon/radiusMeters; thiếu trả 400."
       - name: lon
         in: query
         required: false
         schema:
           $ref: '#/components/schemas/Longitude'
-        description: All of lat/lon/radiusMeters required together.
+        description: "Phải gửi đồng thời lat/lon/radiusMeters."
       - name: radiusMeters
         in: query
         required: false
@@ -1332,16 +1322,14 @@ paths:
           type: integer
           minimum: 1
           maximum: 100000
-        description: Meters, inclusive distance <= radiusMeters, WGS84 geography; spatial filtering in
-          database before pagination.
+        description: "Đơn vị mét, tính cả biên khoảng cách <= radiusMeters, kiểu geography WGS84; lọc không gian tại cơ sở dữ liệu trước phân trang."
   /api/reports/{id}:
     get:
       operationId: E09
       summary: E09 GET /api/reports/{id}
       tags:
       - B1
-      description: CITIZEN owner only; other owner, missing or withdrawn => identical 404. Never calls
-        Rescue; progress via E14?reportId=...
+      description: "Chỉ chủ CITIZEN; khác chủ, không tồn tại hoặc đã rút đều trả 404. Không gọi Rescue; xem tiến độ qua E14?reportId=..."
       x-owner: Person 2
       x-task: B1
       x-roles:
@@ -1354,7 +1342,7 @@ paths:
       x-status: planned
       responses:
         '200':
-          description: Success.
+          description: "Thành công."
           content:
             application/json:
               schema:
@@ -1363,7 +1351,7 @@ paths:
                 id: 00000000-0000-4000-8000-000000000005
                 reporterId: 00000000-0000-4000-8000-000000000001
                 type: FLOOD
-                description: Water rising near the entrance
+                description: "Nước dâng gần lối vào"
                 latitude: 21.028
                 longitude: 105.834
                 status: PENDING
@@ -1375,7 +1363,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '400':
           description: VALIDATION_ERROR
           content:
@@ -1397,7 +1385,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '401':
           description: UNAUTHENTICATED
           content:
@@ -1417,13 +1405,13 @@ paths:
                 type: string
                 enum:
                 - Bearer
-              description: Bearer challenge.
+              description: "Yêu cầu xác thực Bearer."
             Cache-Control:
               schema:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '403':
           description: FORBIDDEN
           content:
@@ -1443,7 +1431,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '404':
           description: NOT_FOUND
           content:
@@ -1463,7 +1451,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '500':
           description: INTERNAL_ERROR
           content:
@@ -1483,22 +1471,20 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
       parameters:
       - name: id
         in: path
         required: true
         schema:
           $ref: '#/components/schemas/Id'
-        description: Resource UUID
+        description: "UUID tài nguyên"
     delete:
       operationId: E11
       summary: E11 DELETE /api/reports/{id}
       tags:
       - B2
-      description: Owner + PENDING only. Soft delete, not a report status. Already deleted/missing/other
-        owner at initial read =>404. After observing PENDING, losing atomic write to concurrent verification/withdraw
-        =>409 INVALID_TRANSITION. No request body.
+      description: "Chỉ chủ báo cáo ở trạng thái PENDING. Xóa mềm, không phải trạng thái báo cáo. Đã xóa/không tồn tại/khác chủ ở lần đọc đầu trả 404. Sau khi thấy PENDING, thua lần ghi nguyên tử do xác minh/rút đồng thời trả 409 INVALID_TRANSITION. Không có thân yêu cầu."
       x-owner: Person 2
       x-task: B2
       x-roles:
@@ -1508,14 +1494,14 @@ paths:
       x-status: planned
       responses:
         '204':
-          description: Success; no response body.
+          description: "Thành công; không có thân phản hồi."
           headers:
             Cache-Control:
               schema:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '400':
           description: VALIDATION_ERROR
           content:
@@ -1537,7 +1523,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '401':
           description: UNAUTHENTICATED
           content:
@@ -1557,13 +1543,13 @@ paths:
                 type: string
                 enum:
                 - Bearer
-              description: Bearer challenge.
+              description: "Yêu cầu xác thực Bearer."
             Cache-Control:
               schema:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '403':
           description: FORBIDDEN
           content:
@@ -1583,7 +1569,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '404':
           description: NOT_FOUND
           content:
@@ -1603,7 +1589,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '409':
           description: INVALID_TRANSITION
           content:
@@ -1623,7 +1609,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '500':
           description: INTERNAL_ERROR
           content:
@@ -1643,23 +1629,21 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
       parameters:
       - name: id
         in: path
         required: true
         schema:
           $ref: '#/components/schemas/Id'
-        description: Resource UUID
+        description: "UUID tài nguyên"
   /api/reports/{id}/verification:
     patch:
       operationId: E10
       summary: E10 PATCH /api/reports/{id}/verification
       tags:
       - B2
-      description: PENDING only. VERIFIED requires existing ACTIVE disaster at business check; REJECTED
-        requires reason, forbids disasterId. No type-match rule. Deleted at initial read =>404; after
-        observing PENDING, losing atomic write to concurrent withdraw/verification =>409 INVALID_TRANSITION.
+      description: "Chỉ PENDING. VERIFIED cần thảm họa tồn tại và ACTIVE lúc kiểm tra nghiệp vụ; REJECTED cần lý do và không được có disasterId. Không có quy tắc khớp loại. Đã xóa ở lần đọc đầu trả 404; sau khi thấy PENDING, thua lần ghi nguyên tử do rút/xác minh đồng thời trả 409 INVALID_TRANSITION."
       x-owner: Person 2
       x-task: B2
       x-roles:
@@ -1669,7 +1653,7 @@ paths:
       x-status: planned
       responses:
         '200':
-          description: Success.
+          description: "Thành công."
           content:
             application/json:
               schema:
@@ -1678,7 +1662,7 @@ paths:
                 id: 00000000-0000-4000-8000-000000000005
                 reporterId: 00000000-0000-4000-8000-000000000001
                 type: FLOOD
-                description: Water rising near the entrance
+                description: "Nước dâng gần lối vào"
                 latitude: 21.028
                 longitude: 105.834
                 status: VERIFIED
@@ -1692,7 +1676,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '400':
           description: VALIDATION_ERROR
           content:
@@ -1714,7 +1698,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '401':
           description: UNAUTHENTICATED
           content:
@@ -1734,13 +1718,13 @@ paths:
                 type: string
                 enum:
                 - Bearer
-              description: Bearer challenge.
+              description: "Yêu cầu xác thực Bearer."
             Cache-Control:
               schema:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '403':
           description: FORBIDDEN
           content:
@@ -1760,7 +1744,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '404':
           description: NOT_FOUND
           content:
@@ -1780,7 +1764,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '409':
           description: INVALID_TRANSITION / DISASTER_NOT_ACTIVE
           content:
@@ -1800,7 +1784,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '415':
           description: UNSUPPORTED_MEDIA_TYPE
           content:
@@ -1820,7 +1804,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '500':
           description: INTERNAL_ERROR
           content:
@@ -1840,14 +1824,14 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
       parameters:
       - name: id
         in: path
         required: true
         schema:
           $ref: '#/components/schemas/Id'
-        description: Resource UUID
+        description: "UUID tài nguyên"
       requestBody:
         required: true
         content:
@@ -1863,7 +1847,7 @@ paths:
       summary: E12 GET /api/rescue-teams
       tags:
       - D1
-      description: Derived availability at read time only; assignment rechecks database invariant.
+      description: "Tình trạng sẵn sàng chỉ được suy ra tại lúc đọc; phân công kiểm tra lại bất biến cơ sở dữ liệu."
       x-owner: Person 4
       x-task: D1
       x-roles:
@@ -1873,7 +1857,7 @@ paths:
       x-status: planned
       responses:
         '200':
-          description: Success.
+          description: "Thành công."
           content:
             application/json:
               schema:
@@ -1893,7 +1877,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '400':
           description: VALIDATION_ERROR
           content:
@@ -1915,7 +1899,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '401':
           description: UNAUTHENTICATED
           content:
@@ -1935,13 +1919,13 @@ paths:
                 type: string
                 enum:
                 - Bearer
-              description: Bearer challenge.
+              description: "Yêu cầu xác thực Bearer."
             Cache-Control:
               schema:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '403':
           description: FORBIDDEN
           content:
@@ -1961,7 +1945,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '500':
           description: INTERNAL_ERROR
           content:
@@ -1981,7 +1965,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
       parameters:
       - name: page
         in: query
@@ -1991,7 +1975,7 @@ paths:
           minimum: 0
           maximum: 1000000
           default: 0
-        description: page
+        description: "Số trang"
       - name: size
         in: query
         required: false
@@ -2000,7 +1984,7 @@ paths:
           minimum: 1
           maximum: 100
           default: 20
-        description: size
+        description: "Kích thước trang"
       - name: sort
         in: query
         required: false
@@ -2010,8 +1994,7 @@ paths:
           - name,asc
           - name,desc
           default: name,asc
-        description: One sort only. Always append id ASC as tie-breaker. Mission createdAt sort means
-          assignedAt.
+        description: "Chỉ một tiêu chí sắp xếp. Luôn thêm id ASC để phân định khi bằng nhau. Sắp xếp nhiệm vụ theo createdAt nghĩa là assignedAt."
       - name: availability
         in: query
         required: false
@@ -2020,16 +2003,14 @@ paths:
           enum:
           - AVAILABLE
           - BUSY
-        description: availability
+        description: "Tình trạng sẵn sàng"
   /api/rescue-missions:
     post:
       operationId: E13
       summary: E13 POST /api/rescue-missions
       tags:
       - D1
-      description: Require nondeleted VERIFIED report, associated ACTIVE disaster at business check, existing
-        team, no prior mission for report, no active mission for team. Atomic DB invariants; no cancel
-        or reassign.
+      description: "Cần báo cáo VERIFIED chưa xóa, thảm họa liên kết ACTIVE lúc kiểm tra nghiệp vụ, đội tồn tại, báo cáo chưa từng có nhiệm vụ và đội không có nhiệm vụ hoạt động. Bất biến cơ sở dữ liệu được bảo vệ nguyên tử; không hủy hoặc phân công lại."
       x-owner: Person 4
       x-task: D1
       x-roles:
@@ -2039,7 +2020,7 @@ paths:
       x-status: planned
       responses:
         '201':
-          description: Success.
+          description: "Thành công."
           content:
             application/json:
               schema:
@@ -2057,7 +2038,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '400':
           description: VALIDATION_ERROR
           content:
@@ -2079,7 +2060,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '401':
           description: UNAUTHENTICATED
           content:
@@ -2099,13 +2080,13 @@ paths:
                 type: string
                 enum:
                 - Bearer
-              description: Bearer challenge.
+              description: "Yêu cầu xác thực Bearer."
             Cache-Control:
               schema:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '403':
           description: FORBIDDEN
           content:
@@ -2125,7 +2106,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '404':
           description: NOT_FOUND
           content:
@@ -2145,7 +2126,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '409':
           description: REPORT_NOT_VERIFIED / DISASTER_NOT_ACTIVE / REPORT_ALREADY_ASSIGNED / TEAM_BUSY
           content:
@@ -2165,7 +2146,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '415':
           description: UNSUPPORTED_MEDIA_TYPE
           content:
@@ -2185,7 +2166,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '500':
           description: INTERNAL_ERROR
           content:
@@ -2205,7 +2186,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
       requestBody:
         required: true
         content:
@@ -2220,10 +2201,7 @@ paths:
       summary: E14 GET /api/rescue-missions
       tags:
       - D1
-      description: Validate report visibility through Reporting before applying mission filters. Citizen
-        can only query their own reportId, never all missions. Visible report with no missions or unmatched
-        filters =>200 empty page. Authority may omit reportId. Unknown teamId filter =>empty page. Batch
-        lookup for page report data; no N+1.
+      description: "Kiểm tra quyền xem báo cáo qua Reporting trước khi lọc nhiệm vụ. Người dân chỉ truy vấn reportId của mình, không lấy mọi nhiệm vụ. Báo cáo xem được nhưng chưa có nhiệm vụ hoặc không khớp bộ lọc trả 200 với trang rỗng. Điều phối viên có thể bỏ reportId. teamId lạ trả trang rỗng. Tra cứu báo cáo theo lô cho trang kết quả, không có N+1."
       x-owner: Person 4
       x-task: D1
       x-roles:
@@ -2235,7 +2213,7 @@ paths:
       x-status: planned
       responses:
         '200':
-          description: Success.
+          description: "Thành công."
           content:
             application/json:
               schema:
@@ -2258,7 +2236,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '400':
           description: VALIDATION_ERROR
           content:
@@ -2280,7 +2258,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '401':
           description: UNAUTHENTICATED
           content:
@@ -2300,13 +2278,13 @@ paths:
                 type: string
                 enum:
                 - Bearer
-              description: Bearer challenge.
+              description: "Yêu cầu xác thực Bearer."
             Cache-Control:
               schema:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '403':
           description: FORBIDDEN
           content:
@@ -2326,7 +2304,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '404':
           description: NOT_FOUND
           content:
@@ -2346,7 +2324,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '500':
           description: INTERNAL_ERROR
           content:
@@ -2366,7 +2344,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
       parameters:
       - name: page
         in: query
@@ -2376,7 +2354,7 @@ paths:
           minimum: 0
           maximum: 1000000
           default: 0
-        description: page
+        description: "Số trang"
       - name: size
         in: query
         required: false
@@ -2385,7 +2363,7 @@ paths:
           minimum: 1
           maximum: 100
           default: 20
-        description: size
+        description: "Kích thước trang"
       - name: sort
         in: query
         required: false
@@ -2395,35 +2373,32 @@ paths:
           - createdAt,desc
           - createdAt,asc
           default: createdAt,desc
-        description: One sort only. Always append id ASC as tie-breaker. Mission createdAt sort means
-          assignedAt.
+        description: "Chỉ một tiêu chí sắp xếp. Luôn thêm id ASC để phân định khi bằng nhau. Sắp xếp nhiệm vụ theo createdAt nghĩa là assignedAt."
       - name: reportId
         in: query
         required: false
         schema:
           $ref: '#/components/schemas/Id'
-        description: Optional for AUTHORITY; required for CITIZEN (missing =>400). Supplied missing/deleted/other-owner
-          report =>404 even if no mission exists.
+        description: "Tùy chọn với AUTHORITY, bắt buộc với CITIZEN (thiếu trả 400). Báo cáo không tồn tại/đã xóa/khác chủ trả 404 dù chưa có nhiệm vụ."
       - name: status
         in: query
         required: false
         schema:
           $ref: '#/components/schemas/MissionStatus'
-        description: status
+        description: "Trạng thái"
       - name: teamId
         in: query
         required: false
         schema:
           $ref: '#/components/schemas/Id'
-        description: teamId
+        description: "ID đội"
   /api/rescue-missions/{id}/status:
     patch:
       operationId: E15
       summary: E15 PATCH /api/rescue-missions/{id}/status
       tags:
       - D1
-      description: ASSIGNED -> IN_PROGRESS -> COMPLETED only; repeated or skipped transition =>409. Atomic
-        compare-state update; existing missions may complete after disaster resolved.
+      description: "Chỉ ASSIGNED -> IN_PROGRESS -> COMPLETED; chuyển lặp hoặc bỏ bước trả 409. Cập nhật so sánh trạng thái nguyên tử; nhiệm vụ đã có được hoàn tất sau khi thảm họa kết thúc."
       x-owner: Person 4
       x-task: D1
       x-roles:
@@ -2433,7 +2408,7 @@ paths:
       x-status: planned
       responses:
         '200':
-          description: Success.
+          description: "Thành công."
           content:
             application/json:
               schema:
@@ -2452,7 +2427,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '400':
           description: VALIDATION_ERROR
           content:
@@ -2474,7 +2449,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '401':
           description: UNAUTHENTICATED
           content:
@@ -2494,13 +2469,13 @@ paths:
                 type: string
                 enum:
                 - Bearer
-              description: Bearer challenge.
+              description: "Yêu cầu xác thực Bearer."
             Cache-Control:
               schema:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '403':
           description: FORBIDDEN
           content:
@@ -2520,7 +2495,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '404':
           description: NOT_FOUND
           content:
@@ -2540,7 +2515,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '409':
           description: INVALID_TRANSITION
           content:
@@ -2560,7 +2535,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '415':
           description: UNSUPPORTED_MEDIA_TYPE
           content:
@@ -2580,7 +2555,7 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
         '500':
           description: INTERNAL_ERROR
           content:
@@ -2600,14 +2575,14 @@ paths:
                 type: string
                 enum:
                 - no-store
-              description: Do not cache authentication or user data.
+              description: "Không lưu đệm dữ liệu xác thực hoặc người dùng."
       parameters:
       - name: id
         in: path
         required: true
         schema:
           $ref: '#/components/schemas/Id'
-        description: Resource UUID
+        description: "UUID tài nguyên"
       requestBody:
         required: true
         content:
@@ -2627,12 +2602,12 @@ components:
       type: string
       format: uuid
       pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
-      description: Canonical lowercase UUID; server-generated for new resources.
+      description: "UUID chữ thường chuẩn; máy chủ sinh cho tài nguyên mới."
     Timestamp:
       type: string
       format: date-time
       pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?Z$
-      description: ISO-8601 UTC, Z suffix, up to nanoseconds.
+      description: "ISO-8601 UTC, hậu tố Z, tối đa nano giây."
     DisasterType:
       type: string
       enum:
@@ -2680,20 +2655,19 @@ components:
       minLength: 3
       maxLength: 254
       pattern: ^[^\s@]+@[^\s@]+\.[^\s@]+$
-      description: Trim and lowercase with Locale.ROOT before validation, matching existing EmailAddress.
-        Length applies after normalization.
+      description: "Loại khoảng trắng hai đầu và chuyển chữ thường bằng Locale.ROOT trước kiểm tra, khớp EmailAddress hiện có. Độ dài tính sau chuẩn hóa."
     Name:
       type: string
       minLength: 1
       maxLength: 120
       pattern: \S
-      description: Trim outer whitespace; must contain a non-whitespace character.
+      description: "Loại khoảng trắng hai đầu; phải có ký tự không phải khoảng trắng."
     Description:
       type: string
       minLength: 1
       maxLength: 2000
       pattern: \S
-      description: Trim outer whitespace; plain text, no HTML rendering.
+      description: "Loại khoảng trắng hai đầu; văn bản thuần, không hiển thị HTML."
     User:
       type: object
       additionalProperties: false
@@ -2726,8 +2700,7 @@ components:
           minLength: 1
           maxLength: 128
           writeOnly: true
-          description: Do not trim/normalize. Also at most 72 UTF-8 bytes for BCrypt compatibility. Never
-            log.
+          description: "Không loại khoảng trắng hoặc chuẩn hóa. Tối đa 72 byte UTF-8 để tương thích BCrypt. Không ghi nhật ký."
       required:
       - email
       - password
@@ -2796,7 +2769,7 @@ components:
         name: Hanoi flood exercise
         type: FLOOD
         severity: HIGH
-        description: Training scenario only
+        description: "Chỉ dùng cho tình huống diễn tập"
         latitude: 21.028
         longitude: 105.834
     UpdateDisasterRequest:
@@ -2825,9 +2798,7 @@ components:
       required:
       - expectedVersion
       minProperties: 2
-      description: At least one editable field plus expectedVersion. Omitted fields unchanged, null forbidden.
-        ACTIVE may be edited or moved to RESOLVED; RESOLVED is immutable. Explicit ACTIVE->ACTIVE or RESOLVED->RESOLVED
-        is 409; omit status for edits.
+      description: "Ít nhất một trường chỉnh sửa và expectedVersion. Trường bỏ qua giữ nguyên; cấm null. ACTIVE được sửa hoặc chuyển RESOLVED; RESOLVED bất biến. Gửi rõ ACTIVE->ACTIVE hoặc RESOLVED->RESOLVED trả 409; sửa nội dung thì bỏ status."
       example:
         expectedVersion: 0
         status: RESOLVED
@@ -2877,7 +2848,7 @@ components:
         name: Hanoi flood exercise
         type: FLOOD
         severity: HIGH
-        description: Training scenario only
+        description: "Chỉ dùng cho tình huống diễn tập"
         latitude: 21.028
         longitude: 105.834
         status: ACTIVE
@@ -2903,7 +2874,7 @@ components:
       - longitude
       example:
         type: FLOOD
-        description: Water rising near the entrance
+        description: "Nước dâng gần lối vào"
         latitude: 21.028
         longitude: 105.834
     VerifyReportRequest:
@@ -2935,7 +2906,7 @@ components:
           minLength: 1
           maxLength: 500
           pattern: \S
-          description: Trim outer whitespace; nonblank.
+          description: "Loại khoảng trắng hai đầu; không được rỗng."
       required:
       - status
       - rejectionReason
@@ -2992,9 +2963,7 @@ components:
       - status
       - createdAt
       - updatedAt
-      description: 'PENDING: no disasterId/rejectionReason/verifiedAt/rejectedAt. VERIFIED: disasterId
-        and verifiedAt required, rejection fields absent. REJECTED: rejectionReason and rejectedAt required,
-        verification fields absent. No mission data. Withdrawn reports never returned.'
+      description: "PENDING không có disasterId/rejectionReason/verifiedAt/rejectedAt. VERIFIED bắt buộc disasterId và verifiedAt, không có trường từ chối. REJECTED bắt buộc rejectionReason và rejectedAt, không có trường xác minh. Không chứa dữ liệu nhiệm vụ. Không trả báo cáo đã rút."
       oneOf:
       - properties:
           status:
@@ -3043,7 +3012,7 @@ components:
         id: 00000000-0000-4000-8000-000000000005
         reporterId: 00000000-0000-4000-8000-000000000001
         type: FLOOD
-        description: Water rising near the entrance
+        description: "Nước dâng gần lối vào"
         latitude: 21.028
         longitude: 105.834
         status: PENDING
@@ -3066,7 +3035,7 @@ components:
       - id
       - name
       - availability
-      description: Availability is derived from active missions, not independently writable.
+      description: "Tình trạng sẵn sàng suy ra từ nhiệm vụ đang hoạt động, không được ghi độc lập."
       example:
         id: 00000000-0000-4000-8000-000000000006
         name: Đội Cứu hộ Hà Nội 01
@@ -3125,9 +3094,7 @@ components:
       - status
       - assignedAt
       - updatedAt
-      description: 'ASSIGNED: startedAt/completedAt absent. IN_PROGRESS: startedAt required, completedAt
-        absent. COMPLETED: startedAt and completedAt required. assignedAt <= startedAt <= completedAt;
-        updatedAt is last mutation time.'
+      description: "ASSIGNED không có startedAt/completedAt. IN_PROGRESS bắt buộc startedAt, không có completedAt. COMPLETED bắt buộc cả startedAt và completedAt. assignedAt <= startedAt <= completedAt; updatedAt là thời điểm thay đổi cuối."
       oneOf:
       - properties:
           status:
@@ -3196,16 +3163,14 @@ components:
       - size
       - totalElements
       - totalPages
-      description: Own PageResponse, never Spring Page. Counts after authorization and all filters, before
-        pagination. totalPages=ceil(totalElements/size); empty total is 0 pages; page beyond end returns
-        empty items, 200.
+      description: "Dùng PageResponse riêng, không dùng Spring Page. Đếm sau phân quyền và mọi bộ lọc, trước phân trang. totalPages=ceil(totalElements/size); tổng rỗng có 0 trang; trang vượt cuối trả items rỗng và 200."
       example:
         items:
         - id: 00000000-0000-4000-8000-000000000004
           name: Hanoi flood exercise
           type: FLOOD
           severity: HIGH
-          description: Training scenario only
+          description: "Chỉ dùng cho tình huống diễn tập"
           latitude: 21.028
           longitude: 105.834
           status: ACTIVE
@@ -3246,15 +3211,13 @@ components:
       - size
       - totalElements
       - totalPages
-      description: Own PageResponse, never Spring Page. Counts after authorization and all filters, before
-        pagination. totalPages=ceil(totalElements/size); empty total is 0 pages; page beyond end returns
-        empty items, 200.
+      description: "Dùng PageResponse riêng, không dùng Spring Page. Đếm sau phân quyền và mọi bộ lọc, trước phân trang. totalPages=ceil(totalElements/size); tổng rỗng có 0 trang; trang vượt cuối trả items rỗng và 200."
       example:
         items:
         - id: 00000000-0000-4000-8000-000000000005
           reporterId: 00000000-0000-4000-8000-000000000001
           type: FLOOD
-          description: Water rising near the entrance
+          description: "Nước dâng gần lối vào"
           latitude: 21.028
           longitude: 105.834
           status: PENDING
@@ -3294,9 +3257,7 @@ components:
       - size
       - totalElements
       - totalPages
-      description: Own PageResponse, never Spring Page. Counts after authorization and all filters, before
-        pagination. totalPages=ceil(totalElements/size); empty total is 0 pages; page beyond end returns
-        empty items, 200.
+      description: "Dùng PageResponse riêng, không dùng Spring Page. Đếm sau phân quyền và mọi bộ lọc, trước phân trang. totalPages=ceil(totalElements/size); tổng rỗng có 0 trang; trang vượt cuối trả items rỗng và 200."
       example:
         items:
         - id: 00000000-0000-4000-8000-000000000006
@@ -3336,9 +3297,7 @@ components:
       - size
       - totalElements
       - totalPages
-      description: Own PageResponse, never Spring Page. Counts after authorization and all filters, before
-        pagination. totalPages=ceil(totalElements/size); empty total is 0 pages; page beyond end returns
-        empty items, 200.
+      description: "Dùng PageResponse riêng, không dùng Spring Page. Đếm sau phân quyền và mọi bộ lọc, trước phân trang. totalPages=ceil(totalElements/size); tổng rỗng có 0 trang; trang vượt cuối trả items rỗng và 200."
       example:
         items:
         - id: 00000000-0000-4000-8000-000000000007
@@ -3366,8 +3325,7 @@ components:
       required:
       - field
       - message
-      description: field is body/query field name, id, or body for malformed JSON. Never include rejected
-        values.
+      description: "field là tên trường trong thân/truy vấn, id hoặc body nếu JSON sai. Không đưa giá trị bị từ chối vào lỗi."
     Error:
       type: object
       additionalProperties: false
@@ -3420,8 +3378,7 @@ components:
       - message
       - path
       - fieldErrors
-      description: fieldErrors always present; [] except validation errors. path excludes query string.
-        No stack trace, credentials or token.
+      description: "Luôn có fieldErrors; là [] trừ lỗi kiểm tra dữ liệu. path không gồm chuỗi truy vấn. Không có dấu vết ngăn xếp, thông tin xác thực hoặc token."
       example:
         timestamp: '2026-10-08T03:00:00Z'
         status: 409

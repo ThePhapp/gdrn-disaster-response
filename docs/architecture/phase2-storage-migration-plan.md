@@ -1,16 +1,14 @@
-# GDRN Phase 2 Distributed Object Storage Migration Plan
+# Kế hoạch chuyển sang lưu trữ đối tượng phân tán ở Pha 2
 
-## 1. Context and Objective
+## 1. Bối cảnh và mục tiêu
 
-In Phase 1, file attachments (incident evidence images, verification documents) are managed through local storage abstraction. For Phase 2 horizontal scaling across multiple container instances, GDRN requires an S3-compatible object storage topology (e.g., MinIO for on-premise/air-gapped deployment, AWS S3 / Cloudflare R2 for cloud deployments).
+Pha 1 quản lý ảnh minh chứng qua lớp trừu tượng lưu trữ cục bộ. Khi mở rộng ngang nhiều bản sao container ở Pha 2, dự kiến dùng lưu trữ đối tượng tương thích S3: MinIO cho triển khai tại chỗ/cách ly mạng, AWS S3 hoặc Cloudflare R2 cho đám mây.
 
-This RFC specifies the storage migration plan, pre-signed URL workflow, and Hexagonal port preservation without introducing breaking changes to Phase 1 domain logic.
+Đề xuất này mô tả chuyển đổi lưu trữ, URL ký sẵn và cách giữ ranh giới cổng của kiến trúc lục giác, tránh phá vỡ nghiệp vụ Pha 1. Các tên lớp/API dưới đây là thiết kế dự kiến của Pha 2, không phải hợp đồng Pha 1 đang chạy.
 
----
+## 2. Giữ ranh giới cổng và bộ chuyển đổi
 
-## 2. Hexagonal Port and Adapter Preservation
-
-The domain boundary remains completely untouched:
+Ranh giới miền dự kiến được giữ như sau:
 
 ```text
 +-------------------------------------------------------------------+
@@ -25,41 +23,31 @@ The domain boundary remains completely untouched:
       +-------------------------+-------------------------+
       |                                                   |
 +------------------------------------+  +------------------------------------+
-| Phase 1 Adapter:                   |  | Phase 2 Adapter:                   |
+| Bộ chuyển đổi Pha 1:                   |  | Bộ chuyển đổi Pha 2:                   |
 | LocalFileSystemStorageAdapter      |  | S3CompatibleStorageAdapter         |
-| (Writes to local docker volume)    |  | (AWS SDK v2 / MinIO Client)        |
+| (Ghi vùng dữ liệu Docker cục bộ)    |  | (AWS SDK v2 / MinIO Client)        |
 +------------------------------------+  +------------------------------------+
 ```
 
----
+## 3. Tải thẳng lên kho bằng URL ký sẵn
 
-## 3. Direct-to-Storage Ingestion Pattern (Pre-signed URLs)
+Mục tiêu là giảm bộ nhớ và băng thông qua ứng dụng khi tải ảnh nhiều MB tại vùng thiên tai:
 
-To eliminate backend memory saturation and high bandwidth overhead during multi-megabyte photo uploads in disaster areas:
+1. **Yêu cầu tải lên:** Giao diện xin quyền và URL PUT ký sẵn qua `POST /api/v1/incidents/{id}/attachments/presign`.
+2. **Tải trực tiếp:** Máy khách PUT nội dung nhị phân vào vùng chứa S3/MinIO.
+3. **Xác nhận:** Giao diện báo hoàn tất qua `POST /api/v1/incidents/{id}/attachments/confirm`, kèm ETag và kích thước.
+4. **Lưu siêu dữ liệu:** Ứng dụng kiểm tra tệp tồn tại bằng HeadObject rồi ghi bản ghi trong giao dịch cơ sở dữ liệu PostGIS.
 
-1. **Upload Request**: Frontend requests an upload authorization token and pre-signed PUT URL via `POST /api/v1/incidents/{id}/attachments/presign`.
-2. **Direct Upload**: Client PUTs raw binary directly to S3/MinIO bucket.
-3. **Confirmation**: Frontend notifies backend upon upload completion via `POST /api/v1/incidents/{id}/attachments/confirm` with ETag and file size.
-4. **Metadata Persistence**: GDRN backend verifies file existence via HeadObject API call and commits record in PostGIS DB within a single transaction.
+## 4. Các bước chuyển đổi
 
----
+1. **Pha 2.1 — Hiện thực bộ chuyển đổi:** Thêm `S3CompatibleStorageAdapter` với `@ConditionalOnProperty(name = "gdrn.storage.provider", havingValue = "s3")`.
+2. **Pha 2.2 — Đọc từ hai nguồn:** Chỉ ghi tệp mới vào S3/MinIO. Khi đọc, có khóa S3 thì trả URL ký sẵn; nếu chưa có thì đọc vùng dữ liệu cục bộ.
+3. **Pha 2.3 — Đồng bộ nền:** Dùng công cụ dòng lệnh có thể chạy lặp an toàn để chuyển tệp cũ sang kho đối tượng, rồi cập nhật khóa trong bản ghi đính kèm.
+4. **Pha 2.4 — Ngừng bộ chuyển đổi cục bộ:** Gỡ bỏ sau khi đối soát 100% ảnh đính kèm.
 
-## 4. Migration Execution Phases
+## 5. Bảo mật và kiểm soát truy cập
 
-1. **Phase 2.1 - Adapter Implementation**: Introduce `S3CompatibleStorageAdapter` guarded by `@ConditionalOnProperty(name = "gdrn.storage.provider", havingValue = "s3")`.
-2. **Phase 2.2 - Dual-Read Strategy**:
-   - Write new files exclusively to S3/MinIO.
-   - For reads, inspect metadata: if S3 key present, serve pre-signed S3 URL; otherwise fallback to local volume path.
-3. **Phase 2.3 - Background Sync**:
-   - Run idempotent CLI migration tool to transfer legacy volume files to object storage bucket.
-   - Update database attachment records with new object storage keys.
-4. **Phase 2.4 - Deprecate Local Storage Adapter**: Remove local adapter once 100% of attachments are reconciled.
-
----
-
-## 5. Security & Access Control
-
-- All buckets remain **strictly private** (`private` ACL).
-- Public access blocks enabled at bucket level.
-- Temporary download URLs expire after 15 minutes (`TTL = 900s`).
-- Virus/malware scanning hook integrated via asynchronous S3 event notification queue.
+- Mọi vùng chứa phải **riêng tư** (ACL `private`).
+- Bật chặn truy cập công khai ở cấp vùng chứa.
+- URL tải xuống tạm hết hạn sau 15 phút (`TTL = 900s`).
+- Tích hợp bước quét mã độc qua hàng đợi thông báo sự kiện S3 bất đồng bộ.

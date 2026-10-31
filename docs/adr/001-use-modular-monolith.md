@@ -1,22 +1,17 @@
-# ADR 001: Use a Modular Monolith
+# ADR 001: Sử dụng kiến trúc nguyên khối theo mô-đun
 
-## Status
-Accepted
+## Trạng thái
+Đã chấp thuận.
 
-## Context
-A four-person university team needs a manageable Phase 1 baseline and clear domain
-boundaries before measuring bottlenecks. No distribution requirement is established.
+## Bối cảnh
+Nhóm đồ án gồm bốn người cần nền tảng Pha 1 dễ quản lý và ranh giới nghiệp vụ rõ ràng trước khi đo điểm nghẽn. Chưa có yêu cầu triển khai phân tán.
 
-## Decision
-Use one Spring Boot application with modules under `com.gdrn` and one database
-infrastructure. Reserve identity, disaster, reporting, rescue, resource, alert, geo
-and shared. Enforce dependencies with ArchUnit and code review.
+## Quyết định
+Dùng một ứng dụng Spring Boot, các mô-đun dưới `com.gdrn` và một hạ tầng cơ sở dữ liệu. Dự kiến các mô-đun identity, thảm họa, reporting, rescue, tài nguyên, alert, geo và dùng chung. Kiểm soát quan hệ phụ thuộc bằng ArchUnit và rà soát mã nguồn.
 
-## Alternatives Considered
-- Layer-only monolith: simple, but obscures business ownership boundaries.
-- Microservices: adds deployment and consistency concerns before evidence justifies them.
+## Phương án đã cân nhắc
+- Nguyên khối chỉ chia theo tầng: đơn giản nhưng khó thấy ranh giới trách nhiệm nghiệp vụ.
+- Vi dịch vụ: phát sinh chi phí triển khai và bảo đảm nhất quán khi chưa có bằng chứng cần thiết.
 
-## Consequences
-Deployment and transactions remain local. Modules share a process, database and
-release lifecycle; boundaries need discipline. Independent scaling is not provided.
-Any later extraction requires an ADR and benchmark evidence; no speedup is asserted.
+## Hệ quả
+Triển khai và giao dịch vẫn diễn ra cục bộ. Các mô-đun dùng chung tiến trình, cơ sở dữ liệu và chu kỳ phát hành nên phải tuân thủ ranh giới. Chưa hỗ trợ mở rộng độc lập. Việc tách dịch vụ về sau cần ADR và bằng chứng đo hiệu năng; chưa khẳng định khả năng tăng tốc.

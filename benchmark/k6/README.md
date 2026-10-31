@@ -1,19 +1,15 @@
-# GDRN reporting workloads
+# Kịch bản tải Reporting của GDRN
 
-`reporting.js` is the D3 k6 workload for the existing reporting contracts:
+`reporting.js` là kịch bản k6 của D3 cho các hợp đồng Reporting hiện có:
 
-- `write`: E07 `POST /api/reports` as a citizen;
-- `read-page`: E08 `GET /api/reports` with pagination and stable sort;
-- `read-radius`: E08 `GET /api/reports` with `lat`, `lon` and `radiusMeters`;
-- `mixed`: 20% writes, 60% paginated reads and 20% radius reads.
+- `write`: E07 `POST /api/reports` bằng tài khoản người dân.
+- `read-page`: E08 `GET /api/reports`, phân trang và sắp xếp ổn định.
+- `read-radius`: E08 `GET /api/reports` với `lat`, `lon`, `radiusMeters`.
+- `mixed`: 20% ghi, 60% đọc phân trang, 20% đọc bán kính.
 
-The script has no production URL or credential fallback. Supply all connection and
-credential values through the environment. A short-lived JWT is obtained once in
-`setup()`, and the run is rejected when its planned duration could outlive the
-token. This prevents expired-token failures from being misreported as a domain
-bottleneck.
+Công cụ không có URL môi trường thật hay thông tin xác thực dự phòng. Truyền toàn bộ kết nối/tài khoản qua biến môi trường. JWT ngắn hạn được lấy một lần trong `setup()`; từ chối lượt có thời lượng dự kiến vượt tuổi thọ token để không nhận nhầm lỗi hết hạn thành điểm nghẽn nghiệp vụ.
 
-Example (native k6):
+Ví dụ với k6 cài trực tiếp:
 
 ```powershell
 $env:BASE_URL = 'http://127.0.0.1:8080'
@@ -28,7 +24,4 @@ $env:HTTP_TIMEOUT = '5s'
 k6 run --out json=benchmark/results/raw.json --summary-export benchmark/results/summary.json benchmark/k6/reporting.js
 ```
 
-Do not commit credentials or raw results. The repository runner writes raw JSON and
-summary JSON below a timestamped directory under `benchmark/results/`, which is
-ignored by Git. The dataset must be reset and seeded on a disposable benchmark
-database between repetitions; see the parent benchmark README.
+Không đưa thông tin xác thực hoặc dữ liệu thô vào Git. Công cụ ghi JSON thô và tổng kết vào thư mục riêng mỗi lượt dưới `benchmark/results/`, được Git bỏ qua. Đặt lại và tạo mẫu trên cơ sở dữ liệu kiểm thử dùng tạm giữa các lần lặp; xem [hướng dẫn chung](../README.md).

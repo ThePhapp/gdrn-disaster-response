@@ -1,28 +1,19 @@
-# Reload session fix
+# Sửa khôi phục phiên sau khi tải lại trang
 
-Date: 2026-10-18  
-Branch: `feat/ui-ux-list-compact`  
-Commit: `838334a fix: restore auth session after page reload`
+Nhánh: `feat/ui-ux-list-compact`.
+Commit: `838334a fix: restore auth session after page reload`.
 
-The frontend now persists the current JWT, user and expiry timestamp in the current
-tab's `sessionStorage`. A full reload restores the session before React renders the
-route guard, so users remain on their role landing page until the 900-second JWT TTL
-ends. A new tab has its own storage and still requires login.
+Giao diện lưu JWT, người dùng và thời điểm hết hạn trong `sessionStorage` của thẻ hiện tại. Tải lại khôi phục phiên trước khi React dựng bộ bảo vệ định tuyến, giữ người dùng ở trang theo vai trò tới khi JWT hết tuổi thọ 900 giây. Thẻ mới có vùng lưu trữ riêng và cần đăng nhập.
 
-Invalid or expired stored data is removed during startup. Logout, a matching 401
-response, and the expiry timer clear both memory and `sessionStorage`. The frontend
-continues to use relative `/api` requests with an explicit Bearer header; no cookie or
-`localStorage` authentication was added.
+Dữ liệu lưu sai/hết hạn bị xóa khi khởi động. Đăng xuất, phản hồi 401 khớp phiên và bộ đếm hết hạn xóa cả bộ nhớ và `sessionStorage`. Tiếp tục gọi `/api` tương đối với Bearer tường minh; không thêm xác thực cookie hoặc `localStorage`.
 
-## Verification
+## Kiểm chứng
 
-- `npm.cmd run typecheck`: PASS.
-- `npm.cmd test -- --run`: PASS, 16 files / 81 tests.
-- `npm.cmd run build`: PASS; the existing MapLibre chunk-size warning remains.
-- `pwsh -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev.ps1 up -WaitTimeout 180`: PASS; Compose health, SPA routes and JSON API fallback passed.
-- `npm.cmd run test:login -- --grep "real login, reload, logout" --reporter=line`: PASS, 3/3 real demo accounts.
-- `npm.cmd run test:login -- --reporter=line`: PASS, 19/19 browser tests.
+- `npm.cmd run typecheck`: đạt.
+- `npm.cmd test -- --run`: đạt, 16 tệp / 81 kiểm thử.
+- `npm.cmd run build`: đạt; còn cảnh báo kích thước gói MapLibre có sẵn.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev.ps1 up -WaitTimeout 180`: đạt kiểm tra sức khỏe Compose, định tuyến SPA và phản hồi JSON cho API không khớp.
+- `npm.cmd run test:login -- --grep "real login, reload, logout" --reporter=line`: đạt với 3/3 tài khoản trình diễn thật.
+- `npm.cmd run test:login -- --reporter=line`: đạt 19/19 kiểm thử trình duyệt.
 
-The reload browser check confirms citizen and authority users return to their correct
-landing route after reload, and logout leaves both `localStorage` and `sessionStorage`
-empty.
+Kiểm thử trình duyệt xác nhận người dân/điều phối viên trở về đúng trang theo vai trò sau tải lại; đăng xuất để cả `localStorage` và `sessionStorage` rỗng.

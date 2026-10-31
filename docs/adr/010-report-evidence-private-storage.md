@@ -1,43 +1,17 @@
-# ADR 010: Private report evidence attachments
+# ADR 010: Lưu riêng tư ảnh minh chứng báo cáo
 
-## Status
+## Trạng thái
+Đã chấp thuận cho phần ảnh minh chứng báo cáo.
 
-Accepted for the reporting evidence slice.
+## Bối cảnh
+Người dân cần đính kèm ảnh; người dân và điều phối viên chỉ được xem theo quyền truy cập báo cáo. URL công khai có thể bỏ qua bước phân quyền. Pha 1 dùng nguyên khối theo mô-đun, PostgreSQL và lưu trữ cục bộ, nên cần cổng nhỏ, tường minh thay vì dịch vụ lưu trữ hay hệ thống truyền thông điệp mới.
 
-## Context
+## Quyết định
+- Lưu siêu dữ liệu trong `reporting_report_attachments`, tệp nhị phân dưới `REPORT_ATTACHMENT_STORAGE_ROOT` có thể cấu hình. Thư mục nằm ngoài gốc phục vụ tệp tĩnh; cơ sở dữ liệu chỉ lưu khóa sinh từ UUID.
+- Chỉ nhận JPEG/PNG, tối đa năm ảnh mỗi báo cáo, mỗi ảnh 5 MiB. Bộ chuyển đổi kiểm tra MIME khai báo và định dạng thực do bộ đọc ảnh nhận diện trước khi chuyển tệp tạm sang khóa cuối.
+- Dùng API Reporting có xác thực cho siêu dữ liệu và nội dung. Ứng dụng đọc báo cáo trước; thiếu hoặc không được truy cập đều trả `404`, rồi tìm ảnh theo cả ID báo cáo và ID ảnh. Nội dung truyền trực tiếp với kiểu ảnh đã xác minh, riêng tư và `no-store`; không trả URL công khai hoặc URL ký sẵn để bỏ qua phân quyền.
+- Chủ báo cáo được tải lên/xóa khi báo cáo `PENDING`. Điều phối viên được liệt kê/tải ảnh của báo cáo hiển thị. Điều phối viên và người dân khác không được sửa ảnh của chủ báo cáo.
+- Xóa sẽ ẩn siêu dữ liệu trước khi xóa tệp vật lý. Lỗi lưu trữ không để nội dung tiếp tục truy cập qua API; dòng ẩn và tệp mồ côi có thể được dọn sau.
 
-Citizens need to attach image evidence to their reports, while citizens and
-authorities must see only evidence allowed by the report ownership rules. A
-public object URL would allow a caller to bypass the report authorization check.
-The Phase 1 application is a modular monolith with PostgreSQL and local runtime
-storage, so the feature needs a small explicit port rather than a new storage
-service or messaging dependency.
-
-## Decision
-
-- Store attachment metadata in `reporting_report_attachments` and binary files
-  under the configurable `REPORT_ATTACHMENT_STORAGE_ROOT` directory. The root
-  is outside the frontend static web root and the database stores only a
-  generated UUID-based storage key.
-- Accept JPEG and PNG only. The application limit is five images per report and
-  5 MiB per image. The storage adapter checks the declared MIME type and the
-  actual image reader format before moving a temporary file to its final key.
-- Use authenticated reporting endpoints for metadata and content. The
-  application loads the report first, treats an inaccessible or missing report
-  as `404`, and then loads the attachment by both report ID and attachment ID.
-  Content responses are private, `no-store`, and streamed with the verified
-  image media type; no public or signed bypass URL is returned.
-- The report owner may upload and delete while the report is `PENDING`. An
-  authority may list and download evidence for any visible report. Authorities
-  and other citizens cannot mutate another citizen's evidence.
-- Deletion marks metadata as hidden before deleting the physical file. A
-  storage failure therefore cannot leave content accessible through the API;
-  the hidden row and any orphan file can be handled by a later cleanup job.
-
-## Consequences
-
-The storage adapter is local-disk specific and must be backed up or replaced by
-an adapter before a multi-instance deployment. The port keeps that change out
-of the domain and application rules. Upload errors are mapped to stable API
-codes for missing files, unsupported formats, size limits, report state,
-capacity, and storage failures.
+## Hệ quả
+Bộ chuyển đổi phụ thuộc đĩa cục bộ, cần sao lưu hoặc thay thế trước khi triển khai nhiều bản sao ứng dụng. Cổng giữ thay đổi này ngoài miền và quy tắc ứng dụng. Lỗi tải lên được ánh xạ thành mã API ổn định cho thiếu tệp, định dạng không hỗ trợ, giới hạn kích thước, trạng thái báo cáo, số lượng ảnh và lỗi lưu trữ.

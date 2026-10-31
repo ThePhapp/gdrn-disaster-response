@@ -1,24 +1,18 @@
-# ADR 003: Use PostgreSQL with PostGIS
+# ADR 003: Sử dụng PostgreSQL và PostGIS
 
-## Status
-Accepted
+## Trạng thái
+Đã chấp thuận.
 
-## Context
-Planned coordination use cases involve relational consistency and geographic queries.
-The bootstrap needs reproducible database infrastructure but no business schema.
+## Bối cảnh
+Các ca điều phối cần tính nhất quán quan hệ và truy vấn địa lý. Nền tảng ban đầu cần hạ tầng cơ sở dữ liệu có thể tái lập, chưa cần lược đồ nghiệp vụ.
 
-## Decision
-Use one PostgreSQL 16 database with PostGIS 3.5, Docker Compose for local development,
-Flyway for migrations and Testcontainers for integration tests. The first migration
-only enables PostGIS. Hibernate validates schema. Spatial ORM dependencies are deferred
-until mapped attributes need them. Connection credentials come from the environment.
+## Quyết định
+Dùng PostgreSQL 16 với PostGIS 3.5, Docker Compose cho phát triển cục bộ, Flyway để quản lý thay đổi lược đồ và Testcontainers để kiểm thử tích hợp. Bản chuyển đổi đầu tiên chỉ bật PostGIS. Hibernate kiểm tra lược đồ. Chỉ thêm thư viện ORM không gian khi thuộc tính ánh xạ cần đến. Thông tin kết nối lấy từ biến môi trường.
 
-## Alternatives Considered
-- Plain PostgreSQL: lacks PostGIS spatial operations needed by planned requirements.
-- H2 for integration tests: does not verify PostgreSQL/PostGIS behavior.
-- One database per module: unnecessary operational and consistency cost in this phase.
+## Phương án đã cân nhắc
+- PostgreSQL thuần: thiếu phép toán không gian PostGIS mà yêu cầu dự kiến cần.
+- H2 để kiểm thử tích hợp: không xác minh được hành vi PostgreSQL/PostGIS.
+- Mỗi mô-đun một cơ sở dữ liệu: tăng chi phí vận hành và nhất quán không cần thiết ở giai đoạn này.
 
-## Consequences
-Developers need Docker for full verification. Extension installation requires suitable
-database privileges. Shared database access must respect module ownership in code.
-Future schemas follow domain analysis, and query/index decisions require real workloads.
+## Hệ quả
+Cần Docker để kiểm tra đầy đủ và quyền cơ sở dữ liệu phù hợp để cài phần mở rộng. Truy cập dữ liệu dùng chung phải tôn trọng quyền sở hữu của mô-đun. Lược đồ tương lai theo phân tích nghiệp vụ; lựa chọn truy vấn/chỉ mục cần tải thực tế.

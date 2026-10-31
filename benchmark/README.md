@@ -1,100 +1,65 @@
-# D3 — Reproducible reporting benchmark
+# D3 — Kiểm thử hiệu năng báo cáo có thể tái lập
 
-This directory owns the D3 benchmark artifacts. It measures only contracts that
-exist in the current application: E07 report creation and E08 report listing with
-pagination or a radius filter. It does not add a seed endpoint, Redis, a broker,
-or a performance-oriented application code path.
+Thư mục này chứa công cụ và bằng chứng đo D3, chỉ đo hợp đồng đã có: E07 tạo báo cáo và E08 liệt kê có phân trang hoặc lọc bán kính. Không bổ sung API tạo dữ liệu mẫu, Redis, hệ thống môi giới hay luồng xử lý ứng dụng riêng để đo hiệu năng.
 
-## Full server-on-Kaggle CPU
+## Chạy toàn bộ hệ thống trên Kaggle CPU
 
-For automated private Kaggle jobs running Java 21, native PostgreSQL 16/PostGIS
-and k6 together, without Docker or an external server, see
-[Kaggle CPU setup and API runner](../docs/benchmark/KAGGLE_CPU.md).
-The API execution template is `kaggle_server_cpu.ipynb`, prepared by
-`kaggle_api.py`. The existing Dataset-upload CPU workflow below is preserved.
-The full API matrix was executed on Kaggle CPU on 2026-10-30/31 (private notebook
-version 4): 48/48 runs passed. The linked guide records the exact source, artifacts
-and limits. Version 3 remains the three-workload smoke evidence.
+Xem [hướng dẫn cài đặt và chạy qua API](../docs/benchmark/KAGGLE_CPU.md) để chạy tác vụ Kaggle riêng tư với Java 21, PostgreSQL 16/PostGIS và k6, không cần Docker hay máy chủ ngoài. Mẫu `kaggle_server_cpu.ipynb` được chuẩn bị bằng `kaggle_api.py`. Quy trình tải Bộ dữ liệu bên dưới vẫn được giữ.
 
-## Kaggle CPU: complete execution workflow
+Phiên bản notebook riêng tư số 4 đã hoàn tất **48/48 lượt** trên Kaggle CPU. Hướng dẫn liên kết ghi mã nguồn, bằng chứng và giới hạn. Phiên bản 3 là bằng chứng kiểm tra nhanh ba kịch bản.
 
-`kaggle_cpu_preflight.ipynb` now runs the application, a dedicated PostGIS cluster
-and native k6 on the CPU notebook itself. Its filename is retained for existing
-links; it is no longer a dry-run preflight. Docker and external credentials are
-not required. Internet and root access in a disposable Linux environment are required.
+## Kaggle CPU: quy trình thực thi đầy đủ
 
-1. Run `python benchmark/package_cpu_source.py` locally.
-2. Upload `benchmark/results/gdrn-cpu-source.zip` as a **private Kaggle Dataset**.
-3. Import the notebook, Add Input with that Dataset, set Accelerator **None** and
-   Internet **On**, then **Run All**.
-4. Download `gdrn-cpu-results.zip` from notebook Output. Check `manifest.json`:
-   `environment` must be `Kaggle CPU`, `status` must be `completed`, and the default
-   matrix must contain 48 repetitions (4 workloads × 4 VU levels × 3 repeats).
+`kaggle_cpu_preflight.ipynb` chạy ứng dụng, cụm PostGIS riêng và k6 trực tiếp trong notebook CPU. Giữ tên tệp để các liên kết cũ hoạt động; notebook đã thực thi thật. Không cần Docker hay thông tin xác thực bên ngoài; cần Internet và quyền gốc trên môi trường Linux dùng tạm.
 
-The notebook installs Java 21, PostgreSQL/PostGIS and checksum-verified k6 1.6.1,
-builds the current source, creates disposable demo accounts and starts everything
-on loopback. Each repetition resets only its own database; read/mixed workloads
-seed 1,000 rows and write starts empty. Defaults are 1/10/50/100 VUs, 10s warm-up,
-30s steady and 10s ramp-down. A failed k6 threshold/setup stops the ladder and
-preserves incomplete evidence. Rerunning starts a fresh database.
+1. Chạy `python benchmark/package_cpu_source.py` trên máy cục bộ.
+2. Tải `benchmark/results/gdrn-cpu-source.zip` lên **Bộ dữ liệu Kaggle riêng tư**.
+3. Nhập notebook, chọn **Add Đầu vào** với Bộ dữ liệu đó, đặt **Accelerator: None**, **Internet: On**, rồi **Run All**.
+4. Tải `gdrn-cpu-results.zip` từ **Đầu ra**. Kiểm tra `manifest.json`: `environment` là `Kaggle CPU`, `status` là `completed`, ma trận mặc định đủ 48 lượt (4 kịch bản × 4 mức VU × 3 lần lặp).
 
-Artifacts: `manifest.json` (source/JAR hashes, revision, topology, versions and
-configuration), per-run `run.json`, `seed.json`, `raw.json.gz`, metrics-only
-`summary.json`, `resources.csv`, plus `results.json`, `REPORT.md` and checksums.
-Summary metrics exclude login but include warm-up and ramp-down. Resources are
-sampled every second: host CPU/memory and backend/k6/Postgres RSS. Summed Postgres
-RSS can double-count shared pages. CPU is shared with the load generator, so these
-numbers do not establish independent server capacity. The build skips tests;
-benchmark execution does not replace `mvnw clean verify`.
+Notebook cài Java 21, PostgreSQL/PostGIS và k6 1.6.1 đã đối chiếu mã kiểm tra, biên dịch nguồn, tạo tài khoản tạm và chạy trên địa chỉ vòng lặp. Mỗi lần lặp chỉ đặt lại cơ sở dữ liệu riêng; đọc/hỗn hợp tạo 1.000 dòng mẫu, ghi bắt đầu rỗng. Mặc định 1/10/50/100 VU, 10 giây làm nóng, 30 giây giữ tải, 10 giây giảm tải. Lỗi chuẩn bị hoặc vượt ngưỡng k6 sẽ dừng tăng tải và giữ bằng chứng chưa hoàn tất. Chạy lại tạo cơ sở dữ liệu mới.
 
-For an equivalent **local Linux validation**, run as root in a disposable container:
+Kết quả gồm `manifest.json` (mã băm nguồn/JAR, phiên bản, cấu trúc triển khai, cấu hình), `run.json`, `seed.json`, `raw.json.gz`, `summary.json` chỉ chứa số đo, `resources.csv` cho từng lượt, cùng `results.json`, `REPORT.md` và mã kiểm tra. Số đo loại đăng nhập nhưng gồm làm nóng/giảm tải. Lấy mẫu mỗi giây: CPU/bộ nhớ máy và RSS ứng dụng/k6/Postgres. Cộng RSS Postgres có thể tính trùng trang dùng chung. Máy phát tải dùng chung CPU nên số đo không xác lập năng lực máy chủ độc lập. Bước biên dịch bỏ kiểm thử; đo tải không thay thế `mvnw clean verify`.
+
+Để kiểm chứng tương đương trên **Linux cục bộ**, chạy với quyền gốc trong container dùng tạm:
 
 ```bash
 bash benchmark/setup-cpu.sh
 python3 benchmark/run_cpu.py --repetitions 1
 ```
 
-Linux validation must remain labelled local. Shipping this workflow alone does
-not constitute evidence of an executed Kaggle session.
+Gắn đúng nhãn cục bộ cho kết quả Linux. Có quy trình chưa đủ chứng minh đã chạy thành công trên Kaggle.
 
-References: [Kaggle notebook settings](https://www.kaggle.com/docs/notebooks),
-[k6 custom summary](https://grafana.com/docs/k6/latest/results-output/end-of-test/custom-summary/).
+Tham khảo: [Cài đặt notebook Kaggle](https://www.kaggle.com/docs/notebooks), [tùy chỉnh tổng kết k6](https://grafana.com/docs/k6/latest/results-output/end-of-test/custom-summary/).
 
-## Isolation and prerequisites
+## Cô lập và điều kiện chuẩn bị
 
-Use a disposable Compose project and database. Do not run the reset command against
-the normal local demo database.
+Dùng dự án Compose và cơ sở dữ liệu dùng tạm. Không đặt lại cơ sở dữ liệu trình diễn thông thường.
 
 ```powershell
 Copy-Item .env.example .env.benchmark
-# Edit .env.benchmark locally: use POSTGRES_DB=gdrn_benchmark,
-# DB_PORT=55432, APP_PORT=18080, unique local credentials and SPRING_PROFILES_ACTIVE=demo.
+# Sửa .env.benchmark trên máy: dùng POSTGRES_DB=gdrn_benchmark,
+# DB_PORT=55432, APP_PORT=18080, thông tin xác thực riêng và SPRING_PROFILES_ACTIVE=demo.
 
 docker compose -p gdrn-benchmark --env-file .env.benchmark up -d --build database backend
 $env:BASE_URL = 'http://127.0.0.1:18080'
-$env:BENCHMARK_EMAIL = '<demo citizen email from .env.benchmark>'
-$env:BENCHMARK_PASSWORD = '<demo citizen password from .env.benchmark>'
+$env:BENCHMARK_EMAIL = '<email người dân từ .env.benchmark>'
+$env:BENCHMARK_PASSWORD = '<mật khẩu người dân từ .env.benchmark>'
 ```
 
-The benchmark credential is a citizen because E07 is citizen-only. The authority
-read path is a separate authorization concern and is not mixed into this workload.
-The values above are examples only; no real credential belongs in Git, a notebook,
-or a result file.
+Dùng tài khoản người dân vì E07 chỉ dành cho người dân. Luồng đọc của điều phối viên thuộc phạm vi phân quyền riêng, không trộn vào tải này. Giá trị trên chỉ là ví dụ; không đưa thông tin xác thực thật vào Git, notebook hay kết quả.
 
-Native k6 is preferred. When it is unavailable, the runner can use a local Docker
-image:
+Ưu tiên k6 cài trực tiếp; nếu thiếu có thể dùng ảnh Docker cục bộ:
 
 ```powershell
 docker pull grafana/k6:latest
 ```
 
-Kaggle is not assumed to have a Docker daemon. Use the native Linux workflow
-above; it does not publish a database, service or tunnel.
+Không giả định Kaggle có Docker daemon. Quy trình Linux phía trên không công khai cơ sở dữ liệu, dịch vụ hay đường hầm mạng.
 
-## Reset, seed and run
+## Đặt lại dữ liệu, tạo mẫu và chạy
 
-Reset is explicit and guarded by both a project name and a database name containing
-`bench`, `test`, `ci` or `kaggle`:
+Phải xác nhận đặt lại; cả tên dự án và cơ sở dữ liệu phải chứa `bench`, `test`, `ci` hoặc `kaggle`:
 
 ```powershell
 .\benchmark\reset-reporting.ps1 `
@@ -104,12 +69,9 @@ Reset is explicit and guarded by both a project name and a database name contain
   -ConfirmReset
 ```
 
-Seed data goes through `POST /api/reports` (E07), so validation and persistence stay
-on the public contract. The generator is deterministic: 70% of rows form a dense
-cluster around `CENTER_LAT`/`CENTER_LON`, 30% use a wider regional spread, and all
-five current report types are cycled. It writes a non-secret `seed.json` manifest.
+Dữ liệu mẫu đi qua `POST /api/reports` (E07), giữ kiểm tra và lưu trữ theo hợp đồng công khai. Bộ sinh có tính xác định: 70% dòng gần `CENTER_LAT`/`CENTER_LON`, 30% phân bố rộng, luân phiên cả năm loại báo cáo. Tệp `seed.json` không chứa bí mật.
 
-Run one isolated repetition with the Docker k6 runner:
+Chạy một lần lặp cô lập bằng k6 trong Docker:
 
 ```powershell
 .\benchmark\run-reporting-benchmark.ps1 `
@@ -119,27 +81,12 @@ Run one isolated repetition with the Docker k6 runner:
   -ProjectName gdrn-benchmark -CollectDockerStats
 ```
 
-For a radius run, use `-Workload read-radius`. For a write-only run, reset first
-and omit `-SeedData`; for `mixed`, seed if the read branches need a populated
-dataset. A run directory contains `raw.json`, `summary.json`, `run.json`, the seed
-manifest and optional Docker CPU/RAM samples.
+Đọc bán kính dùng `-Workload read-radius`. Chỉ ghi thì đặt lại trước và bỏ `-SeedData`; `mixed` cần tạo mẫu nếu nhánh đọc cần dữ liệu. Thư mục lượt chạy gồm `raw.json`, `summary.json`, `run.json`, bản kê dữ liệu mẫu và mẫu CPU/RAM Docker nếu bật.
 
-The intended load ladder is smoke, then 10, 50 and 100 VUs when the machine permits.
-Do not raise the level solely to obtain a larger number: stop when CPU, memory,
-database saturation or error-rate evidence requires it, record the reason, and
-repeat the lower level for comparison. Repetitions must reset and seed the same
-dataset before each run. No artificial sleep or delay is added by the workload.
+Bắt đầu kiểm tra nhanh, sau đó 10, 50, 100 VU nếu máy cho phép. Dừng khi CPU, bộ nhớ, cơ sở dữ liệu bão hòa hoặc tỷ lệ lỗi yêu cầu; ghi lý do và lặp mức thấp hơn để đối chiếu. Mỗi lần lặp phải đặt lại và tạo cùng dữ liệu. Kịch bản không thêm thời gian ngủ hay độ trễ nhân tạo.
 
-## Interpreting the output
+## Diễn giải kết quả
 
-Report throughput (requests/second), average latency, p50/p95/p99, error rate, and
-CPU/RAM when the optional collector has usable Docker samples. Keep k6 setup/login
-outside the domain interpretation; the script checks the 900-second JWT lifetime
-against the complete run window and refuses a run that could expire its token.
+Báo cáo thông lượng (yêu cầu/giây), độ trễ trung bình, p50/p95/p99, tỷ lệ lỗi, CPU/RAM nếu có mẫu Docker dùng được. Tách chuẩn bị/đăng nhập khỏi số đo nghiệp vụ. Công cụ đối chiếu toàn bộ thời lượng với tuổi thọ JWT 900 giây và từ chối lượt có thể hết hạn token.
 
-Results are local baseline measurements until the X1 integration gate is complete
-on the measured commit. They are not portable performance claims. Each handoff must
-include dataset size/distribution, query mix, warm-up, repetitions, reset method,
-topology, commit, UTC start/end and limitations. Any Phase 2 candidate (cache,
-read replica, queue, or other infrastructure) is a hypothesis only and must not be
-implemented as part of D3.
+Kết quả cục bộ chỉ là số đo cơ sở cho tới khi hoàn tất kiểm tra tích hợp X1 trên đúng commit được đo; không suy rộng sang mọi máy. Bàn giao phải có kích thước/phân bố dữ liệu, tỷ lệ truy vấn, làm nóng, số lần lặp, cách đặt lại, cấu trúc triển khai, commit và giới hạn. Giữ siêu dữ liệu thời gian trong bằng chứng gốc. Bộ nhớ đệm, bản sao đọc, hàng đợi hay hạ tầng Pha 2 chỉ là giả thuyết, không triển khai trong D3.

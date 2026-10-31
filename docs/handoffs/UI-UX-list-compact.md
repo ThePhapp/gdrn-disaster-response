@@ -1,56 +1,45 @@
-# UI/UX list compact follow-up
+# Bổ sung giao diện danh sách gọn
 
-Date: 2026-10-18  
-Branch: `feat/ui-ux-list-compact`  
-Base: `main` at `9b49b76`
+Nhánh: `feat/ui-ux-list-compact`.
+Nền: `main` tại `9b49b76`.
 
-## Scope
+## Phạm vi
 
-This follow-up addresses long list panels across the existing reporting and rescue
-screens. It changes feature CSS only; routes, API contracts, data loading, and
-business behavior are unchanged.
+Thu gọn bảng danh sách dài trên màn hình báo cáo/cứu hộ. Chỉ sửa CSS tính năng; giữ định tuyến, hợp đồng API, tải dữ liệu và nghiệp vụ.
 
-## Implemented
+## Đã triển khai
 
-- S03 `/my-reports`: the desktop list card has a viewport-aware height and its own
-  vertical scroll area. Report descriptions are limited to two lines and status
-  badges wrap long Vietnamese labels safely.
-- S04 `/operations/reports`: master list remains bounded and scrollable (`max-height: calc(100dvh - 14rem)`); the detail frame expands naturally to fit full content without an inner scrollbar. Facts use 3 columns, spacing is tightened, and read-only map is sized to 13.5rem so all report details, map, and actions display completely without scrolling down.
-- S05 `/operations/disasters`: master list remains bounded and scrollable; the disaster detail panel expands naturally without an inner scrollbar with 3-column facts and a 13.5rem preview map so disaster details and action buttons display completely.
-- S06 `/operations/rescue`: master list remains bounded; the mission detail panel expands naturally without an inner scrollbar with a 13.5rem preview map so all mission information displays completely.
-- At tablet/mobile breakpoints the workbenches return to natural stacked flow and
-  disable nested scrolling, preserving readable one-column layouts.
+- S03 `/my-reports`: thẻ danh sách máy tính có chiều cao theo vùng nhìn và cuộn dọc riêng. Mô tả tối đa hai dòng; nhãn trạng thái tiếng Việt dài xuống dòng an toàn.
+- S04 `/operations/reports`: danh sách chính có giới hạn và cuộn (`max-height: calc(100dvh - 14rem)`); khung chi tiết tự giãn, không cuộn bên trong. Thông tin ba cột, khoảng cách gọn và bản đồ chỉ đọc 13.5rem để hiển thị chi tiết/thao tác đầy đủ.
+- S05 `/operations/disasters`: danh sách chính có giới hạn và cuộn; chi tiết tự giãn, thông tin ba cột, bản đồ 13.5rem, không cuộn bên trong.
+- S06 `/operations/rescue`: danh sách chính có giới hạn; chi tiết nhiệm vụ tự giãn, bản đồ 13.5rem, không cuộn bên trong.
+- Trên máy tính bảng/điện thoại, bố cục trở về xếp dọc tự nhiên, tắt cuộn lồng để giữ một cột dễ đọc.
 
 ## Commit
 
 - `4a2e74d style: compact feature lists and workbenches`
 
-## Verification
+## Kiểm chứng
 
-The following checks passed on the local Docker stack without removing the database
-volume:
+Các kiểm tra sau đạt trên hệ thống Docker cục bộ, không xóa vùng dữ liệu:
 
-| Check | Result |
+| Kiểm tra | Kết quả |
 | --- | --- |
-| `npm.cmd run typecheck` | PASS |
-| `npm.cmd test -- --run` | PASS, 16 files / 81 tests |
-| `npm.cmd run build` | PASS; existing MapLibre chunk-size warning remains |
-| `pwsh -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev.ps1 up -WaitTimeout 180` | PASS; database, backend, and frontend healthy; health, readiness, OpenAPI, Swagger, SPA deep routes, and JSON API fallback checked |
-| `npm.cmd run test:login -- --reporter=line` with real Compose API | PASS, 19/19 browser tests |
-| `./mvnw.cmd --no-transfer-progress clean verify` | PASS, 62 unit/architecture tests and 51 integration tests |
+| `npm.cmd run typecheck` | Đạt |
+| `npm.cmd test -- --run` | Đạt, 16 tệp / 81 kiểm thử |
+| `npm.cmd run build` | Đạt; còn cảnh báo kích thước gói MapLibre có sẵn |
+| `pwsh -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev.ps1 up -WaitTimeout 180` | Đạt; cơ sở dữ liệu, ứng dụng và giao diện sẵn sàng; đã kiểm tra sức khỏe, mức sẵn sàng, OpenAPI, Swagger, đường dẫn sâu SPA và phản hồi JSON API |
+| `npm.cmd run test:login -- --reporter=line` với API Compose thật | Đạt, 19/19 kiểm thử trình duyệt |
+| `./mvnw.cmd --no-transfer-progress clean verify` | Đạt, 62 kiểm thử đơn vị/kiến trúc và 51 tích hợp |
 
-Browser artifacts for the visual review are generated under the ignored
-`frontend/test-results/` directory. The reviewed screenshots include S03 at
-1280px/360px and S06 at 1280px/360px.
+Ảnh rà soát sinh trong `frontend/test-results/`, được Git bỏ qua; gồm S03 và S06 tại 1280px/360px.
 
-## Handoff
+## Bàn giao
 
-The frontend image must be rebuilt after checking out this branch. With the local
-`.env` already present, run:
+Cần dựng lại ảnh Docker giao diện sau khi chuyển nhánh. Khi đã có `.env` cục bộ:
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev.ps1 up -WaitTimeout 180
 ```
 
-The current local host ports are backend `8080` and frontend `5174`, subject to
-the local `.env` configuration. No push or merge was performed.
+Cổng cục bộ được ghi nhận là ứng dụng `8080`, giao diện `5174`, tùy cấu hình `.env`. Chưa đẩy mã hoặc hợp nhất nhánh.
