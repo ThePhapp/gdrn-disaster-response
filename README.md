@@ -2,30 +2,32 @@
 
 ## 1. Bài toán và nghiệp vụ
 
-Thông tin sự cố trao đổi rời rạc khiến người dân khó theo dõi yêu cầu, điều phối viên
-khó xác minh vị trí và biết đội nào còn rảnh. GDRN tập hợp báo cáo có tọa độ, quyết
-định xác minh và tiến độ cứu hộ trong một hệ thống. Phase 1 có **20 API, 7 màn hình**.
+GDRN gom báo cáo sự cố, vị trí và tiến độ cứu hộ vào một hệ thống. Người dân gửi
+báo cáo và theo dõi xử lý; điều phối viên xác minh thông tin, chọn đội cứu hộ và
+cập nhật nhiệm vụ. Phase 1 hiện có **20 API, 7 màn hình**.
 
 | Người dùng | Chức năng đã có |
 | --- | --- |
 | CITIZEN - người dân | Gửi mô tả/loại sự cố/tọa độ; xem báo cáo của mình; rút khi PENDING; đính kèm ảnh và xem tiến độ cứu hộ. |
 | AUTHORITY - điều phối | Quản lý thảm họa; lọc báo cáo theo trạng thái/bán kính; xác minh hoặc từ chối; phân công đội, cập nhật nhiệm vụ và xem dashboard. |
 
-Luồng chính: **gửi báo cáo PENDING → xác minh VERIFIED và gắn thảm họa ACTIVE →
-chọn đội rảnh → nhiệm vụ ASSIGNED → IN_PROGRESS → COMPLETED → người dân theo dõi**.
-Báo cáo có thể bị REJECTED kèm lý do; thảm họa chỉ chuyển ACTIVE → RESOLVED.
+Luồng chính là: **PENDING → VERIFIED → gắn thảm họa ACTIVE → chọn đội rảnh →
+ASSIGNED → IN_PROGRESS → COMPLETED**. Người dân nhìn thấy tiến độ của báo cáo.
+Báo cáo có thể bị `REJECTED` kèm lý do; thảm họa đi từ `ACTIVE` sang `RESOLVED`.
 
-Quy tắc cần giữ: không đọc chéo báo cáo giữa hai citizen; một báo cáo chỉ có một
-nhiệm vụ trong toàn vòng đời; một đội chỉ có một nhiệm vụ đang hoạt động. Dashboard
-lọc ngày theo UTC+7, nhưng số đội rảnh/bận luôn phản ánh hiện tại. Ảnh JPEG/PNG tối
-đa **5 ảnh/báo cáo, 5 MiB/ảnh**; chỉ chủ báo cáo PENDING được upload/xóa.
-Chưa có đăng ký/quản trị tài khoản, refresh token, cảnh báo/tài nguyên hoặc tự động phân đội.
+Citizen không xem được báo cáo của citizen khác. Một báo cáo chỉ có một nhiệm vụ
+trong suốt vòng đời, và một đội chỉ nhận một nhiệm vụ đang hoạt động. Dashboard
+dùng UTC+7 khi lọc ngày, còn số đội rảnh/bận được tính theo trạng thái hiện tại.
+Mỗi báo cáo nhận tối đa **5 ảnh JPEG/PNG**, mỗi ảnh tối đa **5 MiB**; chỉ chủ báo cáo
+đang `PENDING` được thêm hoặc xóa ảnh. Đăng ký tài khoản, refresh token, cảnh báo,
+quản lý tài nguyên và tự động phân đội chưa nằm trong Phase 1.
 
 ## 2. Kiến trúc, mã nguồn và yêu cầu kỹ thuật
 
-**Modular Monolith**: một Spring Boot backend, một SPA và PostgreSQL/PostGIS.
-Luồng triển khai: `Browser → Nginx/Vite proxy /api → backend → database/private files`.
-Giữ một ứng dụng để đơn giản hóa triển khai và giao dịch; chưa có bằng chứng cần tách dịch vụ.
+Phase 1 dùng **modular monolith**: một backend Spring Boot, một SPA và PostgreSQL/PostGIS.
+Request đi theo đường `Browser → Nginx/Vite proxy /api → backend → database/private files`.
+Cách này đủ gọn cho giai đoạn hiện tại và giữ transaction ở một nơi; chưa có lý do
+thực tế để tách thành nhiều service.
 
 | Thành phần | Framework/công nghệ hiện dùng |
 | --- | --- |
@@ -46,40 +48,43 @@ scripts/                  # setup, build/start/stop, browser regression
 benchmark/                # k6, dữ liệu/runner, notebook chạy tải Kaggle CPU
 ```
 
-Theo DDD/Hexagonal, domain là Java thuần; controller xử lý HTTP, application điều
-phối use case qua ports, infrastructure hiện thực adapters. Module chỉ tạo lớp khi
-cần; Dashboard là use case đọc, không có aggregate/bảng riêng. Phụ thuộc liên module:
-`Rescue → Reporting → Disaster`, `Dashboard → Reporting/Rescue`, qua published contracts,
-không truy cập infrastructure hoặc join bảng của nhau. `shared` chỉ chứa kỹ thuật chung.
+Trong mỗi module, domain là Java thuần; controller nhận HTTP, application chạy use case,
+còn infrastructure nối tới database hoặc dịch vụ ngoài. Không tạo aggregate hay bảng
+riêng cho Dashboard vì đây chỉ là use case đọc. `Rescue` dùng contract của `Reporting`
+và `Disaster`; `Dashboard` đọc từ `Reporting` và `Rescue`. Module không truy cập thẳng
+infrastructure của nhau, còn `shared` chỉ chứa phần kỹ thuật dùng chung.
 
-JWT HS256 hết hạn sau 15 phút, BCrypt, default-deny và kiểm tra role/ownership;
-SPA giữ phiên trong `sessionStorage`. Flyway quản lý schema, Hibernate chỉ validate.
-PostGIS `geography(Point,4326)` + GiST + `ST_DWithin` lọc khoảng cách theo mét.
-Conditional updates/version chống ghi đè; UNIQUE report và partial UNIQUE active-team
-chống phân công trùng. Domain test không cần Spring, adapter test dùng PostGIS thật.
+JWT dùng HS256 và hết hạn sau 15 phút; mật khẩu dùng BCrypt, quyền mặc định là deny,
+và mỗi request đều kiểm tra role/ownership. SPA giữ phiên trong `sessionStorage`.
+Flyway quản lý schema, Hibernate chỉ validate. PostGIS dùng `geography(Point,4326)`,
+GiST và `ST_DWithin` để lọc bán kính theo mét. Conditional update/version ngăn ghi đè;
+unique report và partial unique active-team ngăn phân công trùng. Domain test không cần
+Spring, còn adapter test chạy với PostGIS thật.
 Xem [C4](docs/architecture/architecture-overview.md), [contracts](docs/architecture/phase1-module-contracts.md), [ADRs](docs/adr/).
 
 ## 3. Đặc tả và preview API
 
-[**docs/openapi.yaml**](docs/openapi.yaml) là OpenAPI **3.0.3**, đủ **20 operations/14 paths**,
-request/response, ví dụ, mã lỗi, Bearer authentication và quyền.
+[**docs/openapi.yaml**](docs/openapi.yaml) là đặc tả OpenAPI **3.0.3** của hệ thống.
+File có **20 operations/14 paths**, kèm request/response, ví dụ, mã lỗi, Bearer
+authentication và quyền truy cập.
 
-| Nhóm | API thực tế |
-| --- | --- |
-| Identity (2) | POST `/api/auth/login`; GET `/api/auth/me` |
-| Disaster (4) | GET/POST `/api/disasters`; GET/PATCH `/api/disasters/{id}` |
-| Reporting (5) | POST/GET `/api/reports`; GET/DELETE `/api/reports/{id}`; PATCH `/api/reports/{id}/verification` |
-| Rescue (4) | GET `/api/rescue-teams`; POST/GET `/api/rescue-missions`; PATCH `/api/rescue-missions/{id}/status` |
-| Dashboard (1) | GET `/api/dashboard` |
-| Evidence (4) | POST/GET `/api/reports/{id}/attachments`; GET `/api/reports/{id}/attachments/{attachmentId}/content`; DELETE `/api/reports/{id}/attachments/{attachmentId}` |
+| Nhóm          | API thực tế                                                                                                                                                 |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Identity (2)  | POST `/api/auth/login`; GET `/api/auth/me`                                                                                                                  |
+| Disaster (4)  | GET/POST `/api/disasters`; GET/PATCH `/api/disasters/{id}`                                                                                                  |
+| Reporting (5) | POST/GET `/api/reports`; GET/DELETE `/api/reports/{id}`; PATCH `/api/reports/{id}/verification`                                                             |
+| Rescue (4)    | GET `/api/rescue-teams`; POST/GET `/api/rescue-missions`; PATCH `/api/rescue-missions/{id}/status`                                                          |
+| Dashboard (1) | GET `/api/dashboard`                                                                                                                                        |
+| Evidence (4)  | POST/GET `/api/reports/{id}/attachments`; GET `/api/reports/{id}/attachments/{attachmentId}/content`; DELETE `/api/reports/{id}/attachments/{attachmentId}` |
 
 DTO, query filters và lỗi chi tiết nằm trong YAML.
 
-**Preview không cần backend:** mở [Swagger Editor](https://editor.swagger.io/), import
-file `docs/openapi.yaml` hoặc dán toàn bộ YAML vào editor để xem request/response.
-**Thử API đang chạy:** mở [Swagger UI](http://127.0.0.1:8080/swagger-ui/index.html),
-login lấy token, bấm **Authorize**, nhập JWT rồi dùng **Try it out**. Đổi port theo `.env`.
-Runtime xuất JSON tại `/v3/api-docs`; bản YAML là snapshot bàn giao đã đối chiếu code.
+**Xem đặc tả:** mở [Swagger Editor](https://editor.swagger.io/) rồi import
+`docs/openapi.yaml`. Không cần chạy backend.
+
+**Gọi API local:** mở [Swagger UI](http://127.0.0.1:8080/swagger-ui/index.html),
+login lấy token, bấm **Authorize** và dùng **Try it out**. Port đọc từ `.env`.
+Runtime cũng xuất JSON tại `/v3/api-docs`; file YAML là bản snapshot đã đối chiếu với code.
 
 Kiểm tra bằng `python docs/api/validate_openapi.py` sau khi cài dependencies ghi đầu file.
 Login public; API còn lại cần Bearer JWT. JSON lỗi dùng `ApiError` của dự án.
@@ -87,25 +92,27 @@ Snapshot đã mô tả lỗi ảnh/413 mà JSON runtime còn thiếu; xem [biên
 
 ## 4. Cài đặt, build và triển khai
 
-Cần Git, PowerShell >=5.1 và Docker Desktop **Linux containers**. Chạy Maven trên
-host cần JDK21; phát triển SPA cần Node **22.14.0** (`frontend/.nvmrc`). Từ root repo:
+Trên Windows cần Git, PowerShell >=5.1 và Docker Desktop chạy **Linux containers**.
+Nếu chạy Maven ngoài container, cài JDK21; frontend dùng Node **22.14.0**
+(`frontend/.nvmrc`). Từ thư mục gốc:
 
 ```powershell
 .\scripts\local.ps1 -Action setup  # Tạo/bổ sung .env, secret và tài khoản demo
 .\scripts\dev.ps1 up              # Build/chạy DB, backend, frontend; kiểm tra health
 ```
 
-Mặc định: [SPA](http://127.0.0.1:5173/login) **5173**, API/Swagger **8080**, PostgreSQL
-**5432**; health tại `/actuator/health/readiness`. `.env` quyết định
-`FRONTEND_PORT/APP_PORT/DB_PORT`, DB credentials, `JWT_SECRET_BASE64` (>=32 byte),
-profile `demo` và ba cặp `DEMO_*_EMAIL/PASSWORD`. Lấy tài khoản từ `.env` riêng,
-không commit secret; volume DB cũ phải dùng credentials gốc. Bản đồ cần cấu hình
-public `VITE_MAP*` lúc build; thiếu cấu hình vẫn nhập tọa độ thủ công được.
+Mặc định SPA chạy ở [http://127.0.0.1:5173/login](http://127.0.0.1:5173/login),
+API/Swagger ở port **8080**, PostgreSQL ở **5432**; health check là
+`/actuator/health/readiness`. `.env` chứa port, DB credentials, `JWT_SECRET_BASE64`
+(tối thiểu 32 byte), profile `demo` và ba cặp `DEMO_*_EMAIL/PASSWORD`.
+Không commit file này. Nếu giữ volume DB cũ, phải dùng lại credentials cũ. Bản đồ
+cần các biến `VITE_MAP*`; thiếu chúng vẫn nhập tọa độ thủ công được.
 
-Backend image build Maven → JAR → JRE21 chạy user riêng; frontend build `npm ci`
-→ `dist/` → Nginx phục vụ SPA và proxy `/api`. Compose chờ DB/backend healthy;
-Flyway tự migrate khi khởi động. Muốn dùng Vite host: thay `dev.ps1 up` bằng
-`local.ps1 -Action start`. Dừng bằng `dev.ps1 down` hoặc `local.ps1 -Action stop`, giữ DB volume.
+Backend image chạy theo chuỗi Maven → JAR → JRE21 dưới một user riêng. Frontend chạy
+`npm ci`, tạo `dist/`, sau đó Nginx phục vụ SPA và proxy `/api`. Compose chờ DB và
+backend healthy trước khi hoàn tất; Flyway migrate lúc backend khởi động. Muốn chạy
+Vite trên host thì dùng `local.ps1 -Action start`. Dừng bằng `dev.ps1 down` hoặc
+`local.ps1 -Action stop`; DB volume vẫn được giữ lại.
 
 ```powershell
 .\mvnw.cmd clean verify            # Unit + architecture + PostGIS integration; cần Docker
@@ -118,27 +125,32 @@ Pop-Location
 .\scripts\browser-e2e.ps1           # Sau khi stack demo đã chạy
 ```
 
-CI có 3 jobs: `verify`, `frontend`, `browser-e2e`. Dockerfile package bỏ tests nên
-image build không thay thế `clean verify`. Lần rà soát đã ghi nhận **130 backend,
-93 frontend tests PASS**, browser **18 PASS/5 map skip**; [biên bản](docs/PHASE1_REVIEW.md)
-ghi rõ revision và giới hạn, không coi số cũ là kiểm chứng cho mọi commit.
-Đã kiểm chứng Compose local; **chưa xác nhận cloud/production**. Chuyển máy cần
-secret riêng, TLS/reverse proxy, quyền PostGIS và backup/restore cả DB lẫn ảnh.
-Hướng dẫn chi tiết: [runbook](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md), [review/demo data](docs/PRODUCT_REVIEW.md).
+CI có ba job: `verify`, `frontend` và `browser-e2e`. Dockerfile chỉ đóng gói ứng dụng,
+không chạy test, nên vẫn phải chạy `clean verify` riêng. Lần review gần nhất ghi nhận
+**130 backend, 93 frontend tests PASS** và browser **18 PASS/5 map skip**; xem
+[biên bản](docs/PHASE1_REVIEW.md) để biết revision tương ứng. Đây mới là kiểm tra
+local; khi đưa sang máy khác cần secret, TLS/reverse proxy, quyền PostGIS và quy trình
+backup/restore cho cả DB lẫn ảnh. Xem thêm [runbook](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md)
+và [review/demo data](docs/PRODUCT_REVIEW.md).
 
 ## 5. Kiểm thử tải CPU
 
-Bộ kiểm thử dùng **k6** cho E07 tạo báo cáo và E08 đọc báo cáo: `write`,
+Bộ tải k6 bao gồm E07 tạo báo cáo và E08 đọc báo cáo qua bốn workload: `write`,
 `read-page`, `read-radius`, `mixed` (20% ghi, 60% đọc trang, 20% đọc bán kính).
-Đây là tải API với tài khoản citizen; chưa đo UI, upload ảnh, dashboard hoặc luồng authority.
-DB benchmark riêng được reset giữa các lần chạy. Dữ liệu đọc gồm 1.000 báo cáo,
-seed `20261024`, 70% tọa độ trong cụm gần tâm và 30% phân bố rộng.
+Benchmark dùng tài khoản citizen, reset DB riêng trước mỗi lượt và seed 1.000 báo cáo
+cho các workload đọc. UI, upload ảnh, dashboard và luồng authority chưa nằm trong bộ tải.
+Seed cố định là `20261024`; 70% tọa độ nằm gần tâm, 30% phân bố rộng.
 
 ### Lượt kiểm thử local mới — 30/10/2026
 
-Đã chạy **16/16 tổ hợp**, mỗi tổ hợp **1 lần**: 4 workload × 1/10/50/100 VUs. Ubuntu 24.04 trong Docker Desktop, AMD Ryzen 7 6800H with Radeon Graphics, 16 CPU logic, RAM VM 6.62 GiB; Java 21, PostgreSQL 16.15/PostGIS 3.4.2, k6 1.6.1. Backend/DB/k6 dùng chung VM; backend giới hạn heap 1 GiB. Đây là **local Linux CPU, chưa phải Kaggle**.
+Đã chạy **16/16 tổ hợp**, mỗi tổ hợp **1 lần**: 4 workload × 1/10/50/100 VUs.
+Môi trường là Ubuntu 24.04 trong Docker Desktop, AMD Ryzen 7 6800H, 16 CPU logic,
+RAM VM 6.62 GiB; Java 21, PostgreSQL 16.15/PostGIS 3.4.2, k6 1.6.1. Backend,
+DB và k6 dùng chung VM; backend giới hạn heap 1 GiB.
 
-Mỗi lượt: **5s warm-up + 15s giữ tải + 5s ramp-down**. Reset DB trước mỗi lượt; write bắt đầu rỗng, các workload còn lại seed 1.000 báo cáo. Bảng gồm toàn bộ cửa sổ chạy, loại request login; lỗi tính cả HTTP status và body check.
+Mỗi lượt gồm **5s warm-up + 15s giữ tải + 5s ramp-down**. DB được reset trước
+mỗi lượt; `write` bắt đầu từ rỗng, các workload còn lại seed 1.000 báo cáo. Bảng
+tính cả cửa sổ chạy nhưng bỏ request login; lỗi gồm cả HTTP status và body check.
 
 | Workload | VUs | Request/s | TB (ms) | p50 (ms) | p95 (ms) | p99 (ms) | Lỗi |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -159,11 +171,17 @@ Mỗi lượt: **5s warm-up + 15s giữ tải + 5s ramp-down**. Reset DB trướ
 | read-radius | 100 | 1116.21 | 70.76 | 79.50 | 160.76 | 225.85 | 0.00% |
 | mixed | 100 | 1172.43 | 67.47 | 68.43 | 159.46 | 217.92 | 0.00% |
 
-Với đọc trang, tăng từ 10 lên 100 VUs cho thông lượng tăng **1.50 lần**, trong khi p95 tăng **14.22 lần**. Cần profiling và chạy lặp để xác định nguyên nhân độ trễ, trước khi đề xuất cache hoặc thay đổi kiến trúc.
+Ở workload đọc trang, tăng từ 10 lên 100 VUs làm throughput tăng **1.50 lần**,
+nhưng p95 tăng **14.22 lần**. Cần profiling và chạy lặp trước khi quyết định dùng
+cache hoặc thay đổi kiến trúc.
 
-Tổng **575.066 request nghiệp vụ**, tất cả ngưỡng lỗi <1% đều đạt. Đã kiểm tra checksum và tính lại số request, trung bình, p50/p95/p99 từ raw. CPU host cao nhất trong các mẫu: **84.3%**; RSS backend cao nhất: **656.0 MiB**.
+Tổng cộng có **575.066 request nghiệp vụ**, tất cả ngưỡng lỗi dưới 1% đều đạt.
+Checksum đã được kiểm tra và các số request, trung bình, p50/p95/p99 được tính lại
+từ raw. CPU host cao nhất trong mẫu là **84.3%**, RSS backend cao nhất **656.0 MiB**.
 
-**Giới hạn:** thời gian ngắn và chỉ một lần lặp, có dịch vụ nền trên Docker Desktop; chưa đủ để kết luận năng lực tối đa hoặc xác định bottleneck. Không so trực tiếp với baseline cũ vì khác runtime, topology và cách tổng hợp. Notebook Kaggle mặc định chạy ba lần mỗi tổ hợp để có thêm bằng chứng.
+Thời lượng local ngắn và chỉ có một repetition, ngoài ra Docker Desktop còn có các
+dịch vụ nền. Vì vậy bảng này chỉ dùng làm baseline, không dùng để kết luận capacity
+hay bottleneck. Kaggle chạy ba repetitions cho mỗi tổ hợp để có bộ số liệu ổn định hơn.
 
 Bằng chứng tổng hợp: [JSON kết quả và cấu hình](docs/benchmark/cpu-local-2026-10-30.json). 
 
@@ -181,31 +199,24 @@ Docker Desktop, Intel i5-12500H, 16 logical processors, RAM 15,7 GiB;
 | E08 đọc trang | 1.000 | 50 | 1.439,13 | 18,93 | 17,35 | 36,35 | 48,63 | 0% |
 | E08 đọc trang | 1.000 | 100 | 1.996,98 | 34,93 | 30,19 | 78,70 | 105,28 | 0% |
 
-**Cách đọc:** VUs là số người dùng ảo đồng thời; request/s là thông lượng;
-p95/p99 là thời gian mà 95%/99% request hoàn thành trong ngưỡng đó. Khi tải đọc
-tăng từ 10 lên 100 VUs, thông lượng tăng khoảng 2,15 lần nhưng p95 tăng khoảng
-6,26 lần. Chưa thể xác định bottleneck chỉ từ bảng này; cần đối chiếu CPU/RAM,
-query và chạy lặp. Lần 50 VUs có một iteration bị ngắt lúc ramp-down, dù HTTP
-và checks không lỗi. Không suy diễn 0% lỗi thành khả năng chịu tải vô hạn.
+**Ghi chú:** VUs là số người dùng ảo chạy đồng thời; request/s là throughput;
+p95/p99 là thời gian hoàn thành của 95%/99% request. Ở workload đọc trang,
+tăng từ 10 lên 100 VUs làm throughput tăng khoảng 2,15 lần, còn p95 tăng khoảng
+6,26 lần. Bảng này chưa đủ để chỉ ra bottleneck; cần xem thêm CPU/RAM, query và
+chạy lặp. Một iteration ở 50 VUs dừng trong ramp-down dù HTTP và checks vẫn đạt.
 
-### Chạy trên Kaggle CPU
+### Chạy full trên Kaggle CPU
 
-[Notebook Kaggle](benchmark/kaggle_cpu_preflight.ipynb) đã có luồng chạy thật:
-cài Java 21/PostGIS/k6, build backend, khởi tạo DB và tài khoản riêng, chạy tải,
-thu CPU/RAM rồi xuất báo cáo. Tên file `preflight` được giữ để không gãy liên kết.
+Runner tự động nằm trong [benchmark/kaggle_api.py](benchmark/kaggle_api.py),
+notebook là [kaggle_server_cpu.ipynb](benchmark/kaggle_server_cpu.ipynb). Job chạy
+Java 21, PostgreSQL/PostGIS và k6 trên cùng CPU Kaggle, tạo database và tài khoản
+tạm cho từng phiên rồi lưu manifest, seed, raw k6 và resource samples.
 
-1. Chạy `python benchmark/package_cpu_source.py` tại root repo.
-2. Upload `benchmark/results/gdrn-cpu-source.zip` thành **private Kaggle Dataset**.
-3. Import notebook, thêm Dataset bằng **Add Input**, chọn **Accelerator: None**,
-   bật **Internet**, rồi **Run All**.
-4. Tải `gdrn-cpu-results.zip` từ Output; xem `REPORT.md`, `results.json` và
-   `manifest.json`. Chỉ xác nhận chạy hoàn tất khi manifest ghi `completed`.
-
-Mặc định chạy 4 workload × 4 mức 1/10/50/100 VUs × 3 lần. Mỗi lần gồm 10 giây
-warm-up, 30 giây giữ tải, 10 giây ramp-down; dừng khi k6 lỗi/ngưỡng lỗi ≥1%.
-Thống kê mới loại request login, nhưng bao gồm cả warm-up/ramp-down.
-CPU/RAM được lấy mỗi giây; backend, DB và k6 dùng chung máy nên cần ghi rõ
-topology khi so sánh. Lưu raw nén, seed, cấu hình, phiên bản và checksum cùng bảng.
+Để cài và đăng nhập Kaggle, xem [hướng dẫn benchmark](docs/benchmark/KAGGLE_CPU.md).
+Profile `full` chạy 4 workload ở 1/10/50/100 VUs, mỗi tổ hợp 3 lần. Mỗi lần gồm
+10 giây warm-up, 30 giây steady và 10 giây ramp-down. Runner dừng ngay khi k6
+vượt ngưỡng lỗi 1% hoặc thiếu business request. Backend, DB và k6 dùng chung CPU,
+nên số liệu chỉ có ý nghĩa khi ghi kèm topology và giới hạn máy.
 
 ### Kết quả full trên Kaggle — 30–31/10/2026
 
@@ -222,9 +233,9 @@ p95 là độ trễ endpoint.
 | mixed | 177.20 req/s · 10.88 ms | 427.61 · 69.65 ms | 446.36 · 252.47 ms | 447.03 · 521.66 ms |
 
 Tổng cộng có **1.675.588 request**, error rate nghiệp vụ **0%**, cleanup hoàn tất
-và 315/315 artifact SHA-256 khớp. `read-page` bắt đầu plateau ở 50–100 VUs;
-`read-radius` và `mixed` tăng latency rõ rệt ở 100 VUs do backend, PostGIS và k6
-dùng chung CPU Kaggle. [Báo cáo và manifest đã lưu trong Git](docs/benchmark/evidence/kaggle-full-v4/REPORT.md).
+và 315/315 checksum SHA-256 khớp. `read-page` gần như chững throughput ở 50–100 VUs;
+`read-radius` và `mixed` chậm rõ rệt ở 100 VUs vì backend, PostGIS và k6 dùng chung
+CPU Kaggle. [Báo cáo và manifest](docs/benchmark/evidence/kaggle-full-v4/REPORT.md).
 
 Chi tiết cấu hình và artifacts: [benchmark/README.md](benchmark/README.md).
 
