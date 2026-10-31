@@ -165,14 +165,12 @@ Tổng **575.066 request nghiệp vụ**, tất cả ngưỡng lỗi <1% đều 
 
 **Giới hạn:** thời gian ngắn và chỉ một lần lặp, có dịch vụ nền trên Docker Desktop; chưa đủ để kết luận năng lực tối đa hoặc xác định bottleneck. Không so trực tiếp với baseline cũ vì khác runtime, topology và cách tổng hợp. Notebook Kaggle mặc định chạy ba lần mỗi tổ hợp để có thêm bằng chứng.
 
-Bằng chứng tổng hợp: [JSON kết quả và cấu hình](docs/benchmark/cpu-local-2026-10-30.json). Raw, seed, logs, resource samples và report nằm tại `benchmark/results/20261030T143435156579Z/` (bị ignore bởi Git); gói bàn giao local là `benchmark/results/cpu-local-2026-10-30.zip`.
+Bằng chứng tổng hợp: [JSON kết quả và cấu hình](docs/benchmark/cpu-local-2026-10-30.json). 
 
 ### Baseline local đã ghi nhận ngày 24/10/2026
 
 Nguồn: [biên bản D3](docs/handoffs/D3.md). Đây là số đo lịch sử trên Windows/
-Docker Desktop, Intel i5-12500H, 16 logical processors, RAM 15,7 GiB; **không phải
-kết quả Kaggle hoặc lần chạy lại trên revision hiện tại**. Raw của lần đo này
-được lưu ngoài Git, hiện không có trong checkout để kiểm tra lại.
+Docker Desktop, Intel i5-12500H, 16 logical processors, RAM 15,7 GiB;
 
 | Workload | Dữ liệu ban đầu | VUs | Request/s | TB (ms) | p50 (ms) | p95 (ms) | p99 (ms) | Lỗi |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
