@@ -22,11 +22,11 @@ Tham số lạ/lặp/rỗng hoặc có thân yêu cầu trả 400 VALIDATION_ERR
 
 Nếu không lọc ngày, `from`/`to` là null. Số đếm là long Java/số JSON không âm. Báo cáo tính trạng thái hiện tại, lọc theo thời gian tạo, loại đã rút. Nhiệm vụ tính trạng thái hiện tại, lọc theo thời gian phân công; hoạt động = assigned + inProgress. Đây là trạng thái hiện tại của nhóm dữ liệu được chọn, không phải ảnh chụp lịch sử hay số lần chuyển trạng thái trong khoảng. Đội luôn tính toàn bộ hiện tại; có nhiệm vụ ASSIGNED/IN_PROGRESS thì bận, kể cả ngoài khoảng ngày. Nhóm dữ liệu rỗng trả 0, nhưng số đội vẫn phản ánh năng lực hiện tại.
 
-## Hợp đồng mô-đun công khai
+## Hợp đồng module công khai
 
-`reporting.application.contract.ReportStatisticsQuery` cung cấp `Counts summarize(Instant fromInclusive, Instant toExclusive)`, với Counts(pending, verified, rejected). Rescue công bố `RescueStatisticsQuery` với cùng tham số khoảng và Counts(assigned, inProgress, completed, availableTeams, busyTeams). Khoảng là hai null (không giới hạn) hoặc hai thời điểm khác null đúng thứ tự; sai thì ném IllegalArgumentException. Số đếm không phân trang, không chứa ID, nội dung báo cáo, dữ liệu người dùng hay kiểu lưu trữ.
+`reporting.application.contract.ReportStatisticsQuery` cung cấp `Counts summarize(Instant fromInclusive, Instant toExclusive)`, với Counts(pending, verified, rejected). Rescue công bố `RescueStatisticsQuery` với cùng tham số khoảng và Counts(assigned, inProgress, completed, availableTeams, busyTeams). Khoảng là hai null (không giới hạn) hoặc hai thời điểm khác null đúng thứ tự; sai thì ném IllegalArgumentException. Số đếm không pagination, không chứa ID, nội dung báo cáo, dữ liệu người dùng hay kiểu lưu trữ.
 
-Tầng ứng dụng Dashboard chỉ phụ thuộc cổng `DashboardStatistics` riêng. Hạ tầng ánh xạ hợp đồng bên cung cấp trong cùng giao dịch chỉ đọc REPEATABLE READ trên nguồn dữ liệu hiện có. SQL nằm ở mô-đun sở hữu; không SQL xuyên mô-đun hoặc nhập lớp nội bộ bên cung cấp. Phản hồi dùng một ảnh chụp dữ liệu; asOf là thời điểm đọc sau truy vấn đầu tiên xác lập ảnh chụp, không cam kết cập nhật trực tiếp hay tái dựng lịch sử. Ca đọc này không cần ghi, thực thể miền, lược đồ hay bản chuyển đổi mới.
+Application layer Dashboard chỉ phụ thuộc cổng `DashboardStatistics` riêng. Hạ tầng ánh xạ hợp đồng bên cung cấp trong cùng giao dịch chỉ đọc REPEATABLE READ trên nguồn dữ liệu hiện có. SQL nằm ở module sở hữu; không SQL xuyên module hoặc nhập lớp nội bộ bên cung cấp. Phản hồi dùng một snapshot; asOf là thời điểm đọc sau truy vấn đầu tiên xác lập ảnh chụp, không cam kết cập nhật trực tiếp hay tái dựng lịch sử. Ca đọc này không cần ghi, thực thể miền, schema hay bản chuyển đổi mới.
 
 ## Giao diện
 

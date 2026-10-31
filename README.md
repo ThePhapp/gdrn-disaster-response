@@ -24,16 +24,16 @@ quản lý tài nguyên và tự động phân đội chưa nằm trong Pha 1.
 
 ## 2. Kiến trúc, mã nguồn và yêu cầu kỹ thuật
 
-Pha 1 dùng **nguyên khối theo mô-đun**: một ứng dụng phía máy chủ Spring Boot, một SPA và PostgreSQL/PostGIS.
-Yêu cầu đi theo đường: trình duyệt → Nginx/Vite chuyển tiếp `/api` → ứng dụng → cơ sở dữ liệu/tệp riêng tư.
+Pha 1 dùng **modular monolith**: một backend Spring Boot, một SPA và PostgreSQL/PostGIS.
+Request đi theo đường: trình duyệt → Nginx/Vite proxy `/api` → backend → database/tệp riêng tư.
 Cách này đủ gọn cho giai đoạn hiện tại và giữ giao dịch ở một nơi; chưa có lý do
 thực tế để tách thành nhiều dịch vụ.
 
 | Thành phần | Công nghệ hiện dùng |
 | --- | --- |
-| Ứng dụng phía máy chủ | Java 21, Spring Boot 3.5.16; Web, Security, Actuator; Maven Wrapper 3.9.9. |
+| Backend | Java 21, Spring Boot 3.5.16; Web, Security, Actuator; Maven Wrapper 3.9.9. |
 | Dữ liệu | PostgreSQL 16/PostGIS 3.5; Flyway V1-V7; JPA/Hibernate cho Identity/Disaster, JDBC cho Reporting/Rescue và thống kê. |
-| Giao diện | React 19.3.0, TypeScript 7.0.2, Vite 8.3.4, Router 7.18.4; MapLibre 6.11.2; Node 22.14.0. |
+| Frontend | React 19.3.0, TypeScript 7.0.2, Vite 8.3.4, Router 7.18.4; MapLibre 6.11.2; Node 22.14.0. |
 | Đóng gói/kiểm thử | Docker Compose, Nginx 1.27; JUnit/Mockito, ArchUnit, Testcontainers, Vitest, Playwright và k6. |
 
 ```text
@@ -48,18 +48,18 @@ scripts/                  # cài đặt, biên dịch/khởi động/dừng, ki�
 benchmark/                # k6, dữ liệu/công cụ chạy, notebook đo tải Kaggle CPU
 ```
 
-Trong mỗi mô-đun, miền nghiệp vụ là Java thuần; bộ điều khiển nhận HTTP, tầng ứng dụng chạy ca sử dụng,
-còn hạ tầng nối tới cơ sở dữ liệu hoặc dịch vụ ngoài. Không tạo thực thể tổng hợp hay bảng
+Trong mỗi module, domain là Java thuần; controller nhận HTTP, application layer chạy ca sử dụng,
+còn hạ tầng nối tới cơ sở dữ liệu hoặc dịch vụ ngoài. Không tạo aggregate hay bảng
 riêng cho Dashboard vì đây chỉ là ca sử dụng đọc. `Rescue` dùng hợp đồng của `Reporting`
-và `Disaster`; `Dashboard` đọc từ `Reporting` và `Rescue`. Mô-đun không truy cập thẳng
+và `Disaster`; `Dashboard` đọc từ `Reporting` và `Rescue`. Module không truy cập thẳng
 hạ tầng của nhau, còn `shared` chỉ chứa phần kỹ thuật dùng chung.
 
 JWT dùng HS256 và hết hạn sau 15 phút; mật khẩu dùng BCrypt, quyền mặc định là từ chối,
-và mỗi yêu cầu đều kiểm tra vai trò/quyền sở hữu. SPA giữ phiên trong `sessionStorage`.
-Flyway quản lý lược đồ, Hibernate chỉ kiểm tra. PostGIS dùng `geography(Point,4326)`,
+và mỗi yêu cầu đều kiểm tra vai trò/ownership. SPA giữ phiên trong `sessionStorage`.
+Flyway quản lý schema, Hibernate chỉ kiểm tra. PostGIS dùng `geography(Point,4326)`,
 GiST và `ST_DWithin` để lọc bán kính theo mét. Cập nhật có điều kiện và phiên bản ngăn ghi đè;
 ràng buộc duy nhất trên báo cáo và đội đang hoạt động ngăn phân công trùng. Kiểm thử miền không cần
-Spring, còn kiểm thử bộ chuyển đổi chạy với PostGIS thật.
+Spring, còn kiểm thử adapter chạy với PostGIS thật.
 Xem [C4](docs/architecture/architecture-overview.md), [các hợp đồng](docs/architecture/phase1-module-contracts.md), [ADRs](docs/adr/).
 
 ## 3. Đặc tả và xem trước API
@@ -80,7 +80,7 @@ xác thực Bearer và quyền truy cập.
 DTO, tham số lọc và lỗi chi tiết nằm trong YAML.
 
 **Xem đặc tả:** mở [Swagger Editor](https://editor.swagger.io/) rồi nhập
-`docs/openapi.yaml`. Không cần chạy ứng dụng phía máy chủ.
+`docs/openapi.yaml`. Không cần chạy backend.
 
 **Gọi API cục bộ:** mở [Swagger UI](http://127.0.0.1:8080/swagger-ui/index.html),
 đăng nhập lấy token, bấm **Authorize** và dùng **Try it out**. Cổng đọc từ `.env`.
@@ -110,7 +110,7 @@ cần các biến `VITE_MAP*`; thiếu chúng vẫn nhập tọa độ thủ cô
 
 Ảnh Docker của ứng dụng được tạo theo chuỗi Maven → JAR → JRE21, chạy dưới một người dùng riêng. Giao diện chạy
 `npm ci`, tạo `dist/`, sau đó Nginx phục vụ SPA và proxy `/api`. Compose chờ DB và
-ứng dụng phía máy chủ sẵn sàng trước khi hoàn tất; Flyway chuyển đổi lược đồ lúc ứng dụng phía máy chủ khởi động. Muốn chạy
+backend sẵn sàng trước khi hoàn tất; Flyway chuyển đổi schema lúc backend khởi động. Muốn chạy
 Vite trên máy cục bộ thì dùng `local.ps1 -Action start`. Dừng bằng `dev.ps1 down` hoặc
 `local.ps1 -Action stop`; vùng dữ liệu vẫn được giữ lại.
 
@@ -130,7 +130,7 @@ không chạy kiểm thử, nên vẫn phải chạy `clean verify` riêng. Lầ
 **130 kiểm thử phía máy chủ và 93 kiểm thử giao diện đạt**; trình duyệt có **18 ca đạt, 5 ca bản đồ bỏ qua**. Xem
 [biên bản](docs/PHASE1_REVIEW.md) để biết phiên bản mã tương ứng. Đây mới là kiểm tra
 cục bộ; khi đưa sang máy khác cần cấu hình bí mật, TLS/proxy ngược, quyền PostGIS và quy trình
-sao lưu/khôi phục cho cả DB lẫn ảnh. Xem thêm [hướng dẫn vận hành](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md)
+backup/restore cho cả DB lẫn ảnh. Xem thêm [hướng dẫn vận hành](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md)
 và [rà soát sản phẩm/dữ liệu trình diễn](docs/PRODUCT_REVIEW.md).
 
 ## 5. Kết quả kiểm thử CPU trên Kaggle
@@ -147,12 +147,12 @@ dưới đây là trung bình của 3 lần lặp; p95 là thời gian hoàn th�
 | Kịch bản | Yêu cầu/giây | p95 (ms) |
 | --- | ---: | ---: |
 | Ghi báo cáo (`write`) | 1.732,34 | 126,40 |
-| Đọc phân trang (`read-page`) | 1.064,69 | 223,38 |
+| Đọc pagination (`read-page`) | 1.064,69 | 223,38 |
 | Đọc theo bán kính (`read-radius`) | 374,24 | 514,22 |
 | Hỗn hợp: 20% ghi, 60% đọc trang, 20% đọc bán kính (`mixed`) | 447,03 | 521,66 |
 
 Ứng dụng, PostgreSQL/PostGIS và k6 dùng chung máy Kaggle có 4 CPU logic,
-giới hạn RAM 30 GiB. Thông lượng đọc trang gần như chững ở 50–100 VU, còn độ trễ
+giới hạn RAM 30 GiB. Throughput đọc trang gần như chững ở 50–100 VU, còn latency
 đọc bán kính và hỗn hợp tăng; cần đo sâu hơn để xác định điểm nghẽn.
 Số liệu chưa đại diện cho năng lực của máy chủ chạy độc lập, và chưa bao gồm
 giao diện, tải ảnh, bảng thống kê hay luồng điều phối viên.
@@ -165,15 +165,15 @@ Xem [bảng đầy đủ và bằng chứng](docs/benchmark/evidence/kaggle-full
 
 | Hiện trạng đã thấy | Điều nhóm tiếp nhận cần kiểm chứng/cải tiến |
 | --- | --- |
-| Compose gốc chỉ gắn vùng dữ liệu cho DB; ảnh nằm trong container ứng dụng. | Siêu dữ liệu có thể còn nhưng mất tệp khi thay container. Có [cấu hình bổ sung để rà soát](docker-compose.review.yml); cần lưu trữ bền vững, quyền ghi và diễn tập sao lưu/khôi phục. |
-| Nginx trả 413 với PNG hợp lệ khoảng 3 MiB trong lần rà soát. | Đồng bộ giới hạn proxy với luật 5 MiB/ảnh và multipart 6MB; kiểm thử qua cả SPA → Nginx → ứng dụng phía máy chủ. |
+| Compose gốc chỉ gắn vùng dữ liệu cho DB; ảnh nằm trong container ứng dụng. | Siêu dữ liệu có thể còn nhưng mất tệp khi thay container. Có [cấu hình bổ sung để rà soát](docker-compose.review.yml); cần lưu trữ bền vững, quyền ghi và diễn tập backup/restore. |
+| Nginx trả 413 với PNG hợp lệ khoảng 3 MiB trong lần rà soát. | Đồng bộ giới hạn proxy với luật 5 MiB/ảnh và multipart 6MB; kiểm thử qua cả SPA → Nginx → backend. |
 | Gói mã bản đồ sau biên dịch khoảng 1 MB; kiểm tra từng báo `undici` có rủi ro mức cao. | Đo tải trang, chạy lại kiểm tra và đánh giá chuỗi phụ thuộc trước khi cập nhật; không suy từ cảnh báo thành kết luận khai thác. |
 | JWT chưa làm mới/thu hồi; tài khoản tạo sẵn để trình diễn; chưa có bằng chứng về tính sẵn sàng cao hoặc triển khai đám mây. | Làm rõ nhu cầu vận hành, quản trị tài khoản và bảo mật trước khi triển khai ngoài cục bộ. |
-| D3 đã đo 16 tổ hợp CPU cục bộ và đủ 48 lượt trên Kaggle, có bảng, bản kê và mã kiểm tra. | Đo chuyên sâu và lặp lại kịch bản để xác định điểm nghẽn trước khi chọn bộ nhớ đệm, hàng đợi hay vi dịch vụ. |
+| D3 đã đo 16 tổ hợp CPU cục bộ và đủ 48 lượt trên Kaggle, có bảng, manifest và checksum. | Đo chuyên sâu và lặp lại kịch bản để xác định điểm nghẽn trước khi chọn cache, queue hay microservices. |
 
 Nhóm nhận đọc README → [API](docs/openapi.yaml) → [hợp đồng/ADR](docs/architecture/phase1-module-contracts.md)
 → [bằng chứng/hạn chế](docs/PHASE1_REVIEW.md), tự chạy hệ thống và các kiểm tra. Giữ các ràng buộc
-nghiệp vụ, ranh giới mô-đun và bản chuyển đổi lược đồ đã phát hành. Đổi kiến trúc cần số liệu
+nghiệp vụ, ranh giới module và migration đã phát hành. Đổi kiến trúc cần số liệu
 trước/sau và ADR; các nhận xét trên là kết quả rà soát bàn giao, không thay
 [danh mục triển khai](docs/PHASE1_PLAN.md), [quy tắc phát triển](CONTRIBUTING.md) và
 [bối cảnh dài hạn](GDRN_PROJECT_CONTEXT.md).

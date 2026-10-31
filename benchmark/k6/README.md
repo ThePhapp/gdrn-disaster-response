@@ -3,9 +3,9 @@
 `reporting.js` là kịch bản k6 của D3 cho các hợp đồng Reporting hiện có:
 
 - `write`: E07 `POST /api/reports` bằng tài khoản người dân.
-- `read-page`: E08 `GET /api/reports`, phân trang và sắp xếp ổn định.
+- `read-page`: E08 `GET /api/reports`, pagination và sắp xếp ổn định.
 - `read-radius`: E08 `GET /api/reports` với `lat`, `lon`, `radiusMeters`.
-- `mixed`: 20% ghi, 60% đọc phân trang, 20% đọc bán kính.
+- `mixed`: 20% ghi, 60% đọc phân trang (`read-page`), 20% đọc bán kính (`read-radius`).
 
 Công cụ không có URL môi trường thật hay thông tin xác thực dự phòng. Truyền toàn bộ kết nối/tài khoản qua biến môi trường. JWT ngắn hạn được lấy một lần trong `setup()`; từ chối lượt có thời lượng dự kiến vượt tuổi thọ token để không nhận nhầm lỗi hết hạn thành điểm nghẽn nghiệp vụ.
 

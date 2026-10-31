@@ -1,39 +1,40 @@
 # GDRN — Bối cảnh dự án và đặc tả kỹ thuật
 
 > **Cách đọc hiện tại:** Đây là context dài hạn/backlog, không phải
-> phần triển khai plan hay bản mô tả khi chạy. Dùng [danh mục duy nhất](docs/PHASE1_PLAN.md)
-> cho scope/dependency, [tiến độ](docs/phase1-progress.md) cho merge/evidence,
-> [kiến trúc hiện tại](docs/architecture/architecture-overview.md) và các hợp đồng P00
+> implementation plan hay bản mô tả runtime. Dùng [catalog duy nhất](docs/PHASE1_PLAN.md)
+> cho scope/dependency, [progress](docs/phase1-progress.md) cho merge/evidence,
+> [architecture hiện tại](docs/architecture/architecture-overview.md) và contracts P00
 > cho kỹ thuật. P00/P01/B1/C1/UI01-A đã tích hợp trên main `78f164b`: E01–E09,
-> S01/S05, V1–V4 và dùng chung Crisis Command UI. Phần API/schema/events/phân công/rubric
-> bên dưới là lịch sử hoặc mục tiêu dài hạn khi chưa được danh mục MVP chọn triển khai.
+> S01/S05, V1–V4 và shared Crisis Command UI. Phần API/schema/events/phân công/rubric
+> bên dưới là lịch sử hoặc mục tiêu dài hạn khi chưa được catalog MVP chọn triển khai.
 > “Event mặc định internal/in-process” trong context cũ không cho phép thêm event bus
 > vào MVP; ADR004 là đề xuất tương lai. Không triển khai lại nhiệm vụ đã hoàn tất.
 
 > **Tích hợp B1/C1:** E01–E09 và S01/S05 đã có, Flyway V1–V4.
-> Reporting ownership/PostGIS dùng policy môi trường triển khai; radius/verify/withdraw thuộc B2,
-> S02/S03 thuộc B3, Rescue vẫn chưa triển khai. Chỉ giao công việc theo
+> Reporting ownership/PostGIS dùng policy production; radius/verify/withdraw thuộc B2,
+> S02/S03 thuộc B3, Rescue vẫn chưa triển khai. Chỉ giao task theo
 > [kế hoạch duy nhất](docs/PHASE1_PLAN.md); xem
 > [kết quả tích hợp](docs/handoffs/B1-C1-integration.md) cho kiểm chứng hiện tại.
 
-> **P01 update:** E01/E02/S01 đã triển khai trên nhánh P01: JWT thật,
-> user/credential persistence, trình diễn cấu hình và SPA đăng nhập. Các đoạn P00 bên dưới là
-> trạng thái lịch sử tại P00; phần dài hạn vẫn danh sách để sau. Xem
-> [bàn giao P01](docs/handoffs/P01.md), [cục bộ setup](docs/P01_LOCAL.md).
 
-> **Phạm vi note P00:** Phần bên dưới giữ nguyên bối cảnh dài hạn/backlog,
-> không phải danh sách đã implemented. Phạm vi thực thi hiện tại theo
+> **P01 update:** E01/E02/S01 đã triển khai trên nhánh P01: JWT thật,
+> user/credential persistence, demo profile và SPA login. Các đoạn P00 bên dưới là
+> trạng thái lịch sử tại P00; phần dài hạn vẫn backlog. Xem
+> [handoff P01](docs/handoffs/P01.md), [local setup](docs/P01_LOCAL.md).
+
+> **Scope note P00:** Phần bên dưới giữ nguyên bối cảnh dài hạn/backlog,
+> không phải danh sách đã implemented. Scope thực thi hiện tại theo
 > [kế hoạch MVP 4 người / 3 tuần](docs/PHASE1_PLAN.md),
 > [15 API + 6 UI/OpenAPI](docs/api/phase1-contract.md),
-> [công khai các hợp đồng và bản chuyển đổi lược đồ ledger](docs/architecture/phase1-module-contracts.md),
+> [published contracts và migration ledger](docs/architecture/phase1-module-contracts.md),
 > [ADR 005](docs/adr/005-phase1-mvp-auth-frontend.md) và
 > [tiến độ](docs/phase1-progress.md). Kế hoạch này thay thế đề xuất phân công, lịch một
-> tháng, API/lifecycle và phạm vi mở rộng bên dưới cho MVP. Chỉ Identity, Disaster,
-> Reporting, Rescue và SPA cơ bản; Địa lý bán kính nằm trong Reporting bộ chuyển đổi.
-> Register, Resource/Alert, RescueRequest riêng, risk/priority, bản đồ, events và các API
-> ngoài E01–E15 là danh sách để sau. Không coi danh sách để sau sản phẩm mặc định là Pha 2 kiến trúc.
-> JWT bộ nhớ-only, no làm mới, chỉ CITIZEN/AUTHORITY, reload cần đăng nhập lại là thiết kế
-> dự kiến. RESPONDER/ADMIN vẫn giữ trong miền nghiệp vụ enum/tests, chưa dùng ở MVP.
+> tháng, API/lifecycle và scope mở rộng bên dưới cho MVP. Chỉ Identity, Disaster,
+> Reporting, Rescue và SPA cơ bản; Geo bán kính nằm trong Reporting adapter.
+> Register, Resource/Alert, RescueRequest riêng, risk/priority, map, events và các API
+> ngoài E01–E15 là backlog. Không coi backlog sản phẩm mặc định là Phase 2 kiến trúc.
+> JWT memory-only, no refresh, chỉ CITIZEN/AUTHORITY, reload cần login lại là thiết kế
+> dự kiến. RESPONDER/ADMIN vẫn giữ trong domain enum/tests, chưa dùng ở MVP.
 > Hiện có bootstrap + User/EmailAddress/Role/tests, chưa API nghiệp vụ/auth/frontend.
 > ADR 004 thực tế là đề xuất internal events; ADR 005 mới là MVP/auth/frontend.
 > Các số ADR/API mẫu bên dưới mang tính lịch sử, không cấp lại số đã dùng.
@@ -43,36 +44,36 @@
 > **Course:** Kiến trúc phần mềm
 > **Team size:** 4 thành viên
 > **Development window:** theo kế hoạch MVP duy nhất (3 tuần dự kiến)
-> **Purpose of this tệp:** Lưu đặc tả và định hướng phát triển dài hạn; phạm vi và khi chạy hiện tại theo các nguồn ở ghi chú đầu tệp.
+> **Purpose of this file:** Lưu đặc tả và định hướng phát triển dài hạn; scope và runtime hiện tại theo các nguồn ở ghi chú đầu file.
 
 ---
 
 ## 0. Nguyên tắc kỹ thuật
 
-Khi làm việc trong kho mã này, phải tuân thủ các nguyên tắc sau:
+Khi làm việc trong repository này, phải tuân thủ các nguyên tắc sau:
 
-1. **Không phá vỡ ranh giới mô-đun.** Không truy cập trực tiếp persistence/JPA entity/repository phần triển khai của mô-đun khác.
-2. **Miền nghiệp vụ tầng phải framework-independent.** Không import Spring Web, Spring Data, Hibernate/JPA hoặc cơ sở dữ liệu library vào miền nghiệp vụ.
-3. **Không biến project thành CRUD thuần túy.** Business quy tắc phải nằm trong miền/ứng dụng phù hợp.
-4. **Pha 1 là Nguyên khối theo mô-đun.** Không tự ý tách microservice.
-5. **Pha 1 không dùng RabbitMQ/Kafka/Redis làm phụ thuộc bắt buộc**, trừ khi yêu cầu được cập nhật rõ ràng. Event trong Pha 1 mặc định là internal/in-process miền nghiệp vụ event.
-6. Controller chỉ chịu trách nhiệm HTTP concerns: parse/validate yêu cầu, gọi ca sử dụng, bản đồ phản hồi.
-7. Tầng ứng dụng tầng điều phối các ca sử dụng; không chứa chi tiết HTTP hay persistence thư viện nền tảng.
-8. Hạ tầng implements ports/interfaces được định nghĩa ở phía trong.
-9. Ưu tiên phụ thuộc inversion: outer tầng phụ thuộc vào inner abstractions, không ngược lại.
-10. Mọi thay đổi quan trọng về kiến trúc phải giữ compatibility với mục tiêu đo hiệu năng Pha 1 → Pha 2.
-11. Không thêm công nghệ chỉ vì “production-like”. Mọi phụ thuộc mới cần có lý do.
-12. Khi yêu cầu chưa rõ, ưu tiên phần triển khai nhỏ nhất phù hợp kiến trúc hiện tại thay vì tự mở rộng phạm vi.
-13. Code mới phải có kiểm thử phù hợp với mức độ rủi ro của thay đổi.
-14. Không hard-mã nguồn bí mật, JWT bí mật, password, cơ sở dữ liệu thông tin xác thực hoặc environment-specific configuration.
+1. **Không phá vỡ module boundaries.** Không truy cập trực tiếp persistence/JPA entity/repository implementation của module khác.
+2. **Domain layer phải framework-independent.** Không import Spring Web, Spring Data, Hibernate/JPA hoặc database library vào domain.
+3. **Không biến project thành CRUD thuần túy.** Business rule phải nằm trong domain/application phù hợp.
+4. **Pha 1 là Modular Monolith.** Không tự ý tách microservice.
+5. **Pha 1 không dùng RabbitMQ/Kafka/Redis làm dependency bắt buộc**, trừ khi yêu cầu được cập nhật rõ ràng. Event trong Pha 1 mặc định là internal/in-process domain event.
+6. Controller chỉ chịu trách nhiệm HTTP concerns: parse/validate request, gọi use case, map response.
+7. Application layer orchestration use cases; không chứa chi tiết HTTP hay persistence framework.
+8. Infrastructure implements ports/interfaces được định nghĩa ở phía trong.
+9. Ưu tiên dependency inversion: outer layers phụ thuộc vào inner abstractions, không ngược lại.
+10. Mọi thay đổi quan trọng về architecture phải giữ compatibility với mục tiêu benchmark Pha 1 → Pha 2.
+11. Không thêm công nghệ chỉ vì “production-like”. Mọi dependency mới cần có lý do.
+12. Khi yêu cầu chưa rõ, ưu tiên implementation nhỏ nhất phù hợp architecture hiện tại thay vì tự mở rộng scope.
+13. Code mới phải có test phù hợp với mức độ rủi ro của thay đổi.
+14. Không hard-code secret, JWT secret, password, database credential hoặc environment-specific configuration.
 15. API errors phải dùng format thống nhất của project.
-16. Database lược đồ changes phải qua bản chuyển đổi lược đồ, không dựa vào auto lược đồ mutation trong môi trường chính.
+16. Database schema changes phải qua migration, không dựa vào auto schema mutation trong môi trường chính.
 
 ---
 
 # 1. Tổng quan dự án
 
-GDRN mô phỏng một nền tảng ứng dụng phía máy chủ quy mô lớn phục vụ điều phối ứng phó thảm họa.
+GDRN mô phỏng một nền tảng backend quy mô lớn phục vụ điều phối ứng phó thảm họa.
 
 Hệ thống hỗ trợ các nhóm nghiệp vụ chính:
 
@@ -105,14 +106,14 @@ Pha 1 sử dụng:
 
 - Java
 - Spring Boot
-- Nguyên khối theo mô-đun
-- Miền nghiệp vụ-Driven Design concepts
-- Clean / Hexagonal Kiến trúc
+- Modular Monolith
+- Domain-Driven Design concepts
+- Clean / Hexagonal Architecture
 - REST + JSON
 - Spring Security + JWT
 - PostgreSQL
 - PostGIS
-- Spring Data JPA / Hibernate ở hạ tầng tầng
+- Spring Data JPA / Hibernate ở infrastructure layer
 - Flyway
 - OpenAPI / Swagger
 - Docker / Docker Compose
@@ -122,18 +123,18 @@ Pha 1 sử dụng:
 Mục tiêu Pha 1:
 
 1. Có hệ thống chức năng hoàn chỉnh ở mức cơ bản.
-2. Có kiến trúc boundaries rõ ràng.
-3. Có số đo cơ sở performance cố định.
-4. Có thể xác định điểm nghẽn bằng đo hiệu năng.
+2. Có architecture boundaries rõ ràng.
+3. Có baseline performance cố định.
+4. Có thể xác định bottleneck bằng benchmark.
 5. Tạo cơ sở khoa học cho quyết định cải tiến Pha 2.
 
 ## Pha 2 — Các cải tiến dự kiến
 
-Pha 2 chưa được mặc định là phần triển khai bắt buộc. Chỉ áp dụng sau khi đánh giá Pha 1.
+Pha 2 chưa được mặc định là implementation bắt buộc. Chỉ áp dụng sau khi đánh giá Pha 1.
 
-Công nghệ/mẫu thiết kế dự kiến:
+Candidate technologies/patterns:
 
-- Event-Driven Kiến trúc
+- Event-Driven Architecture
 - RabbitMQ
 - Async workers
 - Redis caching
@@ -144,7 +145,7 @@ Công nghệ/mẫu thiết kế dự kiến:
 - Grafana
 - Selective service/worker extraction
 
-Không mặc định chuyển toàn bộ hệ thống sang vi dịch vụ.
+Không mặc định chuyển toàn bộ hệ thống sang microservices.
 
 ---
 
@@ -160,22 +161,22 @@ Client
 API Layer
   |
   v
-Tầng ứng dụng
+Application Layer
   |
   v
-Tầng miền
+Domain Layer
   ^
   |
 Ports / Interfaces
   ^
   |
-Tầng hạ tầng
+Infrastructure Layer
   |
   v
 PostgreSQL + PostGIS
 ```
 
-Dependency quy tắc:
+Dependency rule:
 
 ```text
 API -------------> Application -------> Domain
@@ -187,11 +188,11 @@ Domain -X-> PostgreSQL
 Domain -X-> HTTP
 ```
 
-Miền nghiệp vụ là trung tâm của hệ thống.
+Domain là trung tâm của hệ thống.
 
 ---
 
-# 4. Ranh giới nguyên khối theo mô-đun
+# 4. Ranh giới modular monolith
 
 Các bounded context/module chính:
 
@@ -207,9 +208,9 @@ gdrn
 └── shared
 ```
 
-Không dùng `shared` như nơi chứa mọi thứ. Chỉ đưa vào dùng chung những primitive/cross-cutting abstraction thật sự dùng chung và ổn định.
+Không dùng `shared` như nơi chứa mọi thứ. Chỉ đưa vào shared những primitive/cross-cutting abstraction thật sự dùng chung và ổn định.
 
-Mỗi business mô-đun nên có dạng:
+Mỗi business module nên có dạng:
 
 ```text
 <module>/
@@ -233,23 +234,23 @@ Mỗi business mô-đun nên có dạng:
     └── configuration/
 ```
 
-Tên package cụ thể có thể thay đổi nếu kho mã đã có convention tốt hơn, nhưng phụ thuộc direction không được thay đổi.
+Tên package cụ thể có thể thay đổi nếu repository đã có convention tốt hơn, nhưng dependency direction không được thay đổi.
 
 ---
 
-# 5. Trách nhiệm mô-đun
+# 5. Trách nhiệm module
 
 ## 5.1 Danh tính và quyền truy cập
 
-Trách nhiệm:
+Responsibilities:
 
 - User registration.
-- Đăng nhập.
+- Login.
 - JWT issuance/validation.
-- Role-based phân quyền.
+- Role-based authorization.
 - User identity.
 
-Initial vai trò:
+Initial roles:
 
 ```text
 CITIZEN
@@ -258,7 +259,7 @@ AUTHORITY
 ADMIN
 ```
 
-Bảo mật phải được xử lý tập trung qua Spring Security lọc chain/interceptor mechanism, không lặp xác thực logic trong bộ điều khiển.
+Security phải được xử lý tập trung qua Spring Security filter chain/interceptor mechanism, không lặp authentication logic trong controller.
 
 ---
 
@@ -275,7 +276,7 @@ DisasterStatus
 AffectedArea
 ```
 
-Vòng đời tham khảo:
+Lifecycle tham khảo:
 
 ```text
 DETECTED
@@ -289,14 +290,14 @@ CONTROLLED
 RESOLVED
 ```
 
-Quy tắc nghiệp vụ cần kiểm tra tính hợp lệ chuyển trạng thái hợp lệ. Không cho phép cập nhật trạng thái tùy ý nếu chuyển trạng thái không hợp lệ.
+Business rules cần validate transition hợp lệ. Không cho phép arbitrary status update nếu transition không hợp lệ.
 
-Trách nhiệm:
+Responsibilities:
 
-- Create thảm họa.
-- Verify thảm họa.
+- Create disaster.
+- Verify disaster.
 - Change severity.
-- Update vòng đời.
+- Update lifecycle.
 - Query active disasters.
 - Associate affected geographic area.
 
@@ -310,19 +311,19 @@ Concepts:
 IncidentReport
 ReportStatus
 Reporter
-Siêu dữ liệu minh chứng
+Evidence metadata
 GeoLocation
 ```
 
-Trách nhiệm:
+Responsibilities:
 
-- Người dân submits báo cáo.
-- Verify/reject báo cáo.
-- Detect basic trùng lặp báo cáo.
-- Associate báo cáo with known thảm họa when appropriate.
-- Produce internal miền nghiệp vụ event when relevant.
+- Citizen submits report.
+- Verify/reject report.
+- Detect basic duplicate reports.
+- Associate report with known disaster when appropriate.
+- Produce internal domain event when relevant.
 
-Example yêu cầu:
+Example request:
 
 ```json
 {
@@ -349,7 +350,7 @@ MissionStatus
 PriorityScore
 ```
 
-Vòng đời tham khảo:
+Lifecycle tham khảo:
 
 ```text
 PENDING
@@ -363,20 +364,20 @@ IN_PROGRESS
 RESCUED
 ```
 
-Luồng nghiệp vụ cốt lõi:
+Core business flow:
 
 ```text
 Rescue Request
       ↓
-Tính độ ưu tiên
+Priority Calculation
       ↓
 Candidate Teams
       ↓
-Tính khoảng cách
+Distance Calculation
       ↓
-Đối chiếu năng lực
+Capability Matching
       ↓
-Kiểm tra mức sẵn sàng
+Availability Check
       ↓
 Team Assignment
       ↓
@@ -391,7 +392,7 @@ Priority có thể xem xét:
 - Vulnerable people.
 - Geographic risk.
 
-Không hard-mã nguồn một công thức phức tạp nếu requirements chưa chốt; thiết kế để policy có thể thay đổi/test độc lập.
+Không hard-code một công thức phức tạp nếu requirements chưa chốt; thiết kế để policy có thể thay đổi/test độc lập.
 
 ---
 
@@ -408,7 +409,7 @@ PublishedAt
 ExpiresAt
 ```
 
-Trách nhiệm:
+Responsibilities:
 
 - Create alert.
 - Determine target area from supplied risk/disaster information.
@@ -416,7 +417,7 @@ Trách nhiệm:
 - Expire/cancel alert.
 - Query active alerts.
 
-Possible luồng:
+Possible flow:
 
 ```text
 Disaster / Risk
@@ -428,7 +429,7 @@ Emergency Alert
 Publish
 ```
 
-External SMS/email/push tích hợp is not bắt buộc in Pha 1. Simulation/logging is sufficient unless requirements change.
+External SMS/email/push integration is not required in Phase 1. Simulation/logging is sufficient unless requirements change.
 
 ---
 
@@ -445,7 +446,7 @@ Vehicle
 ResourceAllocation
 ```
 
-Các loại tài nguyên ban đầu:
+Initial resource types:
 
 - WATER
 - FOOD
@@ -455,15 +456,15 @@ Các loại tài nguyên ban đầu:
 - RESCUE_EQUIPMENT
 - SHELTER_CAPACITY
 
-Trách nhiệm:
+Responsibilities:
 
 - Register resource/inventory.
-- Query tình trạng sẵn sàng.
+- Query availability.
 - Allocate resources to disaster/mission/area.
 - Prevent invalid over-allocation.
 - Release/consume allocation as defined by business rules.
 
-Phân bổ tài nguyên phải có quy tắc nghiệp vụ thực tế, không chỉ thêm/đọc/sửa/xóa.
+Phân bổ tài nguyên cần có quy tắc domain thực tế, không chỉ thao tác CRUD.
 
 ---
 
@@ -481,7 +482,7 @@ AffectedArea
 RiskLevel
 ```
 
-Trách nhiệm:
+Responsibilities:
 
 - Distance queries.
 - Nearby rescue requests.
@@ -490,19 +491,19 @@ Trách nhiệm:
 - Spatial filtering.
 - Basic risk assessment policies.
 
-Ví dụ ca sử dụng:
+Example use case:
 
 ```text
-Tìm mọi yêu cầu cứu hộ trong bán kính 10 km từ tâm thảm họa.
+Tìm tất cả Rescue Request trong bán kính 10 km quanh tâm thảm họa.
 ```
 
-Truy vấn không gian nằm trong bộ chuyển đổi/kho dữ liệu hạ tầng; miền và ứng dụng nhận kết quả phù hợp với nghiệp vụ.
+Spatial query nằm trong adapter/repository của infrastructure; domain và application nhận kết quả phù hợp với nghiệp vụ.
 
 ---
 
-# 6. Quy tắc giao tiếp giữa mô-đun
+# 6. Quy tắc giao tiếp giữa module
 
-Mẫu bị cấm:
+Forbidden pattern:
 
 ```text
 RescueService
@@ -510,7 +511,7 @@ RescueService
 DisasterJpaRepository
 ```
 
-Cách tiếp cận ưu tiên:
+Preferred approaches:
 
 ```text
 Rescue Application
@@ -520,11 +521,11 @@ DisasterQueryPort / Published Application API
 Disaster Module
 ```
 
-hoặc internal miền/ứng dụng events khi temporal coupling không cần thiết.
+hoặc internal domain/application events khi temporal coupling không cần thiết.
 
-Không expose persistence thực thể như xuyên mô-đun hợp đồng.
+Không expose persistence entity như cross-module contract.
 
-DTO/hợp đồng xuyên mô-đun phải nhỏ và ổn định.
+Cross-module DTO/contracts phải nhỏ và ổn định.
 
 ---
 
@@ -532,7 +533,7 @@ DTO/hợp đồng xuyên mô-đun phải nhỏ và ổn định.
 
 Pha 1 có thể sử dụng internal/in-process events.
 
-Sự kiện dự kiến:
+Candidate events:
 
 ```text
 DisasterDetected
@@ -551,17 +552,17 @@ ResourceAllocated
 
 Pha 1 **không yêu cầu external broker**.
 
-Hành vi mặc định:
+Default behavior:
 
 ```text
-Thao tác miền
+Domain operation
     ↓
 Internal event
     ↓
-Bộ xử lý trong tiến trình
+In-process handler
 ```
 
-Nếu giao dịch semantics quan trọng, phần triển khai phải ghi rõ handler chạy trước/sau commit và có kiểm thử tương ứng.
+Nếu transaction semantics quan trọng, implementation phải ghi rõ handler chạy trước/sau commit và có test tương ứng.
 
 ---
 
@@ -638,24 +639,24 @@ GET /api/disasters/{id}/affected-resources
 GET /api/disasters/nearby
 ```
 
-API danh sách là số đo cơ sở, không phải yêu cầu phải implement tất cả ngay lập tức.
+API list là baseline, không phải yêu cầu phải implement tất cả ngay lập tức.
 
 ---
 
 # 9. Quy ước thiết kế API
 
 - JSON request/response.
-- RESTful tài nguyên naming.
+- RESTful resource naming.
 - Dùng plural nouns cho collection.
 - Không expose JPA entities trực tiếp.
-- Yêu cầu DTO và phản hồi DTO tách khỏi persistence model.
-- Kiểm tra tính hợp lệ errors phải trả phản hồi nhất quán.
-- Sử dụng trạng thái HTTP mã nguồn đúng semantics.
+- Request DTO và response DTO tách khỏi persistence model.
+- Validation errors phải trả response nhất quán.
+- Sử dụng HTTP status code đúng semantics.
 - Pagination cho collection có khả năng lớn.
 - Timestamp dùng ISO-8601.
 - API documentation phải xuất hiện trong OpenAPI/Swagger.
 
-Cấu trúc lỗi đề xuất:
+Suggested error shape:
 
 ```json
 {
@@ -667,13 +668,13 @@ Cấu trúc lỗi đề xuất:
 }
 ```
 
-Không leak stack trace/internal exception ra máy khách.
+Không leak stack trace/internal exception ra client.
 
 ---
 
 # 10. Bảo mật
 
-Kiến trúc xác thực:
+Authentication architecture:
 
 ```text
 HTTP Request
@@ -690,17 +691,17 @@ Controller
 Requirements:
 
 - Password phải hash bằng password encoder phù hợp.
-- JWT bí mật lấy từ environment/config bí mật.
+- JWT secret lấy từ environment/config secret.
 - Protected endpoints phải dùng centralized security.
 - Authorization theo role/use case.
-- Không tin người dùng ID từ yêu cầu nếu có thể lấy identity từ authenticated principal.
-- Không nhật ký password/token đầy đủ.
+- Không tin user ID từ request nếu có thể lấy identity từ authenticated principal.
+- Không log password/token đầy đủ.
 
-Yêu cầu tối thiểu của bài tập phải được đáp ứng:
+Minimum assignment requirement phải được đáp ứng:
 
-- Có đăng nhập.
-- Ít nhất một GET điểm cuối API yêu cầu xác thực.
-- Ít nhất một POST điểm cuối API yêu cầu xác thực.
+- Có login.
+- Ít nhất một GET endpoint yêu cầu authentication.
+- Ít nhất một POST endpoint yêu cầu authentication.
 
 ---
 
@@ -714,21 +715,21 @@ PostgreSQL + PostGIS
 
 Rules:
 
-- JPA/Hibernate chỉ thuộc hạ tầng.
-- Miền nghiệp vụ object không bắt buộc đồng nhất với JPA thực thể.
-- Mapping giữa persistence model và miền nghiệp vụ model ở hạ tầng.
+- JPA/Hibernate chỉ thuộc infrastructure.
+- Domain object không bắt buộc đồng nhất với JPA entity.
+- Mapping giữa persistence model và domain model ở infrastructure.
 - Schema changes qua Flyway.
-- Index dựa trên truy vấn patterns thực tế.
-- Địa lý columns sử dụng PostGIS type phù hợp.
-- Spatial index được cân nhắc cho truy vấn khoảng cách/khu vực.
+- Index dựa trên query patterns thực tế.
+- Geo columns sử dụng PostGIS type phù hợp.
+- Spatial index được cân nhắc cho query khoảng cách/khu vực.
 
-Không tối ưu premature; số đo cơ sở phải đo được trước khi tuning mạnh.
+Không tối ưu premature; baseline phải đo được trước khi tuning mạnh.
 
 ---
 
 # 12. Các nhóm dữ liệu dự kiến
 
-Không coi đây là lược đồ cuối cùng, nhưng các aggregate/table area có thể gồm:
+Không coi đây là schema cuối cùng, nhưng các aggregate/table area có thể gồm:
 
 ```text
 users
@@ -751,9 +752,9 @@ resource_allocations
 shelters
 ```
 
-Thông tin địa lý có thể nằm trực tiếp trong thực thể tổng hợp phù hợp hoặc qua ánh xạ giá trị/đối tượng tùy thiết kế.
+Geo information có thể nằm trực tiếp trong aggregate phù hợp hoặc qua value/object mapping tùy thiết kế.
 
-Không tạo generic mega-table cho mọi miền nghiệp vụ object.
+Không tạo generic mega-table cho mọi domain object.
 
 ---
 
@@ -763,17 +764,17 @@ Không tạo generic mega-table cho mọi miền nghiệp vụ object.
 
 Ưu tiên cho:
 
-- Status chuyển trạng thái.
+- Status transition.
 - Priority calculation.
 - Resource allocation rules.
 - Assignment policy.
-- Rủi ro policy.
+- Risk policy.
 
-Kiểm thử miền nghiệp vụ không cần Spring context nếu có thể.
+Domain tests không cần Spring context nếu có thể.
 
-## Kiểm thử tầng ứng dụng
+## Kiểm thử application layer
 
-Kiểm thử ca sử dụng điều phối bằng mock/fake các cổng khi phù hợp.
+Test use case orchestration bằng mock/fake ports khi phù hợp.
 
 ## Kiểm thử tích hợp
 
@@ -781,8 +782,8 @@ Sử dụng Testcontainers cho:
 
 - PostgreSQL.
 - PostGIS behavior.
-- Repository bộ chuyển đổi.
-- Security/API tích hợp quan trọng.
+- Repository adapters.
+- Security/API integration quan trọng.
 
 ## Kiểm thử API
 
@@ -790,35 +791,35 @@ Kiểm tra:
 
 - Authentication.
 - Authorization.
-- Kiểm tra tính hợp lệ.
+- Validation.
 - Status codes.
-- Response các hợp đồng.
+- Response contracts.
 
-Không chỉ kiểm thử happy đường dẫn.
+Không chỉ test happy path.
 
 ---
 
 # 14. Điều kiện hoàn tất tính năng
 
-Một tính năng chỉ được coi là hoàn thành khi phù hợp các mục liên quan:
+Một feature chỉ được coi là hoàn thành khi phù hợp các mục liên quan:
 
-- Domain/business quy tắc đã implement.
-- Mô-đun boundary không bị phá.
-- API hợp đồng rõ ràng.
-- Kiểm tra tính hợp lệ có xử lý.
-- Authorization đúng nếu điểm cuối API protected.
-- Lưu trữ bản chuyển đổi lược đồ có nếu lược đồ thay đổi.
-- Unit/integration kiểm thử cần thiết đã có.
+- Domain/business rule đã implement.
+- Module boundary không bị phá.
+- API contract rõ ràng.
+- Validation có xử lý.
+- Authorization đúng nếu endpoint protected.
+- Persistence migration có nếu schema thay đổi.
+- Unit/integration tests cần thiết đã có.
 - Swagger/OpenAPI cập nhật.
 - Dockerized environment vẫn chạy.
-- Không có bí mật hard-coded.
+- Không có secret hard-coded.
 - README/spec cập nhật nếu architecture/API thay đổi đáng kể.
 
 ---
 
 # 15. Pha 1 Luồng cơ sở
 
-Ví dụ synchronous báo cáo luồng:
+Ví dụ synchronous report flow:
 
 ```text
 POST /reports
@@ -827,20 +828,20 @@ Authenticate
       ↓
 Validate
       ↓
-Tạo báo cáo sự cố
+Create Incident Report
       ↓
 Risk Analysis
       ↓
 Associate / Update Disaster
       ↓
-Tạo cảnh báo nếu cần
+Generate Alert if needed
       ↓
 Persist
       ↓
 HTTP Response
 ```
 
-Pha 1 cố ý giữ nhiều luồng synchronous để tạo số đo cơ sở dễ hiểu và đo hiệu năng.
+Pha 1 cố ý giữ nhiều flow synchronous để tạo baseline dễ hiểu và benchmark.
 
 Không artificial delay chỉ để làm Pha 1 trông chậm.
 
@@ -850,7 +851,7 @@ Không artificial delay chỉ để làm Pha 1 trông chậm.
 
 Benchmark phải chạy trên cấu hình phần cứng cố định, ưu tiên Kaggle CPU theo yêu cầu môn học.
 
-Kịch bản tải dự kiến:
+Candidate workloads:
 
 ```text
 100 concurrent users
@@ -860,7 +861,7 @@ Kịch bản tải dự kiến:
 2000 concurrent users
 ```
 
-API dự kiến:
+Candidate endpoints:
 
 ```text
 GET  /api/disasters
@@ -871,17 +872,17 @@ GET  /api/disasters/{id}/nearby-rescue-requests
 
 Metrics:
 
-- Requests/sec / thông lượng.
-- Average độ trễ.
+- Requests/sec / throughput.
+- Average latency.
 - P50.
 - P95.
 - P99.
-- Tỷ lệ lỗi.
+- Error rate.
 - CPU.
 - Memory.
-- Database truy vấn độ trễ.
+- Database query latency.
 
-Benchmark tập lệnh phải được quản lý phiên bản.
+Benchmark scripts phải version-controlled.
 
 ---
 
@@ -893,13 +894,13 @@ Mapping ví dụ:
 
 | Observed problem | Candidate improvement |
 |---|---|
-| Read-heavy điểm cuối API gây DB load cao | Redis bộ nhớ đệm |
+| Read-heavy endpoint gây DB load cao | Redis cache |
 | Long synchronous side effects | RabbitMQ + async worker |
-| Burst traffic làm yêu cầu timeout | Queue / async processing |
+| Burst traffic làm request timeout | Queue / async processing |
 | Notification failure làm mất công việc | Retry + DLQ |
-| Duplicate event processing | Idempotent bên sử dụng |
-| Khó quan sát điểm nghẽn | Prometheus + Grafana |
-| Một kịch bản tải có scaling cấu hình khác core | Selective worker/service extraction |
+| Duplicate event processing | Idempotent consumer |
+| Khó quan sát bottleneck | Prometheus + Grafana |
+| Một workload có scaling profile khác core | Selective worker/service extraction |
 
 Mọi improvement cần ghi:
 
@@ -925,7 +926,7 @@ Mọi improvement cần ghi:
                            v
                 +---------------------+
                 |      GDRN Core      |
-                |  Nguyên khối theo mô-đun   |
+                |  Modular Monolith   |
                 +----------+----------+
                            |
               +------------+-------------+
@@ -975,7 +976,7 @@ Các vấn đề phải cân nhắc:
 - Eventual consistency.
 - Transaction boundary giữa DB và broker.
 
-Không tuyên bố exactly-once nếu phần triển khai không thực sự bảo đảm.
+Không tuyên bố exactly-once nếu implementation không thực sự bảo đảm.
 
 ---
 
@@ -993,48 +994,48 @@ Grafana
 
 Metrics có thể gồm:
 
-- Yêu cầu thông lượng.
-- HTTP độ trễ.
-- Tỷ lệ lỗi.
-- JVM bộ nhớ.
+- Request throughput.
+- HTTP latency.
+- Error rate.
+- JVM memory.
 - CPU.
 - DB pool usage.
-- Query độ trễ.
-- RabbitMQ hàng đợi depth.
+- Query latency.
+- RabbitMQ queue depth.
 - Worker processing duration.
-- Redis bộ nhớ đệm hit/miss.
+- Redis cache hit/miss.
 
 ---
 
 # 21–22. Phân công và lịch triển khai
 
 Chỉ dùng [kế hoạch và 16 nhiệm vụ MVP](docs/PHASE1_PLAN.md).
-Đề xuất phân công mô-đun và lịch một tháng trước đây đã được thay thế; không dùng
-context dài hạn để cấp công việc, đổi owner hay mở rộng phạm vi Pha 1.
+Đề xuất phân công module và lịch một tháng trước đây đã được thay thế; không dùng
+context dài hạn để cấp task, đổi owner hay mở rộng scope Pha 1.
 
 ---
 
 # 23. Quy ước viết mã
 
-Trừ khi cấu hình kho mã quy định khác:
+Unless repository configuration specifies otherwise:
 
 - Java naming conventions chuẩn.
-- Constructor injection; tránh trường injection.
-- Prefer bất biến value objects where practical.
-- Không dùng static global trạng thái cho business logic.
-- Không đặt business logic trong bộ điều khiển.
-- Không đặt business logic quan trọng trong JPA thực thể nếu miền nghiệp vụ model tách biệt.
-- Không trả `null` tùy tiện nếu miền nghiệp vụ semantics cần type rõ ràng.
+- Constructor injection; tránh field injection.
+- Prefer immutable value objects where practical.
+- Không dùng static global state cho business logic.
+- Không đặt business logic trong controller.
+- Không đặt business logic quan trọng trong JPA entity nếu domain model tách biệt.
+- Không trả `null` tùy tiện nếu domain semantics cần type rõ ràng.
 - Exception types phải có ý nghĩa domain/application.
-- Mapping mã nguồn rõ ràng hơn magic reflection khi ánh xạ ảnh hưởng correctness.
+- Mapping code rõ ràng hơn magic reflection khi mapping ảnh hưởng correctness.
 - Method/class nên có responsibility hẹp.
-- Comment giải thích **why**, không lặp lại **what** mà mã nguồn đã thể hiện.
+- Comment giải thích **why**, không lặp lại **what** mà code đã thể hiện.
 
 ---
 
 # 24. Dấu hiệu kiến trúc cần loại bỏ
 
-Các dấu hiệu cần xử lý trong quá trình rà soát:
+Các dấu hiệu cần xử lý trong quá trình review:
 
 ```text
 Controller -> JpaRepository trực tiếp
@@ -1093,17 +1094,17 @@ CONTRIBUTING.md
     /benchmark
 ```
 
-ADR đề xuất:
+Recommended ADRs:
 
 ```text
-ADR-001: Use Nguyên khối theo mô-đun for Phase 1
+ADR-001: Use Modular Monolith for Phase 1
 ADR-002: Use Clean/Hexagonal Architecture
 ADR-003: Use PostgreSQL + PostGIS
 ADR-004: Use JWT Authentication
-ADR-005: Sự kiện miền nội bộ in Phase 1
+ADR-005: Internal Domain Events in Phase 1
 ```
 
-Pha 2 tạo ADR mới dựa trên đo hiệu năng thay vì sửa lịch sử ADR cũ.
+Pha 2 tạo ADR mới dựa trên benchmark thay vì sửa lịch sử ADR cũ.
 
 ---
 
@@ -1113,15 +1114,15 @@ Các quality attributes trọng tâm:
 
 ## Khả năng bảo trì
 
-Đạt qua ranh giới mô-đun, phụ thuộc quy tắc, miền nghiệp vụ isolation và kiểm thử.
+Đạt qua module boundaries, dependency rules, domain isolation và tests.
 
 ## Khả năng sửa đổi
 
-Có thể thêm thảm họa type, risk policy hoặc phân công policy mà không sửa toàn bộ hệ thống.
+Có thể thêm disaster type, risk policy hoặc assignment policy mà không sửa toàn bộ hệ thống.
 
 ## Hiệu năng
 
-Đo độ trễ và thông lượng bằng load kiểm thử.
+Đo latency và throughput bằng load test.
 
 ## Khả năng mở rộng
 
@@ -1129,11 +1130,11 @@ Có thể thêm thảm họa type, risk policy hoặc phân công policy mà kh�
 
 ## Độ tin cậy
 
-Pha 2 có thể đánh giá thử lại, DLQ, message loss/duplication và failure isolation.
+Pha 2 có thể đánh giá retry, DLQ, message loss/duplication và failure isolation.
 
 ## Bảo mật
 
-Authentication, phân quyền và bí mật management.
+Authentication, authorization và secret management.
 
 Không cố tối ưu tất cả quality attributes cùng lúc. Mỗi quyết định phải ghi rõ trade-off.
 
@@ -1150,39 +1151,39 @@ Pha 1 tối thiểu phải đáp ứng đề bài môn học:
 - Có DELETE.
 - Có OpenAPI/Swagger.
 - Phân tầng API → Business/Application/Domain → Data Access.
-- Business/domain không phụ thuộc web thư viện nền tảng hoặc DB library.
+- Business/domain không phụ thuộc web framework hoặc DB library.
 - Repository/Data Access Layer sử dụng ORM/data mapper.
-- Có đăng nhập.
-- Có protected GET điểm cuối API.
-- Có protected POST điểm cuối API.
+- Có login.
+- Có protected GET endpoint.
+- Có protected POST endpoint.
 - Authentication qua filter/middleware/interceptor.
 - Dockerized.
-- Public GitHub kho mã.
-- README mô tả kiến trúc và specification.
+- Public GitHub repository.
+- README mô tả architecture và specification.
 - Commit history có ý nghĩa.
 - Có load testing trên Kaggle CPU.
 
-Ngoài minimum tiêu chí đánh giá, GDRN hướng tới ranh giới mô-đun, PostGIS, miền nghiệp vụ logic và đo hiệu năng đủ rõ để phục vụ Pha 2.
+Ngoài minimum rubric, GDRN hướng tới module boundaries, PostGIS, domain logic và benchmark đủ rõ để phục vụ Pha 2.
 
 ---
 
 # 28. Phạm vi chưa thực hiện ban đầu
 
-Để kiểm soát phạm vi Pha 1, mặc định **không** triển khai:
+Để kiểm soát scope Pha 1, mặc định **không** triển khai:
 
-- Đầy đủ vi dịch vụ.
+- Full microservices.
 - Kubernetes.
 - Kafka cluster.
-- Real satellite tích hợp.
+- Real satellite integration.
 - Real government emergency APIs.
-- Real SMS billing/provider tích hợp.
-- Machine-learning thảm họa prediction.
-- Complex giao diện.
+- Real SMS billing/provider integration.
+- Machine-learning disaster prediction.
+- Complex frontend.
 - Multi-region deployment.
 - Event sourcing.
-- CQRS hạ tầng phức tạp.
+- CQRS infrastructure phức tạp.
 
-Các mục này chỉ được thêm khi nhóm chủ động thay đổi phạm vi và có đủ thời gian/lý do.
+Các mục này chỉ được thêm khi nhóm chủ động thay đổi scope và có đủ thời gian/lý do.
 
 ---
 
@@ -1191,42 +1192,42 @@ Các mục này chỉ được thêm khi nhóm chủ động thay đổi phạm 
 ```text
 PHASE 1
 
-Nguyên khối theo mô-đun
+Modular Monolith
       +
 DDD
       +
-Kiến trúc sạch / lục giác
+Clean / Hexagonal Architecture
       +
-Sự kiện miền nội bộ
+Internal Domain Events
       +
 PostgreSQL / PostGIS
       |
       v
-Kiểm thử chức năng
+Functional Tests
       |
       v
 Load Test / Profiling
       |
       v
-Điểm nghẽn quan sát được
+Observed Bottlenecks
       |
       v
-Quyết định kiến trúc
+Architecture Decisions
       |
       v
 PHASE 2
 
-Cải tiến có chọn lọc
+Selective Improvements
 (Event-driven / RabbitMQ / Redis / Workers / Observability)
       |
       v
 Benchmark Again
       |
       v
-So sánh thuộc tính chất lượng và đánh đổi
+Compare Quality Attributes + Trade-offs
 ```
 
-**Principle:** Không xây kiến trúc phức tạp trước rồi tìm lý do biện minh sau. Pha 1 tạo số đo cơ sở; Pha 2 thay đổi kiến trúc dựa trên bằng chứng.
+**Principle:** Không xây kiến trúc phức tạp trước rồi tìm lý do biện minh sau. Pha 1 tạo baseline; Pha 2 thay đổi kiến trúc dựa trên evidence.
 
 ---
 
@@ -1234,18 +1235,18 @@ So sánh thuộc tính chất lượng và đánh đổi
 
 Trước khi triển khai tính năng, cần kiểm tra:
 
-1. Feature thuộc ngữ cảnh nghiệp vụ nào?
-2. Business quy tắc thuộc miền nghiệp vụ hay tầng ứng dụng?
-3. Input/output cổng nào cần thiết?
-4. Có đang tạo phụ thuộc từ inner tầng ra outer tầng không?
-5. Có đang truy cập mô-đun khác qua phần triển khai chi tiết không?
+1. Feature thuộc bounded context nào?
+2. Business rule thuộc domain hay application?
+3. Input/output port nào cần thiết?
+4. Có đang tạo dependency từ inner layer ra outer layer không?
+5. Có đang truy cập module khác qua implementation detail không?
 6. Endpoint cần authentication/authorization gì?
-7. Có bản chuyển đổi lược đồ không?
-8. Cần kiểm thử đơn vị hay kiểm thử tích hợp nào?
+7. Có schema migration không?
+8. Cần unit test hay integration test nào?
 9. Thay đổi có ảnh hưởng OpenAPI không?
-10. Thay đổi có làm sai số đo cơ sở đo hiệu năng hoặc vô tình đưa giải pháp Pha 2 vào Pha 1 không?
+10. Thay đổi có làm sai baseline benchmark hoặc vô tình đưa giải pháp Pha 2 vào Pha 1 không?
 
-Nếu một công việc yêu cầu vi phạm các quy tắc trên, không âm thầm làm sai architecture. Hãy chỉ rõ xung đột và đề xuất phương án phù hợp với kiến trúc hiện tại.
+Nếu một task yêu cầu vi phạm các rule trên, không âm thầm làm sai architecture. Hãy chỉ rõ conflict và đề xuất phương án phù hợp với kiến trúc hiện tại.
 
 ---
 
@@ -1257,9 +1258,9 @@ Nếu một công việc yêu cầu vi phạm các quy tắc trên, không âm t
 
 ```text
 Java + Spring Boot
-Nguyên khối theo mô-đun
+Modular Monolith
 DDD
-Kiến trúc sạch / lục giác
+Clean / Hexagonal Architecture
 Spring Security + JWT
 PostgreSQL + PostGIS
 Flyway
@@ -1272,13 +1273,13 @@ k6
 ### Các phương án Pha 2
 
 ```text
-Kiến trúc hướng sự kiện
+Event-Driven Architecture
 RabbitMQ
-Tiến trình xử lý bất đồng bộ
+Async Workers
 Redis
-Thử lại / Hàng đợi lỗi / Tính lũy đẳng
+Retry / DLQ / Idempotency
 Prometheus + Grafana
-Tách dịch vụ có chọn lọc
+Selective service extraction
 ```
 
-Chất lượng kiến trúc quan trọng hơn số dòng mã. Giữ ranh giới miền, tạo số đo cơ sở và cải tiến tiếp theo dựa trên bằng chứng.
+Chất lượng kiến trúc quan trọng hơn số dòng code. Giữ ranh giới domain, đo baseline và chỉ cải tiến tiếp khi có bằng chứng.
