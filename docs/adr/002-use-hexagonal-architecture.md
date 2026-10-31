@@ -4,13 +4,13 @@
 Đã chấp thuận.
 
 ## Bối cảnh
-Quy tắc nghiệp vụ phải kiểm thử được mà không phụ thuộc HTTP hay thư viện lưu trữ; thay đổi hạ tầng không được đưa kiểu dữ liệu của thư viện vào miền nghiệp vụ.
+Quy tắc nghiệp vụ phải kiểm thử được mà không phụ thuộc HTTP hay thư viện lưu trữ; thay đổi hạ tầng không được đưa kiểu dữ liệu của thư viện vào domain.
 
 ## Quyết định
-Quan hệ phụ thuộc hướng vào trong. API gọi ca sử dụng ở tầng ứng dụng; miền nghiệp vụ là Java thuần. Tầng hạ tầng hiện thực các cổng của ứng dụng/miền nghiệp vụ và ánh xạ mô hình lưu trữ. Chỉ tạo lớp trừu tượng khi có yêu cầu cụ thể. ArchUnit kiểm tra các quy tắc cấu trúc.
+Quan hệ phụ thuộc hướng vào trong. API gọi ca sử dụng ở application layer; domain là Java thuần. Tầng hạ tầng hiện thực các cổng của ứng dụng/domain và ánh xạ mô hình lưu trữ. Chỉ tạo lớp trừu tượng khi có yêu cầu cụ thể. ArchUnit kiểm tra các quy tắc cấu trúc.
 
 ## Phương án đã cân nhắc
-- Bộ điều khiển gọi thẳng Spring Data: không đáp ứng yêu cầu ranh giới.
+- Controller gọi thẳng Spring Data: không đáp ứng yêu cầu ranh giới.
 - Gắn chú thích của thư viện lên đối tượng miền: giảm ánh xạ nhưng buộc miền phụ thuộc lưu trữ.
 - Lớp cơ sở tổng quát dự phòng: tăng trừu tượng khi chưa có ca sử dụng.
 

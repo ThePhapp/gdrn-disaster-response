@@ -1,7 +1,7 @@
 # Bằng chứng kiểm thử hiệu năng đầy đủ GDRN D3
 
 - Tác vụ Kaggle: [thphap/gdrn-d3-server-cpu/4](https://www.kaggle.com/code/thphap/gdrn-d3-server-cpu)
-- Bộ dữ liệu môi trường chạy: [thphap/gdrn-d3-offline-runtime-v2](https://www.kaggle.com/datasets/thphap/gdrn-d3-offline-runtime-v2)
+- Dataset môi trường chạy: [thphap/gdrn-d3-offline-runtime-v2](https://www.kaggle.com/datasets/thphap/gdrn-d3-offline-runtime-v2)
 - Commit mã nguồn: `2545bba2da7ec26830f7372369f05a6186876059`
 - Cấu hình: `full`, 1.000 báo cáo, hạt giống `20261024`
 - Ma trận: 4 kịch bản × 4 mức VU (1/10/50/100) × 3 lần lặp = **48/48 lượt**
@@ -12,7 +12,7 @@
 
 | Kiểm tra | Kết quả |
 |---|---|
-| Trạng thái bản kê | `complete` |
+| Trạng thái manifest | `complete` |
 | Mã thoát các lượt | Tất cả `0` |
 | Dọn dẹp | `complete` |
 | Số đo tài nguyên | Có ở mọi lượt |
@@ -21,7 +21,7 @@
 
 ## Tổng hợp hiệu năng
 
-Mỗi ô là trung bình ba lần lặp theo kịch bản/mức VU. Thông lượng là yêu cầu nghiệp vụ mỗi giây; độ trễ là p95 của API, tính bằng mili giây.
+Mỗi ô là trung bình ba lần lặp theo kịch bản/mức VU. Throughput là yêu cầu nghiệp vụ mỗi giây; latency là p95 của API, tính bằng mili giây.
 
 | Kịch bản tải | 1 VU | 10 VU | 50 VU | 100 VU |
 |---|---:|---:|---:|---:|
@@ -30,7 +30,7 @@ Mỗi ô là trung bình ba lần lặp theo kịch bản/mức VU. Thông lư�
 | `read-radius` | 124.29 req/s, 6.63 ms | 353.07 req/s, 34.84 ms | 372.29 req/s, 245.73 ms | 374.24 req/s, 514.22 ms |
 | `mixed` | 177.20 req/s, 10.88 ms | 427.61 req/s, 69.65 ms | 446.36 req/s, 252.47 ms | 447.03 req/s, 521.66 ms |
 
-Tổng 48 lượt có 1.675.588 yêu cầu nghiệp vụ, tỷ lệ lỗi 0%. Ở 100 VU, thông lượng ghi tiếp tục tăng, đọc phân trang chững lại, còn đọc bán kính/hỗn hợp có độ trễ cao hơn. Mẫu kết quả gợi ý bão hòa tài nguyên dùng chung; cần đo sâu để xác định điểm nghẽn.
+Tổng 48 lượt có 1.675.588 yêu cầu nghiệp vụ, tỷ lệ lỗi 0%. Ở 100 VU, throughput của `write` tiếp tục tăng, `read-page` chững lại, còn `read-radius` và `mixed` có latency cao hơn. Mẫu kết quả gợi ý bão hòa tài nguyên dùng chung; cần đo sâu để xác định điểm nghẽn.
 
 ## Môi trường chạy
 

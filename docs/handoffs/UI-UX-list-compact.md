@@ -5,7 +5,7 @@ Nền: `main` tại `9b49b76`.
 
 ## Phạm vi
 
-Thu gọn bảng danh sách dài trên màn hình báo cáo/cứu hộ. Chỉ sửa CSS tính năng; giữ định tuyến, hợp đồng API, tải dữ liệu và nghiệp vụ.
+Thu gọn bảng danh sách dài trên màn hình báo cáo/cứu hộ. Chỉ sửa CSS tính năng; giữ routing, hợp đồng API, tải dữ liệu và nghiệp vụ.
 
 ## Đã triển khai
 

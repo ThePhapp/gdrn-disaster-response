@@ -1,21 +1,21 @@
 # Kiến trúc hệ thống GDRN
 
-Tài liệu này mô tả kiến trúc tổng thể của hệ thống **Global Disaster Response Network (GDRN)** theo mô hình **C4 (Context, Container, Component)**, kết hợp các nguyên lý **Miền nghiệp vụ-Driven Design (DDD)** và **Hexagonal / Clean Kiến trúc**.
+Tài liệu này mô tả kiến trúc tổng thể của hệ thống **Global Disaster Response Network (GDRN)** theo mô hình **C4 (Context, Container, Component)**, kết hợp các nguyên lý **Domain-Driven Design (DDD)** và **Hexagonal / Clean Architecture**.
 
 ---
 
 ## 1. Tổng quan và Hiện trạng Kiến trúc Pha 1
 
-GDRN là hệ thống mô phỏng điều phối cứu trợ và ứng phó thảm họa thiên tai, phục vụ mục tiêu học thuật và nghiên cứu kiến trúc phần mềm. Đối chiếu mã nguồn tại `main 2ddf9d0`: MVP và phần mở rộng đã có mã nguồn; kết quả kiểm tra và giới hạn triển khai được ghi riêng trong [biên bản rà soát](../PHASE1_REVIEW.md). Phạm vi hiện có:
+GDRN là hệ thống mô phỏng điều phối cứu trợ và ứng phó thảm họa thiên tai, phục vụ mục tiêu học thuật và nghiên cứu kiến trúc phần mềm. Đối chiếu mã nguồn tại `main 2ddf9d0`: MVP và phần mở rộng đã có code; kết quả kiểm tra và giới hạn triển khai được ghi riêng trong [biên bản rà soát](../PHASE1_REVIEW.md). Phạm vi hiện có:
 
-- **Kiến trúc phân rã**: Đơn ứng dụng **Nguyên khối theo mô-đun** (Java 21 / Spring Boot 3.5) đóng gói trong một tiến trình duy nhất, kết hợp cơ sở dữ liệu **PostgreSQL 16 + PostGIS 3.5**.
+- **Kiến trúc phân rã**: Đơn ứng dụng **Modular Monolith** (Java 21 / Spring Boot 3.5) đóng gói trong một tiến trình duy nhất, kết hợp cơ sở dữ liệu **PostgreSQL 16 + PostGIS 3.5**.
 - **Giao diện người dùng**: Ứng dụng đơn trang **SPA** (React 19.3.0 / TypeScript / Vite / Vanilla CSS Design Tokens) phục vụ qua Nginx container với reverse proxy `/api`.
 - **Hệ thống API nghiệp vụ**: Hoàn thành 20 endpoints nghiệp vụ (E01–E20), bao gồm Identity (E01–E02), Disaster (E03–E06), Reporting (E07–E11), Rescue (E12–E15), Dashboard (E16) và Photo Attachments (E17–E20).
-- **Hệ thống màn hình**: 7 màn hình hoàn chỉnh (S01 Đăng nhập, S02 Gửi báo cáo, S03 Báo cáo của tôi, S04 Điều phối duyệt báo cáo, S05 Quản lý thảm họa, S06 Phân công cứu hộ, S07 Dashboard thống kê).
-- **Cơ sở dữ liệu & Không gian**: Quản lý tiến hóa lược đồ qua 7 bản bản chuyển đổi lược đồ Flyway (V1–V7). Xử lý vị trí không gian địa lý WGS84 (SRID 4326) với PostGIS GiST index và JDBC Data Mapper.
-- **Bảo mật & Phiên làm việc**: Xác thực không lưu trạng thái Bearer JWT (HS256), phân quyền dựa trên vai trò `CITIZEN` / `AUTHORITY`, lưu trữ token trong `sessionStorage` phạm vi tab trình duyệt, bảo vệ mặc định từ chối trên toàn bộ điểm cuối API.
-- **Chống xung đột & Concurrency**: Bảo vệ toàn vẹn bằng nguyên tử conditional updates, chỉ mục duy nhất và chỉ mục duy nhất có điều kiện chống tranh chấp condition ở tầng cơ sở dữ liệu.
-- **Đo lường & Kiểm chuẩn**: Bộ công cụ k6 có số đo cục bộ cho kịch bản tải đọc/ghi; notebook Kaggle mới là kiểm tra môi trường, chưa xác nhận máy chủ trên Kaggle.
+- **Hệ thống màn hình**: 7 màn hình hoàn chỉnh (S01 Login, S02 Gửi báo cáo, S03 Báo cáo của tôi, S04 Điều phối duyệt báo cáo, S05 Quản lý thảm họa, S06 Phân công cứu hộ, S07 Dashboard thống kê).
+- **Cơ sở dữ liệu & Không gian**: Quản lý tiến hóa lược đồ qua 7 bản migration Flyway (V1–V7). Xử lý vị trí không gian địa lý WGS84 (SRID 4326) với PostGIS GiST index và JDBC Data Mapper.
+- **Bảo mật & Phiên làm việc**: Xác thực stateless Bearer JWT (HS256), phân quyền dựa trên vai trò `CITIZEN` / `AUTHORITY`, lưu trữ token trong `sessionStorage` phạm vi tab trình duyệt, bảo vệ default-deny trên toàn bộ endpoint.
+- **Chống xung đột & Concurrency**: Bảo vệ toàn vẹn bằng atomic conditional updates, unique index và partial unique index chống race condition ở tầng database.
+- **Đo lường & Kiểm chuẩn**: k6 đã chạy đủ 48/48 lượt trên Kaggle CPU; backend, PostGIS và k6 cùng chạy trên máy Kaggle. Xem [bằng chứng đầy đủ](../benchmark/evidence/kaggle-full-v4/REPORT.md).
 
 ---
 
@@ -50,9 +50,9 @@ flowchart TD
 
 ---
 
-## 3. Mô hình C4 — Cấp độ 2: Sơ đồ Thùng chứa
+## 3. Mô hình C4 — Cấp độ 2: Sơ đồ Container
 
-Sơ đồ Container phân rã hệ thống GDRN thành các thành phần triển khai (containers) ở mức kiến trúc phần mềm, bao gồm SPA Client, Ứng dụng Ứng dụng phía máy chủ Spring Boot, Cơ sở dữ liệu quan hệ/không gian và Vùng lưu trữ tệp tin riêng tư.
+Sơ đồ Container phân rã hệ thống GDRN thành các thành phần triển khai (containers) ở mức kiến trúc phần mềm, bao gồm SPA Client, Ứng dụng Backend Spring Boot, Cơ sở dữ liệu quan hệ/không gian và Vùng lưu trữ tệp tin riêng tư.
 
 ```mermaid
 flowchart TD
@@ -93,7 +93,7 @@ flowchart TD
 
 ## 4. Mô hình C4 — Cấp độ 3: Sơ đồ Thành phần
 
-Sơ đồ Component bóc tách bên trong khối **Ứng dụng phía máy chủ Spring Boot Tầng ứng dụng (Nguyên khối theo mô-đun)** thành các mô-đun nghiệp vụ ngữ cảnh nghiệp vụ, các lớp kiến trúc lục giác (**Hexagonal / Clean Kiến trúc**) và các luồng giao tiếp thông qua **Published Contracts**:
+Sơ đồ Component bóc tách bên trong khối **Backend Spring Boot Application (Modular Monolith)** thành các module nghiệp vụ bounded context, các lớp kiến trúc lục giác (**Hexagonal / Clean Architecture**) và các luồng giao tiếp thông qua **Published Contracts**:
 
 ```mermaid
 flowchart TD
@@ -137,15 +137,16 @@ flowchart TD
 ```
 
 Mũi tên thể hiện phụ thuộc mã nguồn/contract; nét đứt là hiện thực interface,
-không phải luồng xử lý HTTP. Spring configuration nối services với bộ chuyển đổi lúc
-khởi tạo. `shared` giữ technical concerns; lọc security áp dụng trước bộ điều khiển.
+không phải luồng xử lý HTTP. Spring configuration nối services với adapters lúc
+khởi tạo. `shared` giữ technical concerns; filter security áp dụng trước controller.
+
 
 ---
 
 ## 5. Nguyên lý Thiết kế và Quy tắc Kiến trúc
 
 ### 5.1. Kiến trúc Lục giác
-Mỗi mô-đun nghiệp vụ tuân thủ nghiêm ngặt nguyên lý phụ thuộc hướng tâm (**Dependencies point inward**):
+Mỗi module nghiệp vụ tuân thủ nghiêm ngặt nguyên lý phụ thuộc hướng tâm (**Dependencies point inward**):
 
 ```text
 API (Controllers, DTOs)
@@ -155,57 +156,57 @@ Infrastructure (Persistence, Adapters, Spring Security, External Storage)
   └──> Implements Application & Domain Ports
 ```
 
-- **Miền nghiệp vụ độc lập tuyệt đối**: Viết hoàn toàn bằng Java thuần (POJO), không chứa bất kỳ annotation hay import nào từ Spring Thư viện nền tảng, Jakarta Lưu trữ (JPA), Jackson JSON hay PostgreSQL/PostGIS. Toàn bộ quy tắc tính hợp lệ và biến đổi trạng thái (Invariants) được thực thi trong Miền nghiệp vụ.
-- **Tầng ứng dụng Port / Adapter**: Mọi giao tiếp với thế giới bên ngoài (cơ sở dữ liệu, lưu trữ tệp, xác thực token) đều thông qua Interface (Port) định nghĩa ở tầng Tầng ứng dụng. Tầng Hạ tầng cung cấp Adapter hiện thực các Interface này.
-- **Kiểm soát bằng ArchUnit**: Bộ kiểm tra kiến trúc tự động (`ArchitectureTests`) xác thực tính độc lập của Miền nghiệp vụ, ngăn chặn bộ điều khiển truy cập trực tiếp kho mã và cấm rò rỉ cơ sở hạ tầng giữa các mô-đun.
+- **Domain độc lập tuyệt đối**: Viết hoàn toàn bằng Java thuần (POJO), không chứa bất kỳ annotation hay import nào từ Spring Framework, Jakarta Persistence (JPA), Jackson JSON hay PostgreSQL/PostGIS. Toàn bộ quy tắc tính hợp lệ và biến đổi trạng thái (Invariants) được thực thi trong Domain.
+- **Application Port / Adapter**: Mọi giao tiếp với thế giới bên ngoài (cơ sở dữ liệu, lưu trữ tệp, xác thực token) đều thông qua Interface (Port) định nghĩa ở tầng Application. Tầng Infrastructure cung cấp Adapter hiện thực các Interface này.
+- **Kiểm soát bằng ArchUnit**: Bộ kiểm tra kiến trúc tự động (`ArchitectureTests`) xác thực tính độc lập của Domain, ngăn chặn controller truy cập trực tiếp repository và cấm rò rỉ cơ sở hạ tầng giữa các module.
 
-### 5.2. Giao tiếp liên Mô-đun và Ranh giới Dữ liệu
-Dự án áp dụng mô hình **Nguyên khối theo mô-đun** chặt chẽ, không biến tướng thành "Distributed Monolith" hoặc Microservices phức tạp không cần thiết:
+### 5.2. Giao tiếp liên Module và Ranh giới Dữ liệu
+Dự án áp dụng mô hình **Modular Monolith** chặt chẽ, không biến tướng thành "Distributed Monolith" hoặc Microservices phức tạp không cần thiết:
 
 1. **Chiều phụ thuộc đơn hướng**:
    $$\text{Rescue} \longrightarrow \text{Reporting} \longrightarrow \text{Disaster}$$
    $$\text{Dashboard} \longrightarrow \text{Reporting} \quad \text{và} \quad \text{Dashboard} \longrightarrow \text{Rescue}$$
-2. **Không join SQL hoặc liên kết JPA xuyên mô-đun**:
-   - Mỗi mô-đun sở hữu toàn bộ bảng và dữ liệu của riêng mình. Không tồn tại Khóa ngoại vật lý xuyên qua các bảng của mô-đun khác.
-   - Các tham chiếu liên mô-đun (`reporterId`, `disasterId`, `reportId`) được lưu trữ dưới dạng định danh vô hướng `UUID`.
-   - Tính toàn vẹn dữ liệu được đảm bảo thông qua logic ứng dụng và các **Hợp đồng ứng dụng công khai** (`DisasterQuery`, `ReportingQuery`).
-3. **Hợp đồng ứng dụng công khai**:
-   - Nằm tại `<module>.application.contract`, chỉ chứa Java Interface và DTO bất biến (`record`), hoàn toàn không phụ thuộc Spring hay JPA.
-   - Khi mô-đun A cần dữ liệu từ mô-đun B, Adapter của mô-đun A gọi Interface Hợp đồng được xuất bản của mô-đun B. Dữ liệu trả về là các ảnh chụp dữ liệu bất biến (ví dụ: `DisasterSnapshot`, `ReportSnapshot`).
+2. **Không join SQL hoặc liên kết JPA xuyên module**:
+   - Mỗi module sở hữu toàn bộ bảng và dữ liệu của riêng mình. Không tồn tại Foreign Key vật lý xuyên qua các bảng của module khác.
+   - Các tham chiếu liên module (`reporterId`, `disasterId`, `reportId`) được lưu trữ dưới dạng định danh vô hướng `UUID`.
+   - Tính toàn vẹn dữ liệu được đảm bảo thông qua logic ứng dụng và các **Published Application Contracts** (`DisasterQuery`, `ReportingQuery`).
+3. **Published Application Contracts**:
+   - Nằm tại `<module>.application.contract`, chỉ chứa Java Interface và DTO immutable (`record`), hoàn toàn không phụ thuộc Spring hay JPA.
+   - Khi module A cần dữ liệu từ module B, Adapter của module A gọi Interface Contract được xuất bản của module B. Dữ liệu trả về là các snapshot bất biến (ví dụ: `DisasterSnapshot`, `ReportSnapshot`).
 
 ---
 
 ## 6. Chiến lược Dữ liệu, Không gian và Xử lý Đồng thời
 
-### 6.1. Tiến hóa Lược đồ với Flyway
-Hệ thống sử dụng một cơ sở dữ liệu duy nhất với 7 bản bản chuyển đổi lược đồ tuần tự bất biến:
+### 6.1. Tiến hóa Schema với Flyway
+Hệ thống sử dụng một cơ sở dữ liệu duy nhất với 7 bản migration tuần tự bất biến:
 
-| Version | Tệp Migration | Mô-đun Sở Hữu | Nội dung Schema & Ràng buộc |
-|:---: |:--- |:---: |:--- |
+| Version | File Migration | Module Sở Hữu | Nội dung Schema & Ràng buộc |
+| :---: | :--- | :---: | :--- |
 | **V1** | `V1__enable_postgis.sql` | Technical | Kích hoạt extension PostGIS cho tính toán địa lý. |
 | **V2** | `V2__identity_accounts.sql` | Identity | Bảng `identity_users` và `identity_credentials` (FK nội bộ). |
-| **V3** | `V3__disasters.sql` | Disaster | Bảng `disasters`, ràng buộc trạng thái ACTIVE/RESOLVED, tọa độ WGS84, phiên bản khóa. |
+| **V3** | `V3__disasters.sql` | Disaster | Bảng `disasters`, ràng buộc trạng thái ACTIVE/RESOLVED, tọa độ WGS84, version lock. |
 | **V4** | `V4__reporting_reports.sql` | Reporting | Bảng `reporting_reports`, cột `geography(Point, 4326)`, ràng buộc ban đầu PENDING. |
-| **V5** | `V5__reporting_verification_withdrawal.sql` | Reporting | Mở rộng trạng thái VERIFIED/REJECTED, siêu dữ liệu rút báo cáo `withdrawn_at`, GiST index không gian. |
-| **V6** | `V6__rescue_teams_and_missions.sql` | Rescue | Bảng `rescue_teams` và `rescue_missions`, UNIQUE `report_id`, chỉ mục duy nhất có điều kiện cho active đội. |
-| **V7** | `V7__reporting_evidence_attachments.sql` | Reporting | Bảng `reporting_report_attachments`, siêu dữ liệu ảnh minh chứng, CHECK 5 MiB/ảnh và FK nội Reporting; mức 5 ảnh/báo cáo do tầng ứng dụng + bộ chuyển đổi kiểm soát. |
+| **V5** | `V5__reporting_verification_withdrawal.sql` | Reporting | Mở rộng trạng thái VERIFIED/REJECTED, metadata rút báo cáo `withdrawn_at`, GiST index không gian. |
+| **V6** | `V6__rescue_teams_and_missions.sql` | Rescue | Bảng `rescue_teams` và `rescue_missions`, UNIQUE `report_id`, partial unique index cho active team. |
+| **V7** | `V7__reporting_evidence_attachments.sql` | Reporting | Bảng `reporting_report_attachments`, metadata ảnh minh chứng, CHECK 5 MiB/ảnh và FK nội Reporting; mức 5 ảnh/báo cáo do application + adapter kiểm soát. |
 
 ### 6.2. Dữ liệu Không gian PostGIS
 - Lưu trữ tọa độ theo hệ quy chiếu chuẩn WGS84 (SRID 4326) bằng kiểu dữ liệu `geography(Point, 4326)`.
 - Thực hiện truy vấn lọc bán kính bằng hàm PostGIS chuyên dụng:
   ```sql
-  ST_DWithin(r.vị trí, ST_SetSRID(ST_MakePoint(:lon,:lat), 4326)::geography,:radiusMeters)
+  ST_DWithin(r.location, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography, :radiusMeters)
   ```
 - Sử dụng chỉ mục không gian **GiST** (`reporting_reports_visible_location_idx`) trên tập các báo cáo nhìn thấy được (chưa rút) để tối ưu hóa hiệu năng truy vấn lọc theo vùng địa lý.
 - Truy vấn thông qua **JDBC Data Mapper** (`JdbcReportStore`) thuần SQL, loại bỏ phụ thuộc nặng nề vào Hibernate Spatial trong khi vẫn đảm bảo độ chính xác tính toán theo mét thực tế trên mặt cầu Trái Đất.
 
 ### 6.3. Kiểm soát Giao dịch và Xử lý Đồng thời
 1. **Duyệt / Từ chối / Rút báo cáo (Reporting)**:
-   - Sử dụng cơ chế khóa lạc quan (Kiểm soát đồng thời lạc quan) với Atomic Conditional Update:
+   - Sử dụng cơ chế khóa lạc quan (Optimistic Concurrency) với Atomic Conditional Update:
      ```sql
      UPDATE reporting_reports
-     SET trạng thái =:newStatus, phiên bản = phiên bản + 1, ...
-     WHERE id =:id AND phiên bản =:expectedVersion AND trạng thái = 'PENDING' AND withdrawn_at IS NULL
+     SET status = :newStatus, version = version + 1, ...
+     WHERE id = :id AND version = :expectedVersion AND status = 'PENDING' AND withdrawn_at IS NULL
      ```
    - Nếu số dòng cập nhật trả về là 0, hệ thống phát hiện có tranh chấp đồng thời và trả về lỗi `409 Conflict`.
 2. **Phân công đội cứu hộ (Rescue)**:
@@ -214,24 +215,24 @@ Hệ thống sử dụng một cơ sở dữ liệu duy nhất với 7 bản b�
      ```sql
      CREATE UNIQUE INDEX idx_rescue_missions_team_active
      ON rescue_missions (team_id)
-     WHERE trạng thái IN ('ASSIGNED', 'IN_PROGRESS');
+     WHERE status IN ('ASSIGNED', 'IN_PROGRESS');
      ```
-   - Xung đột tranh chấp đội cứu trợ được giải quyết triệt để ở tầng cơ sở dữ liệu, ngăn chặn hoàn toàn tranh chấp condition khi có 2 yêu cầu phân công cùng lúc.
+   - Xung đột tranh chấp đội cứu trợ được giải quyết triệt để ở tầng database, ngăn chặn hoàn toàn race condition khi có 2 yêu cầu phân công cùng lúc.
 3. **Thống kê Dashboard**:
    - Sử dụng giao dịch `READ ONLY` với mức độ cô lập `REPEATABLE READ` trên cùng DataSource.
-   - Đảm bảo tính nhất quán dữ liệu xuyên suốt giữa số lượng báo cáo và nhiệm vụ cứu trợ trong một ảnh chụp dữ liệu thống kê duy nhất mà không gây nghẽn khóa ghi (ghi locks).
+   - Đảm bảo tính nhất quán dữ liệu xuyên suốt giữa số lượng báo cáo và nhiệm vụ cứu trợ trong một snapshot thống kê duy nhất mà không gây nghẽn khóa ghi (write locks).
 
 ---
 
 ## 7. Mô hình Bảo mật và Quản lý Phiên
 
-- **Stateless Bearer JWT**: Token JWT ngắn hạn được ký bằng thuật toán HS256 với bí mật key nạp từ biến môi trường. Không lưu trạng thái phiên trên máy chủ (Stateless).
-- **Tab-scoped Session**: Giao diện lưu token trong `sessionStorage`, khóa `gdrn.session`; reload cùng tab giữ phiên đến hết hạn. Logout/hết hạn xóa phiên; không có token làm mới. Storage phương án dự phòng dùng bộ nhớ khi trình duyệt chặn lưu trữ. Không coi tab phạm vi là bảo vệ trước XSS hoặc việc trình duyệt sao chép/khôi phục tab.
-- **Default-Deny Bảo mật Filter**: Cấu hình Spring Security áp dụng quy tắc mặc định từ chối (`anyRequest().denyAll()`). Từng điểm cuối API được khai báo chính xác phương thức HTTP và quyền tương ứng (`ROLE_CITIZEN`, `ROLE_AUTHORITY`).
-- **Phân quyền dữ liệu ở Tầng ứng dụng Layer**:
+- **Stateless Bearer JWT**: Token JWT ngắn hạn được ký bằng thuật toán HS256 với secret key nạp từ biến môi trường. Không lưu trạng thái phiên trên server (Stateless).
+- **Tab-scoped Session**: Frontend lưu token trong `sessionStorage`, khóa `gdrn.session`; reload cùng tab giữ phiên đến hết hạn. Logout/hết hạn xóa phiên; không có refresh token. Storage fallback dùng memory khi trình duyệt chặn storage. Không coi tab scope là bảo vệ trước XSS hoặc việc trình duyệt sao chép/khôi phục tab.
+- **Default-Deny Security Filter**: Cấu hình Spring Security áp dụng quy tắc mặc định từ chối (`anyRequest().denyAll()`). Từng endpoint được khai báo chính xác phương thức HTTP và quyền tương ứng (`ROLE_CITIZEN`, `ROLE_AUTHORITY`).
+- **Phân quyền dữ liệu ở Application Layer**:
   - Người dân (`CITIZEN`) chỉ được đọc và thao tác trên báo cáo do chính mình tạo ra (`reporterId == currentUserId`).
   - Điều phối viên (`AUTHORITY`) có quyền xem toàn bộ báo cáo và nhiệm vụ điều phối.
-  - Tải ảnh minh chứng đính kèm được bảo vệ thông qua điểm cuối API có xác thực; hệ thống không phát hành công khai URL cho tệp nhị phân.
+  - Tải ảnh minh chứng đính kèm được bảo vệ thông qua endpoint có xác thực; hệ thống không phát hành public URL cho tệp nhị phân.
 
 ---
 
@@ -251,39 +252,39 @@ flowchart TD
     UnitTest --> ArchitectureTest --> IntegrationTest --> BrowserTest
 ```
 
-- **Clean Verify**: Lệnh `.\mvnw.cmd clean verify` chạy trọn vẹn toàn bộ Unit Kiểm thử, Kiến trúc Kiểm thử và Kiểm thử tích hợp với Testcontainers (yêu cầu Docker daemon).
-- **Giao diện Verify**: Lệnh `npm ci`, `npm run typecheck`, `npm test` và `npm run build` xác thực 93 kiểm thử đơn vị giao diện, tính tương thích TypeScript và đóng gói môi trường triển khai gói.
-- **Continuous Integration (CI)**: GitHub Actions workflow tự động kiểm tra cú pháp Compose, chạy clean xác minh, biên dịch frontend/backend ảnh môi trường, khởi động stack kiểm tra healthcheck và chạy bộ hồi quy Playwright trình duyệt kiểm thử.
-- **Đo lường Hiệu năng k6 (Hiệu năng Benchmark Công việc D3)**: Hệ thống duy trì bộ kịch bản kiểm thử tải k6 có khả năng tái lập cao tại `benchmark/`, đo lường thông lượng, p50, p95, p99 và tài nguyên Docker stats trên cơ sở dữ liệu thật PostGIS.
+- **Clean Verify**: Lệnh `.\mvnw.cmd clean verify` chạy trọn vẹn toàn bộ Unit Tests, Architecture Tests và Integration Tests với Testcontainers (yêu cầu Docker daemon).
+- **Frontend Verify**: Lệnh `npm ci`, `npm run typecheck`, `npm test` và `npm run build` xác thực 93 unit tests giao diện, tính tương thích TypeScript và đóng gói production bundle.
+- **Continuous Integration (CI)**: GitHub Actions workflow tự động kiểm tra cú pháp Compose, chạy clean verify, build frontend/backend image, khởi động stack kiểm tra healthcheck và chạy bộ hồi quy Playwright browser test.
+- **Đo lường Hiệu năng k6 (Performance Benchmark Task D3)**: Hệ thống duy trì bộ kịch bản kiểm thử tải k6 có khả năng tái lập cao tại `benchmark/`, đo lường throughput, p50, p95, p99 và tài nguyên Docker stats trên cơ sở dữ liệu thật PostGIS.
 
 ### 8.4. Đo lường Hiệu năng & Nền tảng cơ sở Tải Thực nghiệm
 
-Để phục vụ phân tích kiến trúc dựa trên bằng chứng định lượng (empirical bằng chứng) thay vì cảm tính, hệ thống đã thực thi bộ kiểm chuẩn tải k6 (Công việc D3) đo lường các kịch bản tải đọc/ghi trên cơ sở dữ liệu disposable PostGIS riêng biệt (xem chi tiết tại [Bàn giao D3](../handoffs/D3.md) và [D3 Benchmark Hợp đồng](../benchmark/D3.md)):
+Để phục vụ phân tích kiến trúc dựa trên bằng chứng định lượng (empirical evidence) thay vì cảm tính, hệ thống đã thực thi bộ kiểm chuẩn tải k6 (Task D3) đo lường các workload đọc/ghi trên cơ sở dữ liệu disposable PostGIS riêng biệt (xem chi tiết tại [Handoff D3](../handoffs/D3.md) và [D3 Benchmark Contract](../benchmark/D3.md)):
 
-- **Cấu hình môi trường đo lường:** Host Windows 11 (Acer Nitro AN515-58, Intel Core i5-12500H, 16 logical processors, 15.7 GiB RAM), Docker Desktop Engine 27.3.1, container `grafana/k6` kết nối tới Ứng dụng phía máy chủ máy chủ qua `host.docker.internal`, cơ sở dữ liệu PostGIS 16-3.5.
+- **Cấu hình môi trường đo lường:** Host Windows 11 (Acer Nitro AN515-58, Intel Core i5-12500H, 16 logical processors, 15.7 GiB RAM), Docker Desktop Engine 27.3.1, container `grafana/k6` kết nối tới Backend host qua `host.docker.internal`, cơ sở dữ liệu PostGIS 16-3.5.
 - **Dữ liệu mẫu thực nghiệm:** Sinh ngẫu nhiên xác định với 70% mật độ tập trung / 30% phân tán rộng qua `benchmark/generate_reports.py`.
 
 #### Bảng Số Liệu Đo Tải Thực Nghiệm k6 (Dẫn xuất từ Bàn giao D3)
 
-| Kịch bản tải | Endpoint / Hợp đồng | Bộ dữ liệu | VUs | Yêu cầu/giây | TB / p50 / p95 / p99 (ms) | Tỷ lệ lỗi | Kích thước Artifact thô |
-|:--- |:--- |:---: |:---: |:---: |:---: |:---: |
-| **E07 Write** | `POST /api/reports` | DB rỗng sau đặt lại | 1 | **164.57** | 3.81 / 3.67 / 4.98 / **5.82** | 0% | 5.15 MiB |
-| **E08 Page Kiểm tra nhanh** | `GET /api/reports` | 100 báo cáo | 1 | **137.71** | 5.00 / 4.73 / 7.67 / **10.85** | 0% | 8.97 MiB |
-| **E08 Radius Kiểm tra nhanh** | `GET /api/reports` (`ST_DWithin`) | 100 báo cáo | 1 | **156.06** | 4.31 / 4.10 / 5.85 / **7.78** | 0% | 11.68 MiB |
-| **E08 Page Ladder** | `GET /api/reports` (Phân trang) | 1,000 báo cáo | 10 | **928.17** | 7.23 / 6.49 / 12.58 / **17.55** | 0% | 60.49 MiB |
-| **E08 Page Ladder** | `GET /api/reports` (Phân trang) | 1,000 báo cáo | 50 | **1,439.13** | 18.93 / 17.35 / 36.35 / **48.63** | 0% | 117.63 MiB |
-| **E08 Page Ladder** | `GET /api/reports` (Phân trang) | 1,000 báo cáo | 100 | **1,996.98** | 34.93 / 30.19 / 78.70 / **105.28** | 0% | 130.06 MiB |
+| Workload | Endpoint / Hợp đồng | Dataset | VUs | Requests/s | Avg / p50 / p95 / p99 (ms) | Error rate | Kích thước Artifact thô |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **E07 Write** | `POST /api/reports` | DB rỗng sau reset | 1 | **164.57** | 3.81 / 3.67 / 4.98 / **5.82** | 0% | 5.15 MiB |
+| **E08 Page Smoke** | `GET /api/reports` | 100 reports | 1 | **137.71** | 5.00 / 4.73 / 7.67 / **10.85** | 0% | 8.97 MiB |
+| **E08 Radius Smoke** | `GET /api/reports` (`ST_DWithin`) | 100 reports | 1 | **156.06** | 4.31 / 4.10 / 5.85 / **7.78** | 0% | 11.68 MiB |
+| **E08 Page Ladder** | `GET /api/reports` (Phân trang) | 1,000 reports | 10 | **928.17** | 7.23 / 6.49 / 12.58 / **17.55** | 0% | 60.49 MiB |
+| **E08 Page Ladder** | `GET /api/reports` (Phân trang) | 1,000 reports | 50 | **1,439.13** | 18.93 / 17.35 / 36.35 / **48.63** | 0% | 117.63 MiB |
+| **E08 Page Ladder** | `GET /api/reports` (Phân trang) | 1,000 reports | 100 | **1,996.98** | 34.93 / 30.19 / 78.70 / **105.28** | 0% | 130.06 MiB |
 
 #### Giám Sát Tài Nguyên Container
 
-| Tải người dùng | Ứng dụng phía máy chủ CPU (TB / Đỉnh) | Ứng dụng phía máy chủ RAM Đỉnh | CPU cơ sở dữ liệu (TB / Đỉnh) | Database RAM Đỉnh |
-|:---: |:---: |:---: |:---: |:---: |
+| Tải người dùng | Backend CPU (TB / Đỉnh) | Backend RAM Đỉnh | Database CPU (TB / Đỉnh) | Database RAM Đỉnh |
+| :---: | :---: | :---: | :---: | :---: |
 | **10 VU** | 208.68% / 790.33% | 7.56% (~1.18 GiB) | 69.92% / 212.42% | 2.14% (~344 MiB) |
 | **50 VU** | 306.05% / 451.29% | 8.87% (~1.39 GiB) | 142.44% / 324.68% | 2.14% (~344 MiB) |
 | **100 VU** | 238.21% / 494.43% | 9.22% (~1.45 GiB) | 194.88% / 333.07% | 2.15% (~345 MiB) |
 
 - **Bảo mật và Tái lập trong Benchmark:**
-  - JWT token được cấp phát với thời hạn 900 giây, bảo đảm bao phủ toàn bộ chu kỳ làm nóng, giữ tải lượt chạy và giảm tải mà không gây lỗi giả tạo do hết hạn token.
-  - Công cụ công cụ chạy tự động lọc bỏ (redact) setup JWT token trước khi lưu `summary.json` và kiểm tra an toàn dữ liệu thô.
-  - Bounded in-flight requests ngăn chặn tình trạng tràn bộ đệm k6 máy khách.
+  - JWT token được cấp phát với thời hạn 900 giây, bảo đảm bao phủ toàn bộ chu kỳ warm-up, steady run và ramp-down mà không gây lỗi giả tạo do hết hạn token.
+  - Công cụ runner tự động lọc bỏ (redact) setup JWT token trước khi lưu `summary.json` và kiểm tra an toàn dữ liệu thô.
+  - Bounded in-flight requests ngăn chặn tình trạng tràn bộ đệm k6 client.
   - Kết quả thô được lưu trữ tại `benchmark/results/20261024-142105-01` đến `benchmark/results/20261024-142703-01`.
