@@ -1,0 +1,16 @@
+{
+  "reference": "thphap/gdrn-d3-server-cpu/4",
+  "output": "D:\\photo\\2627I_INT3105_3\\benchmark\\results\\kaggle-server-full-20261030-01",
+  "downloadedFiles": 318,
+  "benchmarkComplete": true,
+  "benchmarkStatus": "complete",
+  "manifestRuns": 48,
+  "runDirectories": 48,
+  "exitCodes": [
+    0
+  ],
+  "cleanup": "complete",
+  "artifactCount": 315,
+  "jwtFiles": [],
+  "verificationSeconds": 59.5
+}

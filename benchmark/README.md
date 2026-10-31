@@ -5,6 +5,61 @@ exist in the current application: E07 report creation and E08 report listing wit
 pagination or a radius filter. It does not add a seed endpoint, Redis, a broker,
 or a performance-oriented application code path.
 
+## Full server-on-Kaggle CPU
+
+For automated private Kaggle jobs running Java 21, native PostgreSQL 16/PostGIS
+and k6 together, without Docker or an external server, see
+[Kaggle CPU setup and API runner](../docs/benchmark/KAGGLE_CPU.md).
+The API execution template is `kaggle_server_cpu.ipynb`, prepared by
+`kaggle_api.py`. The existing Dataset-upload CPU workflow below is preserved.
+The full API matrix was executed on Kaggle CPU on 2026-10-30/31 (private notebook
+version 4): 48/48 runs passed. The linked guide records the exact source, artifacts
+and limits. Version 3 remains the three-workload smoke evidence.
+
+## Kaggle CPU: complete execution workflow
+
+`kaggle_cpu_preflight.ipynb` now runs the application, a dedicated PostGIS cluster
+and native k6 on the CPU notebook itself. Its filename is retained for existing
+links; it is no longer a dry-run preflight. Docker and external credentials are
+not required. Internet and root access in a disposable Linux environment are required.
+
+1. Run `python benchmark/package_cpu_source.py` locally.
+2. Upload `benchmark/results/gdrn-cpu-source.zip` as a **private Kaggle Dataset**.
+3. Import the notebook, Add Input with that Dataset, set Accelerator **None** and
+   Internet **On**, then **Run All**.
+4. Download `gdrn-cpu-results.zip` from notebook Output. Check `manifest.json`:
+   `environment` must be `Kaggle CPU`, `status` must be `completed`, and the default
+   matrix must contain 48 repetitions (4 workloads × 4 VU levels × 3 repeats).
+
+The notebook installs Java 21, PostgreSQL/PostGIS and checksum-verified k6 1.6.1,
+builds the current source, creates disposable demo accounts and starts everything
+on loopback. Each repetition resets only its own database; read/mixed workloads
+seed 1,000 rows and write starts empty. Defaults are 1/10/50/100 VUs, 10s warm-up,
+30s steady and 10s ramp-down. A failed k6 threshold/setup stops the ladder and
+preserves incomplete evidence. Rerunning starts a fresh database.
+
+Artifacts: `manifest.json` (source/JAR hashes, revision, topology, versions and
+configuration), per-run `run.json`, `seed.json`, `raw.json.gz`, metrics-only
+`summary.json`, `resources.csv`, plus `results.json`, `REPORT.md` and checksums.
+Summary metrics exclude login but include warm-up and ramp-down. Resources are
+sampled every second: host CPU/memory and backend/k6/Postgres RSS. Summed Postgres
+RSS can double-count shared pages. CPU is shared with the load generator, so these
+numbers do not establish independent server capacity. The build skips tests;
+benchmark execution does not replace `mvnw clean verify`.
+
+For an equivalent **local Linux validation**, run as root in a disposable container:
+
+```bash
+bash benchmark/setup-cpu.sh
+python3 benchmark/run_cpu.py --repetitions 1
+```
+
+Linux validation must remain labelled local. Shipping this workflow alone does
+not constitute evidence of an executed Kaggle session.
+
+References: [Kaggle notebook settings](https://www.kaggle.com/docs/notebooks),
+[k6 custom summary](https://grafana.com/docs/k6/latest/results-output/end-of-test/custom-summary/).
+
 ## Isolation and prerequisites
 
 Use a disposable Compose project and database. Do not run the reset command against
@@ -33,9 +88,8 @@ image:
 docker pull grafana/k6:latest
 ```
 
-Kaggle is not assumed to have a Docker daemon. The Kaggle notebook below performs a
-preflight and reports which parts are available; it does not publish a database,
-service or tunnel.
+Kaggle is not assumed to have a Docker daemon. Use the native Linux workflow
+above; it does not publish a database, service or tunnel.
 
 ## Reset, seed and run
 
